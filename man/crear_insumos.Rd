@@ -22,5 +22,4 @@ tamaño muestral y coeficiente de variación.
 }
 \examples{
 crear_insumos(~gastot_hd, ~zona+sexo, dc)
-
 }

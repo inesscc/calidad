@@ -128,7 +128,8 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #'
 #' @examples
 #' crear_insumos(~gastot_hd, ~zona+sexo, dc)
-#'
+#' @export
+
 crear_insumos <- function(var, dominios, disenio) {
   #Generar la tabla con los cálculos
   tabla <- calcular_tabla(var, dominios, disenio)
@@ -181,6 +182,8 @@ crear_insumos <- function(var, dominios, disenio) {
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' crear_insumos_prop(~ocupado, ~zona+sexo, dc)
+#' @export
+
 
 crear_insumos_prop <- function(var, dominios, disenio) {
   #Generar la tabla con los cálculos
