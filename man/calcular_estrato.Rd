@@ -21,5 +21,5 @@ Genera una tabla con el conteo de estratos para cada uno de los dominios del tab
 La función contempla un caso para proporción y un caso para promedio
 }
 \examples{
-calcular_estrato(hog, c("zona", "sexo"), "ocupado")
+calcular_estrato(epf_personas, c("zona", "sexo"), "ocupado")
 }

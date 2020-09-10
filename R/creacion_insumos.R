@@ -4,15 +4,16 @@
 #'
 #' @param var variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~
 #' @param dominios dominios de estimación separados por signo +. Debe anteponerse ~
-#' @param diseño diseño complejo creado mediante el paquete \code{survey}
+#' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #'
 #' @return \code{dataframe} que contiene variables de agregación, variable objetivo y error estándar
 #'
 #' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' calcular_tabla(~gastot_hd, ~zona+sexo, dc)
 #' @export
-calcular_tabla <-  function(var, dominios, diseño) {
-  estimacion <- survey::svyby(var , design = diseño, by = dominios , FUN = svymean)
+calcular_tabla <-  function(var, dominios, disenio) {
+  estimacion <- survey::svyby(var , design = disenio, by = dominios , FUN = svymean)
   return(estimacion)
 }
 
@@ -29,7 +30,7 @@ calcular_tabla <-  function(var, dominios, diseño) {
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
-#' calcular_n(hog, c("zona", "sexo"), var = NULL)
+#' calcular_n(epf_personas, c("zona", "sexo"), var = NULL)
 calcular_n <- function(data, dominios, var = NULL) {
   if (is.null(var)) {
     data %>%
@@ -37,7 +38,7 @@ calcular_n <- function(data, dominios, var = NULL) {
       dplyr::summarise(n = dplyr::n())
   } else {
     symbol_var <- rlang::sym(var)
-    hog %>%
+    data %>%
       dplyr::group_by_(.dots = as.list(dominios)  ) %>%
       dplyr::summarise(n = sum(!! symbol_var))
   }
@@ -58,7 +59,7 @@ calcular_n <- function(data, dominios, var = NULL) {
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
-#' calcular_upm(hog, c("zona", "sexo"), "ocupado")
+#' calcular_upm(epf_personas, c("zona", "sexo"), "ocupado")
 
 calcular_upm <- function(data, dominios, var = NULL ) {
   if (is.null(var)) {
@@ -92,7 +93,7 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
-#' calcular_estrato(hog, c("zona", "sexo"), "ocupado")
+#' calcular_estrato(epf_personas, c("zona", "sexo"), "ocupado")
 
 calcular_estrato <- function(data, dominios, var = NULL ) {
   if (is.null(var)) {
@@ -122,30 +123,30 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #'
 #' @param var variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~
 #' @param dominios dominios de estimación separados por signo +. Debe anteponerse ~
-#' @param diseño diseño complejo creado mediante el paquete \code{survey}
+#' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
 #' crear_insumos(~gastot_hd, ~zona+sexo, dc)
 #'
-crear_insumos <- function(var, dominios, diseño) {
+crear_insumos <- function(var, dominios, disenio) {
   #Generar la tabla con los cálculos
-  tabla <- calcular_tabla(var, dominios, diseño)
+  tabla <- calcular_tabla(var, dominios, disenio)
 
   #Extraer nombres
   nombres <- names(tabla)
   agrupacion <-  nombres[c(- (length(nombres) - 1), -length(nombres)) ]
 
   #Calcular el tamaño muestral de cada grupo
-  n <- calcular_n(hog, agrupacion)
+  n <- calcular_n(disenio$variables, agrupacion)
 
   #Calcular los grados de libertad de todos los cruces
-  gl <- calcular_upm(hog, agrupacion) %>%
-    dplyr::left_join(calcular_estrato(hog, agrupacion), by = agrupacion) %>%
+  gl <- calcular_upm(disenio$variables, agrupacion) %>%
+    dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
     dplyr::mutate(gl = upm - varstrat)
 
   #Extrear el coeficiente de variación
-  cv <- cv(tabla, design = diseño) * 100
+  cv <- cv(tabla, design = disenio) * 100
 
   cv <- tabla %>%
     dplyr::select_(.dots =  agrupacion) %>%
@@ -165,7 +166,7 @@ crear_insumos <- function(var, dominios, diseño) {
 }
 
 
-#-------------------------------
+#-----------------------------------------------------------------------
 
 #' Crea los insumos necesarios para hacer la evaluación de estimadores de proporción
 #'
@@ -174,15 +175,16 @@ crear_insumos <- function(var, dominios, diseño) {
 #'
 #' @param var variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~
 #' @param dominios dominios de estimación separados por signo +. Debe anteponerse ~
-#' @param diseño diseño complejo creado mediante el paquete \code{survey}
+#' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' crear_insumos_prop(~ocupado, ~zona+sexo, dc)
 
-crear_insumos_prop <- function(var, dominios, diseño) {
+crear_insumos_prop <- function(var, dominios, disenio) {
   #Generar la tabla con los cálculos
-  tabla <- calcular_tabla(var, dominios, diseño)
+  tabla <- calcular_tabla(var, dominios, disenio)
 
   #Extraer nombres
   nombres <- names(tabla)
@@ -190,11 +192,11 @@ crear_insumos_prop <- function(var, dominios, diseño) {
   var_prop <- nombres[length(nombres) - 1]
 
   #Calcular el tamaño muestral de cada grupo
-  n <- calcular_n(hog, agrupacion, var_prop )
+  n <- calcular_n(disenio$variables, agrupacion, var_prop )
 
   #Calcular los grados de libertad de todos los cruces
-  gl <- calcular_upm(hog, agrupacion, var_prop) %>%
-    dplyr::left_join(calcular_estrato(hog, agrupacion, var_prop), by = agrupacion) %>%
+  gl <- calcular_upm(disenio$variables, agrupacion, var_prop) %>%
+    dplyr::left_join(calcular_estrato(disenio$variables, agrupacion, var_prop), by = agrupacion) %>%
     dplyr::mutate(gl = upm - varstrat)
 
   #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión

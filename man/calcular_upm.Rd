@@ -21,5 +21,5 @@ Genera una tabla con el conteo de UPM para cada uno de los dominios del tabulado
 La función contempla un caso para proporción y un caso para promedio
 }
 \examples{
-calcular_upm(hog, c("zona", "sexo"), "ocupado")
+calcular_upm(epf_personas, c("zona", "sexo"), "ocupado")
 }

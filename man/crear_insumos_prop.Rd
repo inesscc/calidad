@@ -4,14 +4,14 @@
 \alias{crear_insumos_prop}
 \title{Crea los insumos necesarios para hacer la evaluación de estimadores de proporción}
 \usage{
-crear_insumos_prop(var, dominios, dise昼㸱o)
+crear_insumos_prop(var, dominios, disenio)
 }
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~}
 
 \item{dominios}{dominios de estimación separados por signo +. Debe anteponerse ~}
 
-\item{diseño}{diseño complejo creado mediante el paquete \code{survey}}
+\item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 }
 \value{
 \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
@@ -21,5 +21,6 @@ Genera una tabla con los siguientes insumos: media, grados de libertad,
 tamaño muestral y error estándar
 }
 \examples{
+dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 crear_insumos_prop(~ocupado, ~zona+sexo, dc)
 }

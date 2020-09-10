@@ -4,14 +4,14 @@
 \alias{calcular_tabla}
 \title{Calcula medias a partir de cierta agregación}
 \usage{
-calcular_tabla(var, dominios, dise昼㸱o)
+calcular_tabla(var, dominios, disenio)
 }
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~}
 
 \item{dominios}{dominios de estimación separados por signo +. Debe anteponerse ~}
 
-\item{diseño}{diseño complejo creado mediante el paquete \code{survey}}
+\item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 }
 \value{
 \code{dataframe} que contiene variables de agregación, variable objetivo y error estándar
@@ -20,5 +20,6 @@ calcular_tabla(var, dominios, dise昼㸱o)
 Genera una tabla con estimaciones para una agregación determinada
 }
 \examples{
+dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 calcular_tabla(~gastot_hd, ~zona+sexo, dc)
 }
