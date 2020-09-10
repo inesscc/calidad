@@ -1,6 +1,6 @@
 ---
 title: "README"
-output: html_document
+output: github_document
 ---
 
 
@@ -24,7 +24,7 @@ Para evaluar la calidad de una estimación, la [metodología del INE](https://ww
 El paquete incluye una función para crear los insumos para cada uno de los tipo de estimación. El uso de cada uno de ellos es el siguiente: 
 
 
-```{r, eval=T}
+```{r, eval=T, warning=FALSE}
 insumos_prop <- crear_insumos_prop(~ocupado, ~zona+sexo, dc)
 insumos_media <-  crear_insumos(~gastot_hd, ~zona+sexo, dc)
 ```
@@ -35,7 +35,7 @@ EL primer argumento corresponde a la variable objetivo, que debe llevar el símb
 
 Una vez que se han generado los insumos, podemos hacer la evaluación, nuevamente, usando funciones diferentes para cada uno de los 2 tipos de estimación. 
 
-```{r, eval=T}
+```{r, eval=T, warning=FALSE}
 evaluacion_prop <- evaluacion_calidad_prop(insumos_prop)
 evaluacion_media <- evaluacion_calidad(insumos_media)
 ```
