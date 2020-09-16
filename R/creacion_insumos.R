@@ -50,10 +50,10 @@ calcular_n <- function(data, dominios, var = NULL) {
 #' Calcula el número de UPM
 #'
 #' Genera una tabla con el conteo de UPM para cada uno de los dominios del tabulado.
+#' La columna que contiene la información de las UPMs debe llamarse varunit
 #' La función contempla un caso para proporción y un caso para promedio
 #'
 #' @param data \code{dataframe} que contiene los datos que se están evaluando
-#' @param var variable objetivo. Debe ser un integer que toma los valores 1 o 0
 #' @param dominios vector de caracteres que contiene los dominios a evaluar
 #' @param var string que contiene el nombre de la variable de proporción que se evalúa.
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
@@ -62,6 +62,13 @@ calcular_n <- function(data, dominios, var = NULL) {
 #' calcular_upm(epf_personas, c("zona", "sexo"), "ocupado")
 
 calcular_upm <- function(data, dominios, var = NULL ) {
+
+  #Chequear que existe variable varunit en el dataset
+  if (sum(grepl(pattern = "varunit" , x = names(epf_personas))) == 0) {
+    stop("¡La columna que contiene información de las UPMs debe llamarse varunit!")
+  }
+
+
   if (is.null(var)) {
     data %>%
       dplyr::group_by_("varunit", .dots = as.list(dominios)  ) %>%
@@ -84,18 +91,25 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 #' Calcula el número de estratos
 #'
 #' Genera una tabla con el conteo de estratos para cada uno de los dominios del tabulado.
+#' La columna que contiene la información de los estratos debe llamarse varstrat
 #' La función contempla un caso para proporción y un caso para promedio
 #'
 #' @param data \code{dataframe} que contiene los datos que se están evaluando
 #' @param var variable objetivo. Debe ser un integer que toma los valores 1 o 0
 #' @param dominios vector de caracteres que contiene los dominios a evaluar
-#' @param var string que contiene el nombre de la variable de proporción que se evalúa.
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
 #' calcular_estrato(epf_personas, c("zona", "sexo"), "ocupado")
 
 calcular_estrato <- function(data, dominios, var = NULL ) {
+
+  #Chequear que existe variable varstrat en el dataset
+  if (sum(grepl(pattern = "varstrat" , x = names(epf_personas))) == 0) {
+    stop("¡La columna que contiene información de los estratos debe llamarse varstrat!")
+  }
+
+
   if (is.null(var)) {
     data %>%
       dplyr::group_by_("varstrat", .dots = as.list(dominios)  ) %>%
