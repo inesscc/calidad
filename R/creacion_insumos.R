@@ -31,7 +31,7 @@ calcular_tabla <-  function(var, dominios, disenio) {
 #'
 #' @examples
 #' calcular_n(epf_personas, c("zona", "sexo"), var = NULL)
-calcular_n <- function(data, dominios, var = NULL) {
+calcular_n <- function(data, ..., var = NULL) {
   if (is.null(var)) {
     data %>%
       dplyr::group_by_(.dots = as.list(dominios)  ) %>%
