@@ -11,13 +11,14 @@ calcular_estrato(data, dominios, var = NULL)
 
 \item{dominios}{vector de caracteres que contiene los dominios a evaluar}
 
-\item{var}{string que contiene el nombre de la variable de proporción que se evalúa.}
+\item{var}{variable objetivo. Debe ser un integer que toma los valores 1 o 0}
 }
 \value{
 \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 }
 \description{
 Genera una tabla con el conteo de estratos para cada uno de los dominios del tabulado.
+La columna que contiene la información de los estratos debe llamarse varstrat
 La función contempla un caso para proporción y un caso para promedio
 }
 \examples{

@@ -7,7 +7,7 @@
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #'
 #' @return \code{dataframe} que contiene variables de agregación, variable objetivo y error estándar
-#'
+#' @import survey
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' calcular_tabla(~gastot_hd, ~zona+sexo, dc)
@@ -31,16 +31,16 @@ calcular_tabla <-  function(var, dominios, disenio) {
 #'
 #' @examples
 #' calcular_n(epf_personas, c("zona", "sexo"), var = NULL)
-calcular_n <- function(data, ..., var = NULL) {
+calcular_n <- function(data, dominios, var = NULL) {
   if (is.null(var)) {
     data %>%
-      dplyr::group_by_(.dots = as.list(dominios)  ) %>%
+      dplyr::group_by(.dots = as.list(dominios)  ) %>%
       dplyr::summarise(n = dplyr::n())
   } else {
-    symbol_var <- rlang::sym(var)
+    symbol_var <- rlang::parse_expr(var)
     data %>%
-      dplyr::group_by_(.dots = as.list(dominios)  ) %>%
-      dplyr::summarise(n = sum(!! symbol_var))
+      dplyr::group_by(.dots = as.list(dominios)) %>%
+      dplyr::summarise(n = sum(!!symbol_var))
   }
 }
 
@@ -68,21 +68,21 @@ calcular_upm <- function(data, dominios, var = NULL ) {
     stop("¡La columna que contiene información de las UPMs debe llamarse varunit!")
   }
 
-
+  listado <- c("varunit", as.list(dominios))
   if (is.null(var)) {
     data %>%
-      dplyr::group_by_("varunit", .dots = as.list(dominios)  ) %>%
+      dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = dplyr::n()) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(conteo > 0, 1, 0))  %>%
-      dplyr::group_by_(.dots = as.list(dominios)) %>%
+      dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(upm = sum(tiene_info))
   } else {
-    symbol_var <- rlang::sym(var)
+    symbol_var <- rlang::parse_expr(var)
     data %>%
-      dplyr::group_by_("varunit", .dots = as.list(dominios)  ) %>%
+      dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(conteo > 0, 1, 0))  %>%
-      dplyr::group_by_(.dots = as.list(dominios)) %>%
+      dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(upm = sum(tiene_info))
   }
 }
@@ -109,21 +109,21 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
     stop("¡La columna que contiene información de los estratos debe llamarse varstrat!")
   }
 
-
+  listado <- c("varstrat", as.list(dominios))
   if (is.null(var)) {
     data %>%
-      dplyr::group_by_("varstrat", .dots = as.list(dominios)  ) %>%
+      dplyr::group_by( .dots = listado) %>%
       dplyr::summarise(conteo = dplyr::n()) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(conteo > 0, 1, 0)) %>%
-      dplyr::group_by_(.dots = as.list(dominios)) %>%
+      dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(varstrat = sum(tiene_info))
   } else {
     symbol_var <- rlang::sym(var)
     data %>%
-      dplyr::group_by_("varstrat", .dots = as.list(dominios)  ) %>%
+      dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(conteo > 0, 1, 0)) %>%
-      dplyr::group_by_(.dots = as.list(dominios)) %>%
+      dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(varstrat = sum(tiene_info))
   }
 }
