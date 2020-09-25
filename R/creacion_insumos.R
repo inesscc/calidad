@@ -118,7 +118,7 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
       dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(varstrat = sum(tiene_info))
   } else {
-    symbol_var <- rlang::sym(var)
+    symbol_var <- rlang::parse_expr(var)
     data %>%
       dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
