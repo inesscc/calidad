@@ -145,6 +145,22 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #' @export
 
 crear_insumos <- function(var, dominios, disenio) {
+
+  #Chequear que la variable sea de continua Si no lo es, aparece un warning
+  enquo_var <-  rlang::enquo(var)
+  es_prop <- disenio$variables %>%
+    dplyr::mutate(es_prop = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
+
+  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("¡Parece que tu variable es de proporción!")
+
+
+  #COnvertir los inputs en fórmulas para adecuarlos a survey
+  var <- paste0("~", rlang::enexpr(var)) %>%
+    as.formula()
+
+  dominios <- paste0("~", rlang::enexprs(dominios)) %>%
+    as.formula()
+
   #Generar la tabla con los cálculos
   tabla <- calcular_tabla(var, dominios, disenio)
 
@@ -169,11 +185,11 @@ crear_insumos <- function(var, dominios, disenio) {
 
   #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
   final <- tabla %>%
-    dplyr::left_join(gl %>% dplyr::select_(.dots = as.list(c(agrupacion, "gl" ))),
+    dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
               by = agrupacion) %>%
-    dplyr::left_join(n %>% dplyr::select_(.dots = as.list(c(agrupacion, "n" ))),
+    dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
               by = agrupacion) %>%
-    dplyr::left_join(cv %>% dplyr::select_(.dots = as.list(c(agrupacion, "coef_var" ))),
+    dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
               by = agrupacion)
 
   return(final)
@@ -200,6 +216,21 @@ crear_insumos <- function(var, dominios, disenio) {
 
 
 crear_insumos_prop <- function(var, dominios, disenio) {
+
+  #Chequear que la variable sea de proporción. Si no lo es, se interrumpe la ejecución
+  enquo_var <-  rlang::enquo(var)
+  es_prop <- disenio$variables %>%
+    dplyr::mutate(es_prop = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
+
+  if (sum(es_prop$es_prop) != nrow(disenio$variables)) stop("¡La variable no es de proporción!")
+
+  #COnvertir los inputs en fórmulas para adecuarlos a survey
+  var <- paste0("~", rlang::enexpr(var)) %>%
+    as.formula()
+
+  dominios <- paste0("~", rlang::enexprs(dominios)) %>%
+    as.formula()
+
   #Generar la tabla con los cálculos
   tabla <- calcular_tabla(var, dominios, disenio)
 
