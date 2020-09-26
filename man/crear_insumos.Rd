@@ -21,5 +21,6 @@ Genera una tabla con los siguientes insumos: media, grados de libertad,
 tamaño muestral y coeficiente de variación.
 }
 \examples{
-crear_insumos(~gastot_hd, ~zona+sexo, dc)
+dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+crear_insumos(gastot_hd, zona+sexo, dc)
 }

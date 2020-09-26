@@ -38,7 +38,8 @@ cuadratica <- function(p) {
 #' contiene una etiqueta que da cuenta de la calidad: fiable, poco fiable o no fiable.
 #'
 #' @examples
-#' evaluacion_calidad(crear_insumos(~gastot_hd, ~zona+sexo, dc))
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' evaluacion_calidad(crear_insumos(gastot_hd, zona+sexo, dc))
 #' @export
 
 
@@ -74,7 +75,8 @@ evaluacion_calidad <- function(tabulado) {
 #'
 #' @importFrom magrittr `%>%`
 #' @examples
-#' evaluacion_calidad_prop(crear_insumos_prop(~ocupado, ~zona+sexo, dc))
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' evaluacion_calidad_prop(crear_insumos_prop(ocupado, zona+sexo, dc))
 #' @export
 
 

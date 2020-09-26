@@ -141,7 +141,8 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
-#' crear_insumos(~gastot_hd, ~zona+sexo, dc)
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' crear_insumos(gastot_hd, zona+sexo, dc)
 #' @export
 
 crear_insumos <- function(var, dominios, disenio) {
@@ -166,7 +167,7 @@ crear_insumos <- function(var, dominios, disenio) {
 
   #Extraer nombres
   nombres <- names(tabla)
-  agrupacion <-  nombres[c(- (length(nombres) - 1), -length(nombres)) ]
+  agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
 
   #Calcular el tamaño muestral de cada grupo
   n <- calcular_n(disenio$variables, agrupacion)
@@ -180,7 +181,7 @@ crear_insumos <- function(var, dominios, disenio) {
   cv <- cv(tabla, design = disenio) * 100
 
   cv <- tabla %>%
-    dplyr::select_(.dots =  agrupacion) %>%
+    dplyr::select(agrupacion) %>%
     dplyr::bind_cols(coef_var = cv)
 
   #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
@@ -211,7 +212,7 @@ crear_insumos <- function(var, dominios, disenio) {
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' crear_insumos_prop(~ocupado, ~zona+sexo, dc)
+#' crear_insumos_prop(ocupado, zona+sexo, dc)
 #' @export
 
 
@@ -249,9 +250,9 @@ crear_insumos_prop <- function(var, dominios, disenio) {
 
   #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
   final <- tabla %>%
-    dplyr::left_join(gl %>% dplyr::select_(.dots = as.list(c(agrupacion, "gl" ))),
+    dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
               by = agrupacion) %>%
-    dplyr::left_join(n %>% dplyr::select_(.dots = as.list(c(agrupacion, "n" ))),
+    dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
               by = agrupacion)
 
   #Cambiar el nombre de la variable objetivo para que siempre sea igual

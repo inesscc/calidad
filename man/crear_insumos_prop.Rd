@@ -22,5 +22,5 @@ tamaño muestral y error estándar
 }
 \examples{
 dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-crear_insumos_prop(~ocupado, ~zona+sexo, dc)
+crear_insumos_prop(ocupado, zona+sexo, dc)
 }
