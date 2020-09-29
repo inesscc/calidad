@@ -34,6 +34,7 @@ cuadratica <- function(p) {
 #'
 #' @param tabulado \code{dataframe} generado por la función \code{crear_insumos}. Contiene
 #' todos los insumos necesarios para la evaluación.
+#' @param condicion character con la condición de filtro
 #' @return \code{dataframe} con todas las columnas que tiene el input, más una nueva que
 #' contiene una etiqueta que da cuenta de la calidad: fiable, poco fiable o no fiable.
 #'
@@ -43,7 +44,14 @@ cuadratica <- function(p) {
 #' @export
 
 
-evaluacion_calidad <- function(tabulado) {
+evaluacion_calidad <- function(tabulado, condicion = NULL) {
+
+  #Aplicar la condición requerida por el usuario
+  if (!is.null(condicion) ) {
+    tabulado <- tabulado %>%
+      dplyr::filter(!!rlang::parse_expr(condicion))
+  }
+
   evaluacion <- tabulado %>%
     dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
            eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
@@ -70,6 +78,7 @@ evaluacion_calidad <- function(tabulado) {
 #'
 #' @param tabulado \code{dataframe} generado por la función \code{crear_insumos_prop}. Contiene
 #' todos los insumos necesarios para la evaluación.
+#' @param condicion character con la condición de filtro
 #' @return \code{dataframe} con todas las columnas que tiene el input, más una nueva que
 #' contiene una etiqueta que da cuenta de la calidad: fiable, poco fiable o no fiable.
 #'
@@ -80,7 +89,15 @@ evaluacion_calidad <- function(tabulado) {
 #' @export
 
 
-evaluacion_calidad_prop <- function(tabulado) {
+evaluacion_calidad_prop <- function(tabulado, condicion = NULL) {
+
+  #Aplicar la condición requerida por el usuario
+  if (!is.null(condicion) ) {
+    tabulado <- tabulado %>%
+      dplyr::filter(!!rlang::parse_expr(condicion))
+  }
+
+
   evaluacion <- tabulado %>%
     dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
            eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),

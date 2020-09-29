@@ -17,5 +17,5 @@ Contiene el resultado de aplicar el protocolo de calidad.}
 La función recibe como input la evaluación de las estimaciones
 }
 \examples{
-evaluacion_calidad_prop(tabla_html(tabla))
+tabla_html(tabla)
 }

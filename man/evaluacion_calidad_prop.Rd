@@ -4,11 +4,13 @@
 \alias{evaluacion_calidad_prop}
 \title{Evalúa la calidad de las estimaciones de proporción}
 \usage{
-evaluacion_calidad_prop(tabulado)
+evaluacion_calidad_prop(tabulado, condicion = NULL)
 }
 \arguments{
 \item{tabulado}{\code{dataframe} generado por la función \code{crear_insumos_prop}. Contiene
 todos los insumos necesarios para la evaluación.}
+
+\item{condicion}{character con la condición de filtro}
 }
 \value{
 \code{dataframe} con todas las columnas que tiene el input, más una nueva que
@@ -20,5 +22,6 @@ de las estimaciones. Se consideran 3 variables: tamaño muestral, grados de libe
 error estándar.
 }
 \examples{
-evaluacion_calidad_prop(crear_insumos_prop(~ocupado, ~zona+sexo, dc))
+dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+evaluacion_calidad_prop(crear_insumos_prop(ocupado, zona+sexo, dc))
 }
