@@ -7,7 +7,7 @@
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #'
 #' @return \code{dataframe} que contiene variables de agregación, variable objetivo y error estándar
-#'
+#' @import survey
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' calcular_tabla(~gastot_hd, ~zona+sexo, dc)
@@ -34,13 +34,13 @@ calcular_tabla <-  function(var, dominios, disenio) {
 calcular_n <- function(data, dominios, var = NULL) {
   if (is.null(var)) {
     data %>%
-      dplyr::group_by_(.dots = as.list(dominios)  ) %>%
+      dplyr::group_by(.dots = as.list(dominios)  ) %>%
       dplyr::summarise(n = dplyr::n())
   } else {
-    symbol_var <- rlang::sym(var)
+    symbol_var <- rlang::parse_expr(var)
     data %>%
-      dplyr::group_by_(.dots = as.list(dominios)  ) %>%
-      dplyr::summarise(n = sum(!! symbol_var))
+      dplyr::group_by(.dots = as.list(dominios)) %>%
+      dplyr::summarise(n = sum(!!symbol_var))
   }
 }
 
@@ -68,21 +68,21 @@ calcular_upm <- function(data, dominios, var = NULL ) {
     stop("¡La columna que contiene información de las UPMs debe llamarse varunit!")
   }
 
-
+  listado <- c("varunit", as.list(dominios))
   if (is.null(var)) {
     data %>%
-      dplyr::group_by_("varunit", .dots = as.list(dominios)  ) %>%
+      dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = dplyr::n()) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(conteo > 0, 1, 0))  %>%
-      dplyr::group_by_(.dots = as.list(dominios)) %>%
+      dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(upm = sum(tiene_info))
   } else {
-    symbol_var <- rlang::sym(var)
+    symbol_var <- rlang::parse_expr(var)
     data %>%
-      dplyr::group_by_("varunit", .dots = as.list(dominios)  ) %>%
+      dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(conteo > 0, 1, 0))  %>%
-      dplyr::group_by_(.dots = as.list(dominios)) %>%
+      dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(upm = sum(tiene_info))
   }
 }
@@ -109,21 +109,21 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
     stop("¡La columna que contiene información de los estratos debe llamarse varstrat!")
   }
 
-
+  listado <- c("varstrat", as.list(dominios))
   if (is.null(var)) {
     data %>%
-      dplyr::group_by_("varstrat", .dots = as.list(dominios)  ) %>%
+      dplyr::group_by( .dots = listado) %>%
       dplyr::summarise(conteo = dplyr::n()) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(conteo > 0, 1, 0)) %>%
-      dplyr::group_by_(.dots = as.list(dominios)) %>%
+      dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(varstrat = sum(tiene_info))
   } else {
-    symbol_var <- rlang::sym(var)
+    symbol_var <- rlang::parse_expr(var)
     data %>%
-      dplyr::group_by_("varstrat", .dots = as.list(dominios)  ) %>%
+      dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(conteo > 0, 1, 0)) %>%
-      dplyr::group_by_(.dots = as.list(dominios)) %>%
+      dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(varstrat = sum(tiene_info))
   }
 }
@@ -141,16 +141,33 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
-#' crear_insumos(~gastot_hd, ~zona+sexo, dc)
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' crear_insumos(gastot_hd, zona+sexo, dc)
 #' @export
 
 crear_insumos <- function(var, dominios, disenio) {
+
+  #Chequear que la variable sea de continua Si no lo es, aparece un warning
+  enquo_var <-  rlang::enquo(var)
+  es_prop <- disenio$variables %>%
+    dplyr::mutate(es_prop = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
+
+  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("¡Parece que tu variable es de proporción!")
+
+
+  #COnvertir los inputs en fórmulas para adecuarlos a survey
+  var <- paste0("~", rlang::enexpr(var)) %>%
+    as.formula()
+
+  dominios <- paste0("~", rlang::enexprs(dominios)) %>%
+    as.formula()
+
   #Generar la tabla con los cálculos
   tabla <- calcular_tabla(var, dominios, disenio)
 
   #Extraer nombres
   nombres <- names(tabla)
-  agrupacion <-  nombres[c(- (length(nombres) - 1), -length(nombres)) ]
+  agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
 
   #Calcular el tamaño muestral de cada grupo
   n <- calcular_n(disenio$variables, agrupacion)
@@ -164,16 +181,16 @@ crear_insumos <- function(var, dominios, disenio) {
   cv <- cv(tabla, design = disenio) * 100
 
   cv <- tabla %>%
-    dplyr::select_(.dots =  agrupacion) %>%
+    dplyr::select(agrupacion) %>%
     dplyr::bind_cols(coef_var = cv)
 
   #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
   final <- tabla %>%
-    dplyr::left_join(gl %>% dplyr::select_(.dots = as.list(c(agrupacion, "gl" ))),
+    dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
               by = agrupacion) %>%
-    dplyr::left_join(n %>% dplyr::select_(.dots = as.list(c(agrupacion, "n" ))),
+    dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
               by = agrupacion) %>%
-    dplyr::left_join(cv %>% dplyr::select_(.dots = as.list(c(agrupacion, "coef_var" ))),
+    dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
               by = agrupacion)
 
   return(final)
@@ -195,11 +212,26 @@ crear_insumos <- function(var, dominios, disenio) {
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' crear_insumos_prop(~ocupado, ~zona+sexo, dc)
+#' crear_insumos_prop(ocupado, zona+sexo, dc)
 #' @export
 
 
 crear_insumos_prop <- function(var, dominios, disenio) {
+
+  #Chequear que la variable sea de proporción. Si no lo es, se interrumpe la ejecución
+  enquo_var <-  rlang::enquo(var)
+  es_prop <- disenio$variables %>%
+    dplyr::mutate(es_prop = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
+
+  if (sum(es_prop$es_prop) != nrow(disenio$variables)) stop("¡La variable no es de proporción!")
+
+  #COnvertir los inputs en fórmulas para adecuarlos a survey
+  var <- paste0("~", rlang::enexpr(var)) %>%
+    as.formula()
+
+  dominios <- paste0("~", rlang::enexprs(dominios)) %>%
+    as.formula()
+
   #Generar la tabla con los cálculos
   tabla <- calcular_tabla(var, dominios, disenio)
 
@@ -218,9 +250,9 @@ crear_insumos_prop <- function(var, dominios, disenio) {
 
   #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
   final <- tabla %>%
-    dplyr::left_join(gl %>% dplyr::select_(.dots = as.list(c(agrupacion, "gl" ))),
+    dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
               by = agrupacion) %>%
-    dplyr::left_join(n %>% dplyr::select_(.dots = as.list(c(agrupacion, "n" ))),
+    dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
               by = agrupacion)
 
   #Cambiar el nombre de la variable objetivo para que siempre sea igual

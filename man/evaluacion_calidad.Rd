@@ -4,11 +4,13 @@
 \alias{evaluacion_calidad}
 \title{Evalúa la calidad de las estimaciones de media}
 \usage{
-evaluacion_calidad(tabulado)
+evaluacion_calidad(tabulado, condicion = NULL)
 }
 \arguments{
 \item{tabulado}{\code{dataframe} generado por la función \code{crear_insumos}. Contiene
 todos los insumos necesarios para la evaluación.}
+
+\item{condicion}{character con la condición de filtro}
 }
 \value{
 \code{dataframe} con todas las columnas que tiene el input, más una nueva que
@@ -20,5 +22,6 @@ de las estimaciones. Se consideran 3 variables: tamaño muestral, grados de libe
 coeficiente de variación.
 }
 \examples{
-evaluacion_calidad(crear_insumos(~gastot_hd, ~zona+sexo, dc))
+dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+evaluacion_calidad(crear_insumos(gastot_hd, zona+sexo, dc))
 }
