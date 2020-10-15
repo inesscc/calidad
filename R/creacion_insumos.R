@@ -10,8 +10,7 @@
 #' @import survey
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' calcular_tabla(~gastot_hd, ~zona+sexo, dc)
-#' @export
+#' calcular_tabla(gastot_hd, zona+sexo, dc)
 calcular_tabla <-  function(var, dominios, disenio) {
   estimacion <- survey::svyby(var , design = disenio, by = dominios , FUN = svymean)
   return(estimacion)
@@ -149,6 +148,7 @@ crear_insumos <- function(var, dominios, disenio) {
 
   #Chequear que la variable sea de continua Si no lo es, aparece un warning
   enquo_var <-  rlang::enquo(var)
+
   es_prop <- disenio$variables %>%
     dplyr::mutate(es_prop = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
 
@@ -261,4 +261,10 @@ crear_insumos_prop <- function(var, dominios, disenio) {
   return(final)
 
 }
+
+
+
+
+
+
 
