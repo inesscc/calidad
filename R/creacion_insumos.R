@@ -101,6 +101,7 @@ calcular_upm <- function(data, dominios, var = NULL ) {
     stop("¡La columna que contiene información de las UPMs debe llamarse varunit!")
   }
 
+
   listado <- c("varunit", as.list(dominios))
   if (is.null(var)) {
     data %>%
@@ -111,7 +112,7 @@ calcular_upm <- function(data, dominios, var = NULL ) {
       dplyr::summarise(upm = sum(tiene_info))
   } else {
     symbol_var <- rlang::parse_expr(var)
-    data %>%
+     data %>%
       dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>%
       dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
@@ -153,7 +154,7 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
       dplyr::summarise(varstrat = sum(tiene_info))
   } else {
     symbol_var <- rlang::parse_expr(var)
-    data %>%
+     data %>%
       dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>%
       dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
@@ -313,16 +314,19 @@ crear_insumos <- function(var, dominios = NULL, disenio) {
 #' crear_insumos_tot(ocupado, zona+sexo, dc)
 #' @export
 
-
-
 crear_insumos_tot <- function(var, dominios = NULL, disenio) {
-
-  # Generar un string con el nombre de la variable
-  var_string <-  rlang::expr_name(rlang::enexpr(var))
-
 
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
   if (!is.null(rlang::enexprs(dominios)[[1]])) {
+
+      # Se agrega un trozo de código para converir a string las variables de proporción,
+    # ya que de ese modo aparecen ambas categorías: 0 y 1
+    disenio <- svydesign(ids = ~varunit, strata = ~varstrat,
+                         data = disenio$variables %>% mutate(!!enquo(var) := as.character(!!enquo(var))),
+                         weights = ~fe)
+
+    # Generar un string con el nombre de la variable
+    var_string <-  rlang::expr_name(rlang::enexpr(var))
 
     #Identificar las variables ingresadas para la desagregación
     agrupacion <- rlang::expr_name(rlang::enexprs(dominios)[[1]]) %>%
@@ -340,33 +344,38 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
     # Generar la tabla de estimaciones
     tabla1 <- survey::svyby(formula = var_formula, by = dominios_form, design = disenio, FUN = survey::svytotal)
 
+
     # Llevar tabla a formato tidy.
     parte1 <- tabla1 %>%
       dplyr::select(-dplyr::starts_with("se."))  %>%
       tidyr::pivot_longer(cols = -agrupacion, names_to = var_string, values_to = "total" )  %>%
-      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|\\.", replacement = "", x = !!enquo(var)))
+      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|[[:punct:]]", replacement = "", x = !!enquo(var)))
 
 
     parte2 <- tabla1 %>%
       dplyr::select(c(agrupacion, dplyr::starts_with("se."))) %>%
       tidyr::pivot_longer(cols = -agrupacion, names_to = var_string, values_to = "se" ) %>%
-      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|\\.", replacement = "", x = !!rlang::enquo(var)) )
+      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|[[:punct:]]", replacement = "", x = !!rlang::enquo(var)) )
+
 
     totales <- parte1 %>%
       dplyr::left_join(parte2, by = agrup1)
+
 
     # Calcular los insumos para hacer la evauación: cv, tamaño muestral y gl
     cv <- cv(tabla1, design = dc) %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "variable") %>%
       tidyr::pivot_longer(cols = dplyr::starts_with("se."), names_to = var_string, values_to = "coef_var" ) %>%
-      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|\\.", replacement = "", x = !!rlang::enquo(var))) %>%
+      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|[[:punct:]]", replacement = "", x = !!rlang::enquo(var))) %>%
       tidyr::separate(variable, agrupacion)
 
-    n <- calcular_n(dc$variables, dominios = agrup1)
+    n <- calcular_n(disenio$variables, dominios = agrup1)
+
     gl <- calcular_upm(disenio$variables, agrup1) %>%
       dplyr::left_join(calcular_estrato(disenio$variables, agrup1), by = agrup1) %>%
       dplyr::mutate(gl = upm - varstrat)
+
 
     # Unir todo y generar la tabla final
     final <- totales %>%
@@ -384,6 +393,12 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
     agrupacion <- rlang::expr_name(rlang::enexprs(var)[[1]]) %>%
       stringr::str_split(pattern = "\\+")
     agrup1 <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
+
+
+    # Convertir variables a string para homologar criterios
+    disenio <- svydesign(ids = ~varunit, strata = ~varstrat,
+                         data = disenio$variables %>% mutate_at(.vars = vars(agrup1), list(as.character)),
+                         weights = ~fe)
 
     # Acomodar a formato de survey
     var_formula <- paste0("~", rlang::enexprs(var)) %>%
@@ -416,9 +431,8 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
       dplyr::left_join(cv, by = "variable")
 
   }
-
+  names(final) <- tolower(names(final))
   return(final)
-
 
 }
 
@@ -466,10 +480,8 @@ crear_insumos_prop <- function(var, dominios = NULL, disenio) {
 
   #Extraer nombres
   nombres <- names(tabla)
-  agrupacion <-  nombres[c(-(length(nombres) - 3), -(length(nombres) - 2), -(length(nombres) - 1), -length(nombres)) ]
-  agrupacion <- str_remove(string =  agrupacion, pattern = "[[:digit:]]")
-  var_prop <- nombres[length(nombres) - 2]
-  var_prop <- str_remove(string =  var_prop, pattern = "[[:digit:]]")
+  agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
+  var_prop <- nombres[length(nombres) - 1]
 
   #Calcular el tamaño muestral de cada grupo
   n <- calcular_n(disenio$variables, agrupacion, var_prop )
@@ -486,19 +498,13 @@ crear_insumos_prop <- function(var, dominios = NULL, disenio) {
     dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
               by = agrupacion)
 
-  #Cambiar el nombre de la variable objetivo para que siempre sea igual. Hay un agregado temporal
-  # para arreglar el nombre las variables. Esto cambiará cuando logre cambiar a characetr el input de la variable en la función
-  # crear_insumos_total
-  final <- final %>%
-    select(-ends_with("0"))
-  names(final) <- dplyr::if_else(stringr::str_detect(string = names(final), pattern = paste0("se.", var_prop, "[[:digit:]]" )),
-          "se", names(final))
-  names(final) <- stringr::str_remove(string = names(final), pattern = "[[:digit:]]")
-  final <- final %>%
+  #Cambiar el nombre de la variable objetivo para que siempre sea igual.
+  final <- final  %>%
     dplyr::rename(objetivo = var_prop)
 
   # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
   } else {
+
   #Generar la tabla con los cálculos
   tabla <- calcular_tabla(var, dominios, disenio)
 
@@ -517,7 +523,7 @@ crear_insumos_prop <- function(var, dominios = NULL, disenio) {
   final <- data.frame(tabla )
 
   # Armar tabla completa con todos los insumos
-  final <- dplyr::bind_cols(final, "gl" = gl, "n" = n, "coef_var" = cv[1])
+  final <- dplyr::bind_cols(final, "gl" = gl, "n" = n)
   names(final)[2] <- "se"
 
   #Cambiar el nombre de la variable objetivo para que siempre sea igual
