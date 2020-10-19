@@ -17,5 +17,6 @@ Contiene el resultado de aplicar el protocolo de calidad.}
 La función recibe como input la evaluación de las estimaciones
 }
 \examples{
+tabla <- evaluacion_calidad_prop(crear_insumos_prop(ocupado, zona+sexo, dc))
 tabla_html(tabla)
 }

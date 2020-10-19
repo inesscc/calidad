@@ -12,9 +12,19 @@
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' calcular_tabla(gastot_hd, zona+sexo, dc)
 calcular_tabla <-  function(var, dominios, disenio) {
-  estimacion <- survey::svyby(var , design = disenio, by = dominios , FUN = svymean)
+
+  if (!is.null(dominios)) {
+    estimacion <- survey::svyby(var , design = disenio, by = dominios , FUN = svymean)
+  } else {
+    estimacion <- survey::svymean(var, disenio)
+  }
+
   return(estimacion)
 }
+
+
+
+
 
 #-----------------------------------------------------------------------
 
@@ -31,16 +41,40 @@ calcular_tabla <-  function(var, dominios, disenio) {
 #' @examples
 #' calcular_n(epf_personas, c("zona", "sexo"), var = NULL)
 calcular_n <- function(data, dominios, var = NULL) {
+
+  # Esto es para el caso de proporción
   if (is.null(var)) {
     data %>%
       dplyr::group_by(.dots = as.list(dominios)  ) %>%
       dplyr::summarise(n = dplyr::n())
+  # Este es el caso de nivel
   } else {
     symbol_var <- rlang::parse_expr(var)
     data %>%
+      dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
       dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(n = sum(!!symbol_var))
   }
+}
+
+#-----------------------------------------------------------------------
+#' Calcula tamaño muestral para la función de totales poblacionales
+#'
+#' Genera una tabla con el conteo de cada cada una de los dominios de las categorías ingresadas.
+#'
+#' @param x  vector de strings que contiene las variables para las cuales se calcula el tamaño muestra
+#' @param datos \code{dataframe} que se está utilizando. Se extrae del disenio muestral
+#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#'
+#' @examples
+#' calcular_n_total(c("zona", "sexo"), var = dc$variables)
+
+calcular_n_total <- function(x, datos) {
+  datos %>%
+    group_by(.dots = as.list(x)) %>%
+    count() %>%
+    rename(variable := x) %>%
+    mutate(variable = paste0(x, variable))
 }
 
 
@@ -78,6 +112,7 @@ calcular_upm <- function(data, dominios, var = NULL ) {
   } else {
     symbol_var <- rlang::parse_expr(var)
     data %>%
+      dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>%
       dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(conteo > 0, 1, 0))  %>%
@@ -119,6 +154,7 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
   } else {
     symbol_var <- rlang::parse_expr(var)
     data %>%
+      dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>%
       dplyr::group_by(.dots = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(conteo > 0, 1, 0)) %>%
@@ -127,15 +163,48 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
   }
 }
 
+#----------------------------------------------------------------------------
+
+#' Calcula los grados de libertad para un estimaciones de total
+#'
+#' Genera una tabla con el conteo de grados de libertad para cada uno de los dominios del tabulado. Es un wrapper que reune a las funciones calcular_upm y calcular_estrato
+#'
+#' @param datos \code{dataframe} que contiene los datos que se están evaluando. Se obtiene a partir del diseño muestral
+#' @param variables variables objetivo. vector de strings que contiene los nombres de las variables
+#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#'
+#' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' calcular_gl_total(c("zona", "sexo"), dc$variables)
+
+calcular_gl_total <- function(variables, datos) {
+  upm <- map(variables, ~calcular_upm(datos, .x) %>%
+               rename(variable := all_of(.x) ) %>%
+               mutate(variable = paste0(.x, variable))) %>%
+    reduce(bind_rows)
+
+  estratos <- map(variables, ~calcular_estrato(datos, .x) %>%
+                    rename(variable := all_of(.x) ) %>%
+                    mutate(variable = paste0(.x, variable))) %>%
+    reduce(bind_rows)
+
+  gl <- upm %>%
+    left_join(estratos, by = "variable") %>%
+    dplyr::mutate(gl = upm - varstrat)
+  return(gl)
+
+}
+
+
 
 #--------------------------------------------------------------------
 #' Crea los insumos necesarios para hacer la evaluación de estimadores de la media
 #'
 #' Genera una tabla con los siguientes insumos: media, grados de libertad,
-#' tamaño muestral y coeficiente de variación.
+#' tamaño muestral y coeficiente de variación. La función contempla la posibilidad de desagregar la estimación en uno o más dominios.
 #'
-#' @param var variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~
-#' @param dominios dominios de estimación separados por signo +. Debe anteponerse ~
+#' @param var variable objetivo dentro de un \code{dataframe}.
+#' @param dominios dominios de estimación separados por signo +.
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
@@ -144,9 +213,9 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #' crear_insumos(gastot_hd, zona+sexo, dc)
 #' @export
 
-crear_insumos <- function(var, dominios, disenio) {
+crear_insumos <- function(var, dominios = NULL, disenio) {
 
-  #Chequear que la variable sea de continua Si no lo es, aparece un warning
+  #Chequear que la variable sea de continua. Si no lo es, aparece un warning
   enquo_var <-  rlang::enquo(var)
 
   es_prop <- disenio$variables %>%
@@ -155,19 +224,23 @@ crear_insumos <- function(var, dominios, disenio) {
   if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("¡Parece que tu variable es de proporción!")
 
 
-  #COnvertir los inputs en fórmulas para adecuarlos a survey
+  #Convertir los inputs en fórmulas para adecuarlos a survey
   var <- paste0("~", rlang::enexpr(var)) %>%
     as.formula()
 
-  dominios <- paste0("~", rlang::enexprs(dominios)) %>%
-    as.formula()
+  # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
+  if (!is.null(rlang::enexprs(dominios)[[1]])) {
 
-  #Generar la tabla con los cálculos
-  tabla <- calcular_tabla(var, dominios, disenio)
+    dominios <- paste0("~", rlang::enexprs(dominios)) %>%
+      as.formula()
+
+    #Generar la tabla con los cálculos
+    tabla <- calcular_tabla(var, dominios, disenio)
 
   #Extraer nombres
   nombres <- names(tabla)
   agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
+
 
   #Calcular el tamaño muestral de cada grupo
   n <- calcular_n(disenio$variables, agrupacion)
@@ -193,7 +266,159 @@ crear_insumos <- function(var, dominios, disenio) {
     dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
               by = agrupacion)
 
+  # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
+  } else {
+    #Generar la tabla con los cálculos
+    tabla <- calcular_tabla(var, dominios, disenio)
+
+    # Tamaño muestral
+    n <- nrow(disenio$variables)
+
+    # Calcular grados de libertad
+    varstrat <- length(unique(disenio$variables$varstrat))
+    varunit <- length(unique(disenio$variables$varunit))
+    gl <- varunit - varstrat
+
+    # Calcular coeficiente de variación
+    cv <- cv(tabla, design = disenio) * 100
+
+    # Armar tabla final
+    final <- data.frame(tabla )
+
+    # Armar tabla completa con todos los insumos
+    final <- bind_cols(final, "gl" = gl , "n" = n, "coef_var" = cv[1])
+    names(final)[2] <- "se"
+
+  }
+
+
   return(final)
+
+}
+
+#--------------------------------------------------------------------
+
+#' Crea los insumos necesarios para hacer la evaluación de estimadores de totales
+#'
+#' Genera una tabla con los siguientes insumos: total expandido, grados de libertad,
+#' tamaño muestral y coeficiente de variación. La función contempla la posibilidad de desagregar la estimación en uno o más dominios.
+#'
+#' @param var string. Variable para la cual se quiere calcular un total. Pueden introducirse varias variables separadas por un +, para obtener más totales en la tabla
+#' @param dominios string. Dominios de estimación separados por signo +.
+#' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#'
+#' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' crear_insumos_tot(ocupado, zona+sexo, dc)
+#' @export
+
+
+
+crear_insumos_tot <- function(var, dominios = NULL, disenio) {
+
+  # Generar un string con el nombre de la variable
+  var_string <-  rlang::expr_name(rlang::enexpr(var))
+
+
+  # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
+  if (!is.null(rlang::enexprs(dominios)[[1]])) {
+
+    #Identificar las variables ingresadas para la desagregación
+    agrupacion <- rlang::expr_name(rlang::enexprs(dominios)[[1]]) %>%
+      stringr::str_split(pattern = "\\+")
+    agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
+    agrup1 <- c(agrupacion, var_string)
+
+    # Agregar ~ para adecuar a formato de survey
+    dominios_form <- paste0("~", rlang::enexprs(dominios)) %>%
+      as.formula()
+
+    var_formula <- paste0("~", rlang::enexpr(var)) %>%
+      as.formula()
+
+    # Generar la tabla de estimaciones
+    tabla1 <- survey::svyby(formula = var_formula, by = dominios_form, design = disenio, FUN = survey::svytotal)
+
+    # Llevar tabla a formato tidy.
+    parte1 <- tabla1 %>%
+      dplyr::select(-dplyr::starts_with("se."))  %>%
+      tidyr::pivot_longer(cols = -agrupacion, names_to = var_string, values_to = "total" )  %>%
+      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|\\.", replacement = "", x = !!enquo(var)))
+
+
+    parte2 <- tabla1 %>%
+      dplyr::select(c(agrupacion, dplyr::starts_with("se."))) %>%
+      tidyr::pivot_longer(cols = -agrupacion, names_to = var_string, values_to = "se" ) %>%
+      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|\\.", replacement = "", x = !!rlang::enquo(var)) )
+
+    totales <- parte1 %>%
+      dplyr::left_join(parte2, by = agrup1)
+
+    # Calcular los insumos para hacer la evauación: cv, tamaño muestral y gl
+    cv <- cv(tabla1, design = dc) %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column(var = "variable") %>%
+      tidyr::pivot_longer(cols = dplyr::starts_with("se."), names_to = var_string, values_to = "coef_var" ) %>%
+      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|\\.", replacement = "", x = !!rlang::enquo(var))) %>%
+      tidyr::separate(variable, agrupacion)
+
+    n <- calcular_n(dc$variables, dominios = agrup1)
+    gl <- calcular_upm(disenio$variables, agrup1) %>%
+      dplyr::left_join(calcular_estrato(disenio$variables, agrup1), by = agrup1) %>%
+      dplyr::mutate(gl = upm - varstrat)
+
+    # Unir todo y generar la tabla final
+    final <- totales %>%
+      dplyr::left_join(gl %>% dplyr::select(c(agrup1, "gl")),
+                       by = agrup1) %>%
+      dplyr::left_join(n %>% dplyr::select(c(agrup1, "n")),
+                       by = agrup1)  %>%
+      dplyr::left_join(cv %>% dplyr::select(c(agrup1, "coef_var")),
+                       by = agrup1)
+
+  # ESTO CORRESPONDE AL CASO SIN DESAGRAGACIÓN
+  } else {
+
+    # Identificar las variables ingresadas por el usuario
+    agrupacion <- rlang::expr_name(rlang::enexprs(var)[[1]]) %>%
+      stringr::str_split(pattern = "\\+")
+    agrup1 <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
+
+    # Acomodar a formato de survey
+    var_formula <- paste0("~", rlang::enexprs(var)) %>%
+      as.formula()
+
+    # Tabla que se usa luego para calcular cv
+    tabla1 <- survey::svytotal(x = var_formula, design = disenio )
+
+    # Tabla con los totales
+    totales <- as.data.frame(tabla1) %>%
+      tibble::rownames_to_column(var = "variable")
+
+    # Tamaño muestral
+    n <- purrr::map(agrup1, calcular_n_total, datos = disenio$variables) %>%
+      purrr::reduce(bind_rows)
+
+    # Grados de libertad
+    gl <- calcular_gl_total(agrup1, disenio$variables)
+
+    #Extrear el coeficiente de variación
+    cv <- cv(tabla1, design = disenio) * 100
+    cv <- as.data.frame(cv) %>%
+      tibble::rownames_to_column(var = "variable") %>%
+      dplyr::rename(coef_var = cv)
+
+    # COnstruir tabla final
+    final <- totales %>%
+      dplyr::left_join(n, by = "variable") %>%
+      dplyr::left_join(gl %>% dplyr::select(-upm, -varstrat), by = "variable") %>%
+      dplyr::left_join(cv, by = "variable")
+
+  }
+
+  return(final)
+
 
 }
 
@@ -203,10 +428,10 @@ crear_insumos <- function(var, dominios, disenio) {
 #' Crea los insumos necesarios para hacer la evaluación de estimadores de proporción
 #'
 #' Genera una tabla con los siguientes insumos: media, grados de libertad,
-#' tamaño muestral y error estándar
+#' tamaño muestral y error estándar. La función contempla la posibilidad de desagregar la estimación en uno o más dominios.
 #'
-#' @param var variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~
-#' @param dominios dominios de estimación separados por signo +. Debe anteponerse ~
+#' @param var variable objetivo dentro de un \code{dataframe}.
+#' @param dominios dominios de estimación separados por signo +.
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
@@ -216,7 +441,7 @@ crear_insumos <- function(var, dominios, disenio) {
 #' @export
 
 
-crear_insumos_prop <- function(var, dominios, disenio) {
+crear_insumos_prop <- function(var, dominios = NULL, disenio) {
 
   #Chequear que la variable sea de proporción. Si no lo es, se interrumpe la ejecución
   enquo_var <-  rlang::enquo(var)
@@ -225,9 +450,13 @@ crear_insumos_prop <- function(var, dominios, disenio) {
 
   if (sum(es_prop$es_prop) != nrow(disenio$variables)) stop("¡La variable no es de proporción!")
 
+
   #COnvertir los inputs en fórmulas para adecuarlos a survey
   var <- paste0("~", rlang::enexpr(var)) %>%
     as.formula()
+
+  # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
+  if (!is.null(rlang::enexprs(dominios)[[1]])) {
 
   dominios <- paste0("~", rlang::enexprs(dominios)) %>%
     as.formula()
@@ -237,8 +466,10 @@ crear_insumos_prop <- function(var, dominios, disenio) {
 
   #Extraer nombres
   nombres <- names(tabla)
-  agrupacion <-  nombres[c(- (length(nombres) - 1), -length(nombres)) ]
-  var_prop <- nombres[length(nombres) - 1]
+  agrupacion <-  nombres[c(-(length(nombres) - 3), -(length(nombres) - 2), -(length(nombres) - 1), -length(nombres)) ]
+  agrupacion <- str_remove(string =  agrupacion, pattern = "[[:digit:]]")
+  var_prop <- nombres[length(nombres) - 2]
+  var_prop <- str_remove(string =  var_prop, pattern = "[[:digit:]]")
 
   #Calcular el tamaño muestral de cada grupo
   n <- calcular_n(disenio$variables, agrupacion, var_prop )
@@ -255,9 +486,46 @@ crear_insumos_prop <- function(var, dominios, disenio) {
     dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
               by = agrupacion)
 
-  #Cambiar el nombre de la variable objetivo para que siempre sea igual
+  #Cambiar el nombre de la variable objetivo para que siempre sea igual. Hay un agregado temporal
+  # para arreglar el nombre las variables. Esto cambiará cuando logre cambiar a characetr el input de la variable en la función
+  # crear_insumos_total
+  final <- final %>%
+    select(-ends_with("0"))
+  names(final) <- dplyr::if_else(stringr::str_detect(string = names(final), pattern = paste0("se.", var_prop, "[[:digit:]]" )),
+          "se", names(final))
+  names(final) <- stringr::str_remove(string = names(final), pattern = "[[:digit:]]")
   final <- final %>%
     dplyr::rename(objetivo = var_prop)
+
+  # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
+  } else {
+  #Generar la tabla con los cálculos
+  tabla <- calcular_tabla(var, dominios, disenio)
+
+  # Tamaño muestral
+  n <- nrow(disenio$variables)
+
+  # Calcular grados de libertad
+  varstrat <- length(unique(disenio$variables$varstrat))
+  varunit <- length(unique(disenio$variables$varunit))
+  gl <- varunit - varstrat
+
+  # Calcular coeficiente de variación
+  cv <- cv(tabla, design = disenio) * 100
+
+  # Armar tabla final
+  final <- data.frame(tabla )
+
+  # Armar tabla completa con todos los insumos
+  final <- dplyr::bind_cols(final, "gl" = gl, "n" = n, "coef_var" = cv[1])
+  names(final)[2] <- "se"
+
+  #Cambiar el nombre de la variable objetivo para que siempre sea igual
+  final <- final %>%
+    dplyr::rename(objetivo = mean)
+
+  }
+
   return(final)
 
 }

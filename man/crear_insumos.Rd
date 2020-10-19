@@ -4,12 +4,12 @@
 \alias{crear_insumos}
 \title{Crea los insumos necesarios para hacer la evaluación de estimadores de la media}
 \usage{
-crear_insumos(var, dominios, disenio)
+crear_insumos(var, dominios = NULL, disenio)
 }
 \arguments{
-\item{var}{variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~}
+\item{var}{variable objetivo dentro de un \code{dataframe}.}
 
-\item{dominios}{dominios de estimación separados por signo +. Debe anteponerse ~}
+\item{dominios}{dominios de estimación separados por signo +.}
 
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 }
@@ -18,7 +18,7 @@ crear_insumos(var, dominios, disenio)
 }
 \description{
 Genera una tabla con los siguientes insumos: media, grados de libertad,
-tamaño muestral y coeficiente de variación.
+tamaño muestral y coeficiente de variación. La función contempla la posibilidad de desagregar la estimación en uno o más dominios.
 }
 \examples{
 dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
