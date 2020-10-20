@@ -316,17 +316,24 @@ crear_insumos <- function(var, dominios = NULL, disenio) {
 
 crear_insumos_tot <- function(var, dominios = NULL, disenio) {
 
+
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
   if (!is.null(rlang::enexprs(dominios)[[1]])) {
 
-    # Se agrega un trozo de código para converir a string las variables de proporción,
-    # ya que de ese modo aparecen ambas categorías: 0 y 1
-    disenio <- survey::svydesign(ids = ~varunit, strata = ~varstrat,
-                         data = disenio$variables %>% dplyr::mutate(!!rlang::enquo(var) := as.character(!!rlang::enquo(var))),
-                         weights = ~fe)
-
     # Generar un string con el nombre de la variable
     var_string <-  rlang::expr_name(rlang::enexpr(var))
+
+    # Verificar que la variabe de entrada es correcta
+    if (!is.numeric(disenio$variables[[var_string]])) stop("¡La variable debe ser numérica!")
+
+    # Verificar que la variable es dummy
+    test <- disenio$variable %>%
+      dplyr::mutate(test = dplyr::if_else(!!rlang::enquo(var) == 1 | !!rlang::enquo(var) == 0, 1, 0)) %>%
+      dplyr::summarise(pasa = sum(test))
+
+    n_filas <- nrow(disenio$variable)
+    if (n_filas != test$pasa) stop("¡Debes usar una variable dummy cuando desagregas!")
+
 
     #Identificar las variables ingresadas para la desagregación
     agrupacion <- rlang::expr_name(rlang::enexprs(dominios)[[1]]) %>%
@@ -344,66 +351,31 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
     # Generar la tabla de estimaciones
     tabla1 <- survey::svyby(formula = var_formula, by = dominios_form, design = disenio, FUN = survey::svytotal)
 
-    #gl <- calcular_upm(disenio$variables, agrup1) %>%
-     # dplyr::left_join(calcular_estrato(disenio$variables, agrup1), by = agrup1) %>%
-      #dplyr::mutate(gl = upm - varstrat) %>%
-      #dplyr::filter(!!enquo(var) == 1)
-
-    #cv <- survey::cv(tabla1, design = disenio) %>%
-     # as.data.frame() %>%
-    #  tibble::rownames_to_column(var = "variable") %>%
-     # tidyr::separate(variable, agrupacion) %>%
-    #  dplyr::rename(coef_var = ".")
-
-    #n <- calcular_n(disenio$variables, dominios = agrup1) %>%
-     # dplyr::filter(!!enquo(var) == 1)
-
-    # Unir todo y generar la tabla final
-    #final <- tabla1 %>%
-     # dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
-      #                 by = agrupacion) %>%
-      #dplyr::left_join(cv, by = agrupacion)
-
-    #return(list(tabla1, agrupacion, cv, calcular_n(disenio$variables, dominios = agrup1), gl, final, agrup1))
-    # Llevar tabla a formato tidy.
-    parte1 <- tabla1 %>%
-      dplyr::select(-dplyr::starts_with("se."))  %>%
-      tidyr::pivot_longer(cols = -agrupacion, names_to = var_string, values_to = "total" )
-      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|[[:punct:]]", replacement = "", x = !!rlang::enquo(var)))
-
-    parte2 <- tabla1 %>%
-      dplyr::select(c(agrupacion, dplyr::starts_with("se."))) %>%
-      tidyr::pivot_longer(cols = -agrupacion, names_to = var_string, values_to = "se" ) %>%
-      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|[[:punct:]]", replacement = "", x = !!rlang::enquo(var)) )
-
-
-    totales <- parte1 %>%
-      dplyr::left_join(parte2, by = agrup1)
-
-    # Calcular los insumos para hacer la evauación: cv, tamaño muestral y gl
-    cv <- cv(tabla1, design = disenio) %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "variable") %>%
-      tidyr::pivot_longer(cols = dplyr::starts_with("se."), names_to = var_string, values_to = "coef_var" ) %>%
-      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|[[:punct:]]", replacement = "", x = !!rlang::enquo(var)),
-                    coef_var = coef_var * 100) %>%
-      tidyr::separate(variable, agrupacion)
-
-    n <- calcular_n(disenio$variables, dominios = agrup1)
-
     gl <- calcular_upm(disenio$variables, agrup1) %>%
       dplyr::left_join(calcular_estrato(disenio$variables, agrup1), by = agrup1) %>%
-      dplyr::mutate(gl = upm - varstrat)
+      dplyr::mutate(gl = upm - varstrat)  %>%
+      dplyr::filter(!!rlang::enquo(var) == 1)  %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
+    cv <- survey::cv(tabla1, design = disenio) %>%
+      as.data.frame() %>%
+      tibble::rownames_to_column(var = "variable") %>%
+      tidyr::separate(variable, agrupacion) %>%
+      dplyr::rename(coef_var = ".") %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
+
+    n <- calcular_n(disenio$variables, dominios = agrup1) %>%
+      dplyr::filter(!!rlang::enquo(var) == 1) %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
     # Unir todo y generar la tabla final
-    final <- totales %>%
-      dplyr::left_join(gl %>% dplyr::select(c(agrup1, "gl")),
-                       by = agrup1) %>%
-      dplyr::left_join(n %>% dplyr::select(c(agrup1, "n")),
-                       by = agrup1)  %>%
-      dplyr::left_join(cv %>% dplyr::select(c(agrup1, "coef_var")),
-                       by = agrup1)
+    final <- tabla1 %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
+      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
+                       by = agrupacion) %>%
+      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
+                       by = agrupacion) %>%
+      dplyr::left_join(cv, by = agrupacion)
 
   # ESTO CORRESPONDE AL CASO SIN DESAGRAGACIÓN
   } else {

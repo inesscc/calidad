@@ -1,8 +1,11 @@
 
 context("test-creacion_insumos_prop")
 
+options(survey.lonely.psu = "certainty")
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 
+dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene,
+                            weights = ~fe)
 ##############################
 # PROPORCIÓN SIN DESAGREGACIÓN
 ##############################
@@ -14,9 +17,20 @@ test_that("Insumo proporción", {
 })
 
 
+
 ##############################
 # PROPORCIÓN CON DESAGREGACIÓN
 ##############################
+
+# Testear la proporción con desagregación con datos de la ENE
+test <-  crear_insumos_prop(desocupado, fdt+sexo, disenio = dc_ene) %>%
+  dplyr::filter(fdt == 1 & sexo == 1) %>%
+  dplyr::pull(objetivo) * 100
+
+test_that("Proporción desagregada", {
+  expect_equal(round(test, 1), 7.1)
+})
+
 
 # Testear grados de libertad con desagregación
 test2 <-  crear_insumos_prop(ocupado_int, sexo+zona, disenio = dc) %>%
