@@ -116,3 +116,46 @@ evaluacion_calidad_prop <- function(tabulado, condicion = NULL) {
 
 }
 
+#---------------------------------------------------------------------
+#' Evalúa la calidad de las estimaciones de totales
+#'
+#' Se utiliza la metodología publicada por el INE para la evaluación de la calidad
+#' de las estimaciones. Se consideran 3 variables: tamaño muestral, grados de libertad y
+#' coeficiente de variación.
+#'
+#' @param tabulado \code{dataframe} generado por la función \code{crear_insumos}. Contiene
+#' todos los insumos necesarios para la evaluación.
+#' @param condicion character con la condición de filtro
+#' @return \code{dataframe} con todas las columnas que tiene el input, más una nueva que
+#' contiene una etiqueta que da cuenta de la calidad: fiable, poco fiable o no fiable.
+#'
+#' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' evaluacion_calidad_tot(crear_insumos_tot(ocupado_int, zona+sexo, dc))
+#' @export
+
+
+evaluacion_calidad_tot <- function(tabulado, condicion = NULL) {
+
+  #Aplicar la condición requerida por el usuario
+  if (!is.null(condicion) ) {
+    tabulado <- tabulado %>%
+      dplyr::filter(!!rlang::parse_expr(condicion))
+  }
+
+  evaluacion <- tabulado %>%
+    dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
+                  eval_cv = dplyr::case_when(
+                    coef_var <= 15                  ~ "cv <= 15",
+                    coef_var > 15 & coef_var <= 30  ~ "cv entre 15 y 30",
+                    coef_var > 30                   ~ "cv > 30"
+                  ),
+                  calidad = dplyr::case_when(
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv <= 15"         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"
+                  )
+    )
+  return(evaluacion)
+}

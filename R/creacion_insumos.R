@@ -71,10 +71,10 @@ calcular_n <- function(data, dominios, var = NULL) {
 
 calcular_n_total <- function(x, datos) {
   datos %>%
-    group_by(.dots = as.list(x)) %>%
-    count() %>%
-    rename(variable := x) %>%
-    mutate(variable = paste0(x, variable))
+    dplyr::group_by(.dots = as.list(x)) %>%
+    dplyr::count() %>%
+    dplyr::rename(variable := x) %>%
+    dplyr::mutate(variable = paste0(x, variable))
 }
 
 
@@ -179,18 +179,18 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #' calcular_gl_total(c("zona", "sexo"), dc$variables)
 
 calcular_gl_total <- function(variables, datos) {
-  upm <- map(variables, ~calcular_upm(datos, .x) %>%
-               rename(variable := all_of(.x) ) %>%
-               mutate(variable = paste0(.x, variable))) %>%
-    reduce(bind_rows)
+  upm <- purrr::map(variables, ~calcular_upm(datos, .x) %>%
+               dplyr::rename(variable := dplyr::all_of(.x) ) %>%
+               dplyr::mutate(variable = paste0(.x, variable))) %>%
+    purrr::reduce(dplyr::bind_rows)
 
-  estratos <- map(variables, ~calcular_estrato(datos, .x) %>%
-                    rename(variable := all_of(.x) ) %>%
-                    mutate(variable = paste0(.x, variable))) %>%
-    reduce(bind_rows)
+  estratos <- purrr::map(variables, ~calcular_estrato(datos, .x) %>%
+                    dplyr::rename(variable := dplyr::all_of(.x) ) %>%
+                    dplyr::mutate(variable = paste0(.x, variable))) %>%
+    purrr::reduce(dplyr::bind_rows)
 
   gl <- upm %>%
-    left_join(estratos, by = "variable") %>%
+    dplyr::left_join(estratos, by = "variable") %>%
     dplyr::mutate(gl = upm - varstrat)
   return(gl)
 
@@ -287,7 +287,7 @@ crear_insumos <- function(var, dominios = NULL, disenio) {
     final <- data.frame(tabla )
 
     # Armar tabla completa con todos los insumos
-    final <- bind_cols(final, "gl" = gl , "n" = n, "coef_var" = cv[1])
+    final <- dplyr::bind_cols(final, "gl" = gl , "n" = n, "coef_var" = cv[1])
     names(final)[2] <- "se"
 
   }
@@ -319,10 +319,10 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
   if (!is.null(rlang::enexprs(dominios)[[1]])) {
 
-      # Se agrega un trozo de código para converir a string las variables de proporción,
+    # Se agrega un trozo de código para converir a string las variables de proporción,
     # ya que de ese modo aparecen ambas categorías: 0 y 1
-    disenio <- svydesign(ids = ~varunit, strata = ~varstrat,
-                         data = disenio$variables %>% mutate(!!enquo(var) := as.character(!!enquo(var))),
+    disenio <- survey::svydesign(ids = ~varunit, strata = ~varstrat,
+                         data = disenio$variables %>% dplyr::mutate(!!rlang::enquo(var) := as.character(!!rlang::enquo(var))),
                          weights = ~fe)
 
     # Generar un string con el nombre de la variable
@@ -344,13 +344,32 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
     # Generar la tabla de estimaciones
     tabla1 <- survey::svyby(formula = var_formula, by = dominios_form, design = disenio, FUN = survey::svytotal)
 
+    #gl <- calcular_upm(disenio$variables, agrup1) %>%
+     # dplyr::left_join(calcular_estrato(disenio$variables, agrup1), by = agrup1) %>%
+      #dplyr::mutate(gl = upm - varstrat) %>%
+      #dplyr::filter(!!enquo(var) == 1)
 
+    #cv <- survey::cv(tabla1, design = disenio) %>%
+     # as.data.frame() %>%
+    #  tibble::rownames_to_column(var = "variable") %>%
+     # tidyr::separate(variable, agrupacion) %>%
+    #  dplyr::rename(coef_var = ".")
+
+    #n <- calcular_n(disenio$variables, dominios = agrup1) %>%
+     # dplyr::filter(!!enquo(var) == 1)
+
+    # Unir todo y generar la tabla final
+    #final <- tabla1 %>%
+     # dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
+      #                 by = agrupacion) %>%
+      #dplyr::left_join(cv, by = agrupacion)
+
+    #return(list(tabla1, agrupacion, cv, calcular_n(disenio$variables, dominios = agrup1), gl, final, agrup1))
     # Llevar tabla a formato tidy.
     parte1 <- tabla1 %>%
       dplyr::select(-dplyr::starts_with("se."))  %>%
-      tidyr::pivot_longer(cols = -agrupacion, names_to = var_string, values_to = "total" )  %>%
-      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|[[:punct:]]", replacement = "", x = !!enquo(var)))
-
+      tidyr::pivot_longer(cols = -agrupacion, names_to = var_string, values_to = "total" )
+      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|[[:punct:]]", replacement = "", x = !!rlang::enquo(var)))
 
     parte2 <- tabla1 %>%
       dplyr::select(c(agrupacion, dplyr::starts_with("se."))) %>%
@@ -361,13 +380,13 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
     totales <- parte1 %>%
       dplyr::left_join(parte2, by = agrup1)
 
-
     # Calcular los insumos para hacer la evauación: cv, tamaño muestral y gl
-    cv <- cv(tabla1, design = dc) %>%
+    cv <- cv(tabla1, design = disenio) %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "variable") %>%
       tidyr::pivot_longer(cols = dplyr::starts_with("se."), names_to = var_string, values_to = "coef_var" ) %>%
-      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|[[:punct:]]", replacement = "", x = !!rlang::enquo(var))) %>%
+      dplyr::mutate(!!rlang::enquo(var) :=  gsub(pattern = "[[:alpha:]]|[[:punct:]]", replacement = "", x = !!rlang::enquo(var)),
+                    coef_var = coef_var * 100) %>%
       tidyr::separate(variable, agrupacion)
 
     n <- calcular_n(disenio$variables, dominios = agrup1)
@@ -396,8 +415,8 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
 
 
     # Convertir variables a string para homologar criterios
-    disenio <- svydesign(ids = ~varunit, strata = ~varstrat,
-                         data = disenio$variables %>% mutate_at(.vars = vars(agrup1), list(as.character)),
+    disenio <- survey::svydesign(ids = ~varunit, strata = ~varstrat,
+                         data = disenio$variables %>% dplyr::mutate_at(.vars = dplyr::vars(agrup1), list(as.character)),
                          weights = ~fe)
 
     # Acomodar a formato de survey
@@ -413,7 +432,7 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
 
     # Tamaño muestral
     n <- purrr::map(agrup1, calcular_n_total, datos = disenio$variables) %>%
-      purrr::reduce(bind_rows)
+      purrr::reduce(dplyr::bind_rows)
 
     # Grados de libertad
     gl <- calcular_gl_total(agrup1, disenio$variables)
