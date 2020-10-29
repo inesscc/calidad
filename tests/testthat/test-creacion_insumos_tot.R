@@ -25,12 +25,12 @@ test_that("nombres tabla agregado", {
 # Testear tamaño muestral sin desagregación
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 
-test <-  crear_insumos_tot(ocupado_int, disenio = dc)
+test <-  crear_insumos_tot(ocupado, disenio = dc)
 
 n <- epf_personas %>%
-  dplyr::group_by(ocupado_int) %>%
+  dplyr::group_by(ocupado) %>%
   dplyr::count() %>%
-  dplyr::filter(ocupado_int == 1) %>%
+  dplyr::filter(ocupado == 1) %>%
   dplyr::pull(n)
 
 
@@ -40,7 +40,7 @@ test_that("tamaño muestral agregado", {
 
 # Testear gl  sin desagregación
 insumo <- epf_personas %>%
-  dplyr::filter(ocupado_int == 1)
+  dplyr::filter(ocupado == 1)
 
 gl <- length(unique(insumo$varunit)) - length(unique(insumo$varstrat))
 
@@ -63,10 +63,9 @@ test_that("totales agregado", {
 #############################
 
 # Testear los nombres de la tabla
-test <-  crear_insumos_tot(ocupado_int, zona+sexo, disenio = dc)
-names(test)
+test <-  crear_insumos_tot(ocupado, zona+sexo, disenio = dc)
 test_that("nombres desagregado", {
-  expect_equal(names(test), c("zona", "sexo", "ocupado_int", "se", "n", "gl", "coef_var"))
+  expect_equal(names(test), c("zona", "sexo", "ocupado", "se", "n", "gl", "coef_var"))
 })
 
 # Testear totales con desagregación, utilizando la ENE
@@ -80,14 +79,14 @@ test_that("totales desagregado", {
 
 
 # Testear tamaño muestral con desagregación
-test <-  crear_insumos_tot(ocupado_int, zona+sexo, disenio = dc) %>%
+test <-  crear_insumos_tot(ocupado, zona+sexo, disenio = dc) %>%
   dplyr::filter(zona == 1 & sexo == 1) %>%
   dplyr::pull(n)
 
 n <- epf_personas %>%
-  dplyr::group_by(ocupado_int, zona, sexo) %>%
+  dplyr::group_by(ocupado, zona, sexo) %>%
   dplyr::count() %>%
-  dplyr::filter(ocupado_int == 1 & zona == 1 & sexo == 1) %>%
+  dplyr::filter(ocupado == 1 & zona == 1 & sexo == 1) %>%
   dplyr::pull(n)
 
 
@@ -97,12 +96,12 @@ test_that("tamaño muestral desagregado", {
 
 
 # Testear gl  con desagregación
-test <-  crear_insumos_tot(ocupado_int, zona+sexo, disenio = dc) %>%
+test <-  crear_insumos_tot(ocupado, zona+sexo, disenio = dc) %>%
   dplyr::filter(zona == 1 & sexo == 1) %>%
   dplyr::pull(gl)
 
 insumo <- epf_personas %>%
-  dplyr::filter(ocupado_int == 1 & zona == 1 & sexo == 1)
+  dplyr::filter(ocupado == 1 & zona == 1 & sexo == 1)
 
 gl <- length(unique(insumo$varunit)) - length(unique(insumo$varstrat))
 
