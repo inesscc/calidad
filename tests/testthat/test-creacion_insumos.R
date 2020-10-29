@@ -1,0 +1,84 @@
+
+context("test-creacion_insumos")
+
+# Diseños muestrales
+options(survey.lonely.psu = "certainty")
+
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas %>% dplyr::group_by(folio) %>% dplyr::slice(1), weights = ~fe)
+
+dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene, weights = ~fe)
+
+
+##############################
+# MEDIA SIN DESAGREGACIÓN
+##############################
+
+# Testear la media sin desagregación
+
+test1 <-  crear_insumos(gastot_hd, disenio = dc)
+
+test_that("Insumo media", {
+  expect_equal(round(test1$mean), 1121925)
+})
+
+
+# Testear la media con desagregación
+test2 <-  crear_insumos(gastot_hd, zona, disenio = dc)
+
+test_that("Insumo media zona", {
+  expect_equal(round(test2$gastot_hd), c(1243155, 969048))
+})
+
+# Testear grados de libertad con desagregación
+test3 <-  crear_insumos(gastot_hd, zona, disenio = dc) %>%
+  dplyr::filter(zona == 1) %>%
+  dplyr::select(gl) %>%
+  dplyr::pull()
+
+insumo <- epf_personas %>%
+  dplyr::filter(zona == 1)
+
+gl <- length(unique(insumo$varunit)) - length(unique(insumo$varstrat))
+
+test_that("gl media desagregado", {
+  expect_equal(test3, gl)
+})
+
+# Testear tamaño muestral desagregado
+test4 <-  crear_insumos(gastot_hd, zona, disenio = dc) %>%
+  dplyr::filter(zona == 2) %>%
+  dplyr::select(n) %>%
+  dplyr::pull()
+
+n <- epf_personas %>%
+  dplyr::group_by(folio) %>%
+  dplyr::slice(1) %>%
+  dplyr::ungroup() %>%
+  dplyr::filter(zona == 2) %>%
+  dplyr::count(zona) %>%
+  dplyr::pull()
+
+test_that("tamaño muestral media desagregada", {
+  expect_equal(test4, n)
+})
+
+
+
+
+
+
+
+#epf <- read_dta("C:/Users/klehm/Instituto Nacional de Estadisticas/Capacitación INE - General/capacitaciones previas/Capacicación Socialbit SA-FPC/Clase_3_dplyr_loops/Clase Vero Tidyverse/BASE_PERSONAS_VIII_EPF.dta")
+
+#names(epf) <- tolower(names(epf))
+
+#epf <- epf %>%
+#  dplyr::mutate(ocupado = dplyr::if_else(cae == 1, 1, 0)) %>%
+#  dplyr::mutate_at(.vars = dplyr::vars(sexo, zona, ecivil), .funs = list(as.numeric )) %>%
+#  dplyr::select("folio", "sexo", "zona", "ecivil", "fe", "varunit", "varstrat", "gastot_hd", "ocupado") %>%
+ # as.data.frame()
+
+#epf_personas <- epf
+
+#save(epf_personas, file = "data/epf_personas.RData")
+

@@ -22,10 +22,6 @@ calcular_tabla <-  function(var, dominios, disenio) {
   return(estimacion)
 }
 
-
-
-
-
 #-----------------------------------------------------------------------
 
 #' Calcula tamaño muestral para las medias
@@ -216,9 +212,14 @@ calcular_gl_total <- function(variables, datos) {
 
 crear_insumos <- function(var, dominios = NULL, disenio) {
 
-  #Chequear que la variable sea de continua. Si no lo es, aparece un warning
+  # Encapsular inputs para usarlos después
   enquo_var <-  rlang::enquo(var)
+  var_string <-  rlang::expr_name(rlang::enexpr(var))
 
+  # Chequear que la variable no sea character
+  if (is.character(disenio$variables[[var_string]]) == T) stop("¡Estás usando una variable character!")
+
+  #Chequear que la variable sea continua. Si no lo es, aparece un warning
   es_prop <- disenio$variables %>%
     dplyr::mutate(es_prop = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
 
@@ -423,6 +424,11 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
 
   }
   names(final) <- tolower(names(final))
+
+  # Las filas en las que no exsiten casos generan valores NA. Esos casos se eliminan
+  final <- final %>%
+    dplyr::filter(!is.nan(coef_var))
+
   return(final)
 
 }
@@ -448,8 +454,14 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
 
 crear_insumos_prop <- function(var, dominios = NULL, disenio) {
 
-  #Chequear que la variable sea de proporción. Si no lo es, se interrumpe la ejecución
+  # Encapsular inputs para usarlos más tarde
+  var_string <-  rlang::expr_name(rlang::enexpr(var))
   enquo_var <-  rlang::enquo(var)
+
+  # Chequear que la variable no sea character
+  if (is.character(disenio$variables[[var_string]]) == T) stop("¡Estás usando una variable character!")
+
+  #Chequear que la variable sea de proporción. Si no lo es, se interrumpe la ejecución
   es_prop <- disenio$variables %>%
     dplyr::mutate(es_prop = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
 
