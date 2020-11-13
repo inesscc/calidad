@@ -14,7 +14,7 @@ dataframe compuesto por 48.308 observaciones y 8 variables
   \item{varunit}{unidad de primera etapa}
   \item{varstrat}{estrato}
   \item{gastot_hd}{gasto promedio por hogar}
-  \item{ocupado}{indica de la persona está ocupada o no: 1 = ocupado; 2 = no ocupado}
+  \item{ocupado}{indica de la persona está ocupada o no: 1 = ocupado; 0 = no ocupado}
 }
 }
 \source{

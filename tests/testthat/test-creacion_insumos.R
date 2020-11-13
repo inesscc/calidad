@@ -82,3 +82,23 @@ test_that("tamaño muestral media desagregada", {
 
 #save(epf_personas, file = "data/epf_personas.RData")
 
+
+
+#ene <- read_delim("C:/Users/klehm/Downloads/ene-2020-02-efm (2).csv", delim = ";")
+#ene <- read_dta("C:/Users/klehm/Downloads/ene-2020-02-efm.dta")
+
+
+
+#ene <- ene %>%
+#  mutate(fdt = if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0),
+#         pet = if_else(edad >= 15, 1, 0),
+#         ocupado = if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0),
+#         desocupado = if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0)) %>%
+#  select(sexo, region, cae_especifico, fe = fact_cal,
+#         varunit = conglomerado,
+#         varstrat = estrato_unico,
+#         fdt, ocupado,desocupado, edad, pet) %>%
+#  filter(!is.na(fe))
+
+#save(ene, file = "data/ene.RData")
+
