@@ -451,7 +451,6 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
 #' crear_insumos_prop(ocupado, zona+sexo, dc)
 #' @export
 
-
 crear_insumos_prop <- function(var, dominios = NULL, disenio) {
 
   # Encapsular inputs para usarlos más tarde
@@ -503,7 +502,8 @@ crear_insumos_prop <- function(var, dominios = NULL, disenio) {
 
   #Cambiar el nombre de la variable objetivo para que siempre sea igual.
   final <- final  %>%
-    dplyr::rename(objetivo = var_prop)
+    dplyr::rename(objetivo = var_prop) %>%
+    dplyr::filter(objetivo > 0)
 
   # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
   } else {
@@ -532,6 +532,8 @@ crear_insumos_prop <- function(var, dominios = NULL, disenio) {
   #Cambiar el nombre de la variable objetivo para que siempre sea igual
   final <- final %>%
     dplyr::rename(objetivo = mean)
+
+
 
   }
 
