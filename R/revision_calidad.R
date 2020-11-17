@@ -102,7 +102,7 @@ evaluacion_calidad_prop <- function(tabulado, condicion = NULL) {
     dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
            eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
            prop_est = dplyr::if_else(objetivo <= 0.5, "<= a 0.5", "> a 0.5"),
-           cuadratica = cuadratica(se),
+           cuadratica = cuadratica(objetivo),
            eval_se = dplyr::if_else(se <= cuadratica, "se adecuado", "se alto"),
            calidad = dplyr::case_when(
              eval_n == "n insuficiente" | eval_gl == "gl insuficiente"                                                 ~ "no fiable",
