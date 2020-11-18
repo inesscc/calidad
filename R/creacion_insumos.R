@@ -73,6 +73,30 @@ calcular_n_total <- function(x, datos) {
     dplyr::mutate(variable = paste0(x, variable))
 }
 
+#----------------------------------------------------------------------
+#' Chequea que las variables de diseño tengan el nombre correcto
+#'
+#' Comprueba que las variables de diseño se llamen varstrat y varunit. En caso de que no se cumpla, la ejecución se detiene y se genera un error
+#'
+#' @param data \code{dataframe} que contiene la tabla con la cual se está trabajando
+#' @return un mensaje de error
+#'
+#' @examples
+#' chequear_var_disenio(data = var = dc$variables)
+
+
+chequear_var_disenio <- function(data) {
+
+  if (sum(grepl(pattern = "varunit" , x = names(data))) == 0) {
+    stop("¡La columna que contiene información de las UPMs debe llamarse varunit!")
+  }
+
+  if (sum(grepl(pattern = "varstrat" , x = names(data))) == 0) {
+    stop("¡La columna que contiene información de los estratos debe llamarse varstrat!")
+  }
+
+}
+
 
 #-----------------------------------------------------------------------
 
@@ -93,7 +117,7 @@ calcular_n_total <- function(x, datos) {
 calcular_upm <- function(data, dominios, var = NULL ) {
 
   #Chequear que existe variable varunit en el dataset
-  if (sum(grepl(pattern = "varunit" , x = names(epf_personas))) == 0) {
+  if (sum(grepl(pattern = "varunit" , x = names(data))) == 0) {
     stop("¡La columna que contiene información de las UPMs debe llamarse varunit!")
   }
 
@@ -136,7 +160,7 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 calcular_estrato <- function(data, dominios, var = NULL ) {
 
   #Chequear que existe variable varstrat en el dataset
-  if (sum(grepl(pattern = "varstrat" , x = names(epf_personas))) == 0) {
+  if (sum(grepl(pattern = "varstrat" , x = names(data))) == 0) {
     stop("¡La columna que contiene información de los estratos debe llamarse varstrat!")
   }
 
@@ -211,6 +235,10 @@ calcular_gl_total <- function(variables, datos) {
 #' @export
 
 crear_insumos <- function(var, dominios = NULL, disenio) {
+
+  # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
+  #  detiene la ejecución
+  chequear_var_disenio(disenio$variables)
 
   # Encapsular inputs para usarlos después
   enquo_var <-  rlang::enquo(var)
@@ -316,6 +344,9 @@ crear_insumos <- function(var, dominios = NULL, disenio) {
 #' @export
 
 crear_insumos_tot <- function(var, dominios = NULL, disenio) {
+  # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
+  #  detiene la ejecución
+  chequear_var_disenio(disenio$variables)
 
 
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
@@ -452,6 +483,9 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
 #' @export
 
 crear_insumos_prop <- function(var, dominios = NULL, disenio) {
+  # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
+  #  detiene la ejecución
+  chequear_var_disenio(disenio$variables)
 
   # Encapsular inputs para usarlos más tarde
   var_string <-  rlang::expr_name(rlang::enexpr(var))
@@ -486,11 +520,12 @@ crear_insumos_prop <- function(var, dominios = NULL, disenio) {
   var_prop <- nombres[length(nombres) - 1]
 
   #Calcular el tamaño muestral de cada grupo
-  n <- calcular_n(disenio$variables, agrupacion, var_prop )
+  n <- calcular_n(disenio$variables, agrupacion)
+
 
   #Calcular los grados de libertad de todos los cruces
-  gl <- calcular_upm(disenio$variables, agrupacion, var_prop) %>%
-    dplyr::left_join(calcular_estrato(disenio$variables, agrupacion, var_prop), by = agrupacion) %>%
+  gl <- calcular_upm(disenio$variables, agrupacion) %>%
+    dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
     dplyr::mutate(gl = upm - varstrat)
 
   #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
@@ -532,8 +567,6 @@ crear_insumos_prop <- function(var, dominios = NULL, disenio) {
   #Cambiar el nombre de la variable objetivo para que siempre sea igual
   final <- final %>%
     dplyr::rename(objetivo = mean)
-
-
 
   }
 
