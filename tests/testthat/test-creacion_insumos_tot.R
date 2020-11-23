@@ -3,12 +3,14 @@ context("test-creacion_insumos_tot")
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 options(survey.lonely.psu = "certainty")
 
+dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene,
+                            weights = ~fe)
+
+
 ######################
 # Nombres de la tabla #
 ######################
 
-dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene,
-                            weights = ~fe)
 
 test <-  crear_insumos_tot(ocupado,  disenio = dc_ene)
 
@@ -22,7 +24,7 @@ test_that("nombres tabla agregado", {
 # TOTALES SIN DESAGREGACIÓN #
 #############################
 
-# Testear tamaño muestral sin desagregación
+# Testear tamaño muestral sin desagregación usando EPF
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 
 test <-  crear_insumos_tot(ocupado, disenio = dc)
@@ -37,6 +39,7 @@ n <- epf_personas %>%
 test_that("tamaño muestral agregado", {
   expect_equal(test$n[2], n)
 })
+
 
 # Testear gl  sin desagregación
 insumo <- epf_personas %>%
@@ -55,6 +58,8 @@ test <-  crear_insumos_tot(ocupado,  disenio = dc_ene) %>%
 test_that("totales agregado", {
   expect_equal(round(test$total[1] / 1000, 2), 8942.42)
 })
+
+
 
 
 
@@ -77,7 +82,6 @@ test_that("totales desagregado", {
 })
 
 
-
 # Testear tamaño muestral con desagregación
 test <-  crear_insumos_tot(ocupado, zona+sexo, disenio = dc) %>%
   dplyr::filter(zona == 1 & sexo == 1) %>%
@@ -95,7 +99,7 @@ test_that("tamaño muestral desagregado", {
 })
 
 
-# Testear gl  con desagregación
+# Testear gl con desagregación
 test <-  crear_insumos_tot(ocupado, zona+sexo, disenio = dc) %>%
   dplyr::filter(zona == 1 & sexo == 1) %>%
   dplyr::pull(gl)

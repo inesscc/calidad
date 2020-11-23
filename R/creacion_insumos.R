@@ -394,7 +394,8 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
       tibble::rownames_to_column(var = "variable") %>%
       tidyr::separate(variable, agrupacion) %>%
       dplyr::rename(coef_var = ".") %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
+      dplyr::mutate(coef_var = coef_var * 100)
 
     n <- calcular_n(disenio$variables, dominios = agrup1) %>%
       dplyr::filter(!!rlang::enquo(var) == 1) %>%

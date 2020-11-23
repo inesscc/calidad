@@ -8,13 +8,15 @@ output: github_document
 
 Antes de comenzar a usar el paquete `calidad` es necesario declarar el diseño muestral de la encuesta que se está evaluando, para lo cual utilizamos el paquete `survey`. En este ejemplo se usa un dataset reducido de la Encuesta de Presupuestos Familiares, que viene incluido en el paquete `calidad`.  
 
-Es importante declarar cuál es la UPM, el estrato y el factor de expansión. Toda esta información debería estar contenida en las bases de datos de las encuestas de hogares. Para un correcto funcionamiento del paquete, es necesario que las variables de diseño tengan los siguientes nombres:
+Es importante declarar cuál es la UPM, el estrato y el factor de expansión. Toda esta información debería estar contenida en las bases de datos de las encuestas de hogares. Para un correcto funcionamiento del paquete, es necesario que las variables de diseño tengan los siguientes nombres[^nombre_variables]:
 
 - varunit: Unidad primaria de muestro (UPM)  
 
 - varstrat: Estratos
 
 - fe: Factor de expansión
+
+[^nombre_variables]: Una de las próximas funcionalidades es que el paquete maneje de manera interna el nombre de las variable de diseño. La implementación oficial debería contar con esta funcionalidad. 
 
 ```{r, message=FALSE}
 library(survey)
