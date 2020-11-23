@@ -13,11 +13,13 @@ Es importante declarar cuál es la UPM, el estrato y el factor de
 expansión. Toda esta información debería estar contenida en las bases
 de datos de las encuestas de hogares. Para un correcto funcionamiento
 del paquete, es necesario que las variables de diseño tengan los
-siguientes nombres:
+siguientes nombres\[1\]:
 
   - varunit: Unidad primaria de muestro (UPM)
 
-  - varstrat: estratos
+  - varstrat: Estratos
+
+  - fe: Factor de expansión
 
 <!-- end list -->
 
@@ -85,3 +87,7 @@ evaluacion_media_tot <- evaluacion_calidad(insumos_total)
 La salida de estas últimas funciones es un `dataframe` que, además de
 contener la información ya generada, incluye una columna que indica se
 la estimación es poco fiable, fiable o no fiable.
+
+1.  Una de las próximas funcionalidades es que el paquete maneje de
+    manera interna el nombre de las variable de diseño. La
+    implementación oficial debería contar con esta funcionalidad.
