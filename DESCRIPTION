@@ -7,9 +7,18 @@ Maintainer: Klaus Lehmann <klehmann@fen.uchile.cl>
 Description: El paquete evalúa la calidad de estimaciones hechas por encuestas de hogares, 
     siguiendo la metodología desarrollada por el Instituto Nacional de Estadísticas. Es
     posible implementar la evaluación para estimaciones de media y de proporción. 
-License: What license is it under?
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.1
 Suggests: knitr, rmarkdown, testthat
 VignetteBuilder: knitr
+Imports: 
+    rlang,
+    dplyr,
+    purrr,
+    survey,
+    kableExtra,
+    tibble,
+    stringr
+

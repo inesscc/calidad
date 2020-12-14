@@ -1,14 +1,17 @@
 
 context("test-creacion_insumos_prop")
 
-# Diseños muestrales
-
 options(survey.lonely.psu = "certainty")
 
-dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene, weights = ~fe)
+# Cargar base ENUSC
 enusc <-  readRDS("C:/Users/klehm/Downloads/bkish_2019.rds")
 
+# Diseños muestrales
+
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene %>%
+                              dplyr::mutate(desocupado2 = dplyr::if_else(desocupado == 1 & fdt == 1, 1, 0)),
+                              weights = ~fe)
 enusc <- enusc %>%
   dplyr::rename(varunit = Conglomerado,
          varstrat = VarStrat) %>%
