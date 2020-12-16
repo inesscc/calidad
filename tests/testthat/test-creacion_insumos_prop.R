@@ -44,6 +44,21 @@ test_that("Proporción desagregada", {
 })
 
 
+test <-  crear_insumos_prop(desocupado, fdt+sexo+region, disenio = dc_ene) %>%
+  dplyr::filter(fdt == 1 & sexo == 2 & region == 1) %>%
+  dplyr::pull(objetivo) * 100
+
+#test_that("Proporción desagregada", {
+#  expect_equal(round(test, 1), 7.1)
+#})
+
+#ene %>%
+#  mutate(numerador = if_else(desocupado == 1 & fdt == 1 & region == 1 & sexo == 2, fe, 0),
+#         denominador = if_else(fdt == 1 & region == 1 & sexo == 2, fe, 0)) %>%
+#  summarise(tasa = sum(numerador)/sum(denominador))
+
+
+
 # Testear grados de libertad con desagregación EPF
 test2 <-  crear_insumos_prop(ocupado, sexo+zona, disenio = dc) %>%
   dplyr::filter(sexo == 2 & zona == 1) %>%
