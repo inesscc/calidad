@@ -51,6 +51,10 @@ evaluacion_calidad <- function(tabulado, condicion = NULL) {
     tabulado <- tabulado %>%
       dplyr::filter(!!rlang::parse_expr(condicion))
   }
+  # Chequear si existen valores NA en los insumos. Si hay NAs, la ejecución se interrumpe
+  if (sum(is.na(tabulado$n)) > 0 | sum(is.na(tabulado$gl)) > 0 |  sum(is.na(tabulado$coef_var)) > 0) {
+    stop("Alguno de los insumos tiene valores NA")
+  }
 
   evaluacion <- tabulado %>%
     dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
@@ -97,6 +101,10 @@ evaluacion_calidad_prop <- function(tabulado, condicion = NULL) {
       dplyr::filter(!!rlang::parse_expr(condicion))
   }
 
+  # Chequear si existen valores NA en los insumos. Si hay NAs, la ejecución se interrumpe
+  if (sum(is.na(tabulado$n)) > 0 | sum(is.na(tabulado$gl)) > 0 |  sum(is.na(tabulado$se)) > 0) {
+    stop("Alguno de los insumos tiene valores NA")
+  }
 
   evaluacion <- tabulado %>%
     dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
@@ -142,6 +150,12 @@ evaluacion_calidad_tot <- function(tabulado, condicion = NULL) {
     tabulado <- tabulado %>%
       dplyr::filter(!!rlang::parse_expr(condicion))
   }
+
+  # Chequear si existen valores NA en los insumos. Si hay NAs, la ejecución se interrumpe
+  if (sum(is.na(tabulado$n)) > 0 | sum(is.na(tabulado$gl)) > 0 |  sum(is.na(tabulado$coef_var)) > 0) {
+    stop("Alguno de los insumos tiene valores NA")
+  }
+
 
   evaluacion <- tabulado %>%
     dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),

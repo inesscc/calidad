@@ -25,7 +25,16 @@ tabla_html <- function(tabla) {
         calidad == "poco fiable" ~ "yellow",
         calidad == "no fiable" ~ "red"
       ),
-      color = "white")) %>%
+      color = "black")) %>%
+   dplyr::mutate(
+      n = kableExtra::cell_spec(n, color= dplyr::case_when(
+        n < 60  ~ "red",
+        n >= 60 ~ "black"
+      )),
+      gl = kableExtra::cell_spec(gl, color = dplyr::case_when(
+        gl < 9  ~ "red",
+        gl >= 9 ~ "black"
+      ))) %>%
     kableExtra::kable(format.args = list(decimal.mark = ',', big.mark = "."), format = "html", escape = F) %>%
     kableExtra::kable_styling("striped", full_width = F) %>%
     kableExtra::kable_paper("hover")

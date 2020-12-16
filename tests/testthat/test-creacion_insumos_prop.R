@@ -1,14 +1,17 @@
 
 context("test-creacion_insumos_prop")
 
-# Diseños muestrales
-
 options(survey.lonely.psu = "certainty")
 
-dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene, weights = ~fe)
+# Cargar base ENUSC
 enusc <-  readRDS("C:/Users/klehm/Downloads/bkish_2019.rds")
 
+# Diseños muestrales
+
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene %>%
+                              dplyr::mutate(desocupado2 = dplyr::if_else(desocupado == 1 & fdt == 1, 1, 0)),
+                              weights = ~fe)
 enusc <- enusc %>%
   dplyr::rename(varunit = Conglomerado,
          varstrat = VarStrat) %>%
@@ -39,6 +42,21 @@ test <-  crear_insumos_prop(desocupado, fdt+sexo, disenio = dc_ene) %>%
 test_that("Proporción desagregada", {
   expect_equal(round(test, 1), 7.1)
 })
+
+
+test <-  crear_insumos_prop(desocupado, fdt+sexo+region, disenio = dc_ene) %>%
+  dplyr::filter(fdt == 1 & sexo == 2 & region == 1) %>%
+  dplyr::pull(objetivo) * 100
+
+#test_that("Proporción desagregada", {
+#  expect_equal(round(test, 1), 7.1)
+#})
+
+#ene %>%
+#  mutate(numerador = if_else(desocupado == 1 & fdt == 1 & region == 1 & sexo == 2, fe, 0),
+#         denominador = if_else(fdt == 1 & region == 1 & sexo == 2, fe, 0)) %>%
+#  summarise(tasa = sum(numerador)/sum(denominador))
+
 
 
 # Testear grados de libertad con desagregación EPF
