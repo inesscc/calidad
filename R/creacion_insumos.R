@@ -234,7 +234,7 @@ calcular_gl_total <- function(variables, datos) {
 #' crear_insumos(gastot_hd, zona+sexo, dc)
 #' @export
 
-crear_insumos <- function(var, dominios = NULL, disenio) {
+crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
@@ -261,16 +261,35 @@ crear_insumos <- function(var, dominios = NULL, disenio) {
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
   if (!is.null(rlang::enexprs(dominios)[[1]])) {
 
-    dominios <- paste0("~", rlang::enexprs(dominios)) %>%
-      as.formula()
+    # Esto corre para el caso en el que NO hay subpop
+    if (is.null(rlang::enexpr(subpop))) {
 
-    #Generar la tabla con los cálculos
-    tabla <- calcular_tabla(var, dominios, disenio)
+      dominios <- paste0("~", rlang::enexprs(dominios)) %>%
+        as.formula()
+
+      #Generar la tabla con los cálculos
+      tabla <- calcular_tabla(var, dominios, disenio)
+
+    # Esto corre para subpop
+    } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
+
+      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
+
+      dominios <-   paste(rlang::enexprs(dominios), rlang::enexprs(subpop), sep = "+")
+      dominios <- paste0("~", dominios) %>%
+        as.formula()
+
+      #Generar la tabla con los cálculos
+      tabla <- calcular_tabla(var, dominios, disenio) %>%
+        dplyr::filter(!!rlang::enquo(subpop) == 1)
+    }
 
   #Extraer nombres
   nombres <- names(tabla)
   agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
-
 
   #Calcular el tamaño muestral de cada grupo
   n <- calcular_n(disenio$variables, agrupacion)
@@ -298,6 +317,22 @@ crear_insumos <- function(var, dominios = NULL, disenio) {
 
   # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
   } else {
+
+
+    # Si el usuario ingresa subpoblación, se filtra la base de datos para la subpoblación de referencia
+    if (!is.null(rlang::enexpr(subpop))) {
+
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
+
+      # Aquí se filtra el diseño
+      subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
+      disenio <- disenio[disenio$variables[subpop_text] == 1]
+
+    }
+
     #Generar la tabla con los cálculos
     tabla <- calcular_tabla(var, dominios, disenio)
 
@@ -343,11 +378,10 @@ crear_insumos <- function(var, dominios = NULL, disenio) {
 #' crear_insumos_tot(ocupado, zona+sexo, dc)
 #' @export
 
-crear_insumos_tot <- function(var, dominios = NULL, disenio) {
+crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
   chequear_var_disenio(disenio$variables)
-
 
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
   if (!is.null(rlang::enexprs(dominios)[[1]])) {
@@ -367,16 +401,41 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
     if (n_filas != test$pasa) stop("¡Debes usar una variable dummy cuando desagregas!")
 
 
-    #Identificar las variables ingresadas para la desagregación
-    agrupacion <- rlang::expr_name(rlang::enexprs(dominios)[[1]]) %>%
-      stringr::str_split(pattern = "\\+")
-    agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
-    agrup1 <- c(agrupacion, var_string)
+    # Esto corre para el caso en el que NO hay subpop
+    if (is.null(rlang::enexpr(subpop))) {
 
-    # Agregar ~ para adecuar a formato de survey
-    dominios_form <- paste0("~", rlang::enexprs(dominios)) %>%
-      as.formula()
+      #Identificar las variables ingresadas para la desagregación
+      agrupacion <- rlang::expr_name(rlang::enexprs(dominios)[[1]]) %>%
+        stringr::str_split(pattern = "\\+")
+      agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
+      agrup1 <- c(agrupacion, var_string)
 
+      # Agregar ~ para adecuar a formato de survey
+      dominios_form <- paste0("~", rlang::enexprs(dominios)) %>%
+        as.formula()
+
+      # Esto corre para subpop
+    } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
+
+      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
+
+      #Identificar las variables ingresadas para la desagregación
+      agrupacion <- rlang::expr_name(rlang::enexprs(dominios)[[1]]) %>%
+        stringr::str_split(pattern = "\\+")
+      agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
+      agrupacion <- c(rlang::quo_text(rlang::enquo(subpop)), agrupacion  )
+      agrup1 <- c(agrupacion, var_string)
+
+      #dominios_form <- paste(agrupacion, "+")
+      dominios_form <- paste(rlang::enexpr(subpop), rlang::enexprs(dominios), sep =  "+")
+      dominios_form <- paste0("~", dominios_form) %>%
+        as.formula()
+
+    }
+    # Pasar a la variable objetivo al formato de survey
     var_formula <- paste0("~", rlang::enexpr(var)) %>%
       as.formula()
 
@@ -389,6 +448,7 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
       dplyr::filter(!!rlang::enquo(var) == 1)  %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
+
     cv <- survey::cv(tabla1, design = disenio) %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "variable") %>%
@@ -396,6 +456,7 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
       dplyr::rename(coef_var = ".") %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
       dplyr::mutate(coef_var = coef_var * 100)
+
 
     n <- calcular_n(disenio$variables, dominios = agrup1) %>%
       dplyr::filter(!!rlang::enquo(var) == 1) %>%
@@ -418,7 +479,6 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
       stringr::str_split(pattern = "\\+")
     agrup1 <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
 
-
     # Convertir variables a string para homologar criterios
     disenio <- survey::svydesign(ids = ~varunit, strata = ~varstrat,
                          data = disenio$variables %>% dplyr::mutate_at(.vars = dplyr::vars(agrup1), list(as.character)),
@@ -427,6 +487,21 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
     # Acomodar a formato de survey
     var_formula <- paste0("~", rlang::enexprs(var)) %>%
       as.formula()
+
+    # Si el usuario ingresa subpoblación, se filtra la base de datos para la subpoblación de referencia
+    if (!is.null(rlang::enexpr(subpop))) {
+
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
+
+      # Aquí se filtra el diseño
+      subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
+      disenio <- disenio[disenio$variables[subpop_text] == 1]
+
+    }
+
 
     # Tabla que se usa luego para calcular cv
     tabla1 <- survey::svytotal(x = var_formula, design = disenio )
@@ -483,7 +558,7 @@ crear_insumos_tot <- function(var, dominios = NULL, disenio) {
 #' crear_insumos_prop(ocupado, zona+sexo, dc)
 #' @export
 
-crear_insumos_prop <- function(var, dominios = NULL, disenio) {
+crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
   chequear_var_disenio(disenio$variables)
@@ -497,9 +572,9 @@ crear_insumos_prop <- function(var, dominios = NULL, disenio) {
 
   #Chequear que la variable sea de proporción. Si no lo es, se interrumpe la ejecución
   es_prop <- disenio$variables %>%
-    dplyr::mutate(es_prop = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
+    dplyr::mutate(es_prop_var = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
 
-  if (sum(es_prop$es_prop) != nrow(disenio$variables)) stop("¡La variable no es de proporción!")
+  if (sum(es_prop$es_prop_var) != nrow(es_prop)) stop("¡La variable no es de proporción!")
 
 
   #COnvertir los inputs en fórmulas para adecuarlos a survey
@@ -509,13 +584,29 @@ crear_insumos_prop <- function(var, dominios = NULL, disenio) {
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
   if (!is.null(rlang::enexprs(dominios)[[1]])) {
 
-  dominios <- paste0("~", rlang::enexprs(dominios)) %>%
-    as.formula()
+    # Esto corre para el caso en el que NO hay subpop
+    if (is.null(rlang::enexpr(subpop))) {
+      dominios <- paste0("~", rlang::enexprs(dominios)) %>%
+        as.formula()
+
+    # Esto corre para subpop
+    } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
+
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
+
+        dominios <- paste(rlang::enexprs(dominios), rlang::enexpr(subpop), sep = "+")
+        dominios <- paste0("~", dominios) %>%
+          as.formula()
+    }
 
   #Generar la tabla con los cálculos
   tabla <- calcular_tabla(var, dominios, disenio)
 
-  #Extraer nombres
+    #Extraer nombres
   nombres <- names(tabla)
   agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
   var_prop <- nombres[length(nombres) - 1]
@@ -539,15 +630,29 @@ crear_insumos_prop <- function(var, dominios = NULL, disenio) {
   #Cambiar el nombre de la variable objetivo para que siempre sea igual.
   final <- final  %>%
     dplyr::rename(objetivo = var_prop) %>%
-    dplyr::filter(objetivo > 0)
+    dplyr::filter(objetivo > 0) # se eliminan los ceros de la tabla
 
   # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
   } else {
 
+    # Si el usuario ingresa subpoblación, se filtra la base de datos para la subpoblación de referencia
+    if (!is.null(rlang::enexpr(subpop))) {
+
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
+
+      # Aquí se filtra el diseño
+      subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
+      disenio <- disenio[disenio$variables[subpop_text] == 1]
+
+    }
+
   #Generar la tabla con los cálculos
   tabla <- calcular_tabla(var, dominios, disenio)
 
-  # Tamaño muestral
+    # Tamaño muestral
   n <- nrow(disenio$variables)
 
   # Calcular grados de libertad
