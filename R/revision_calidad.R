@@ -44,7 +44,7 @@ cuadratica <- function(p) {
 #' @export
 
 
-evaluacion_calidad <- function(tabulado, condicion = NULL) {
+evaluacion_calidad <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -70,6 +70,17 @@ evaluacion_calidad <- function(tabulado, condicion = NULL) {
              eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"
            )
     )
+
+  # Criterio general para la publicación del tabulado
+  if (publicar == TRUE) {
+    evaluacion <- evaluacion %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0("pasa el ", pasa, "%"))
+  }
+
+
   return(evaluacion)
 }
 
@@ -93,7 +104,7 @@ evaluacion_calidad <- function(tabulado, condicion = NULL) {
 #' @export
 
 
-evaluacion_calidad_prop <- function(tabulado, condicion = NULL) {
+evaluacion_calidad_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -120,6 +131,17 @@ evaluacion_calidad_prop <- function(tabulado, condicion = NULL) {
              eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "se alto"       ~ "poco fiable"
            )
     )
+
+  # Criterio general para la publicación del tabulado
+  if (publicar == TRUE) {
+    evaluacion <- evaluacion %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0("pasa el ", pasa, "%"))
+  }
+
+
   return(evaluacion)
 
 }
@@ -143,7 +165,7 @@ evaluacion_calidad_prop <- function(tabulado, condicion = NULL) {
 #' @export
 
 
-evaluacion_calidad_tot <- function(tabulado, condicion = NULL) {
+evaluacion_calidad_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -171,5 +193,18 @@ evaluacion_calidad_tot <- function(tabulado, condicion = NULL) {
                     eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"
                   )
     )
+
+  # Criterio general para la publicación del tabulado
+  if (publicar == TRUE) {
+    evaluacion <- evaluacion %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0("pasa el ", pasa, "%"))
+  }
+
+
+
   return(evaluacion)
 }
+
