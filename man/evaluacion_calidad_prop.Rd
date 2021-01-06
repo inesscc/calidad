@@ -4,7 +4,7 @@
 \alias{evaluacion_calidad_prop}
 \title{Evalúa la calidad de las estimaciones de proporción}
 \usage{
-evaluacion_calidad_prop(tabulado, condicion = NULL)
+evaluacion_calidad_prop(tabulado, condicion = NULL, publicar = FALSE)
 }
 \arguments{
 \item{tabulado}{\code{dataframe} generado por la función \code{crear_insumos_prop}. Contiene

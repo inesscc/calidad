@@ -4,7 +4,7 @@
 \alias{evaluacion_calidad}
 \title{Evalúa la calidad de las estimaciones de media}
 \usage{
-evaluacion_calidad(tabulado, condicion = NULL)
+evaluacion_calidad(tabulado, condicion = NULL, publicar = FALSE)
 }
 \arguments{
 \item{tabulado}{\code{dataframe} generado por la función \code{crear_insumos}. Contiene

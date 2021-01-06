@@ -254,6 +254,7 @@ crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
   if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("¡Parece que tu variable es de proporción!")
 
 
+
   #Convertir los inputs en fórmulas para adecuarlos a survey
   var <- paste0("~", rlang::enexpr(var)) %>%
     as.formula()
@@ -363,58 +364,71 @@ crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
 #--------------------------------------------------------------------
 
+#' Crea los insumos para el caso específico de estimaciones de suma, a nivel desagregado
+#'
+#' Genera una tabla con los siguientes insumos: suma, grados de libertad,
+#' tamaño muestral y coeficiente de variación. La función tiene la posibilidad de utilizar una subpoblación. La variable de subpoblación debe ser dummy.
+#'
+#' @param var variable objetivo dentro de un \code{dataframe}.
+#' @param dominios dominios de estimación separados por signo +.
+#' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#' @return \code{dataframe} que contiene todos los insumos necesarios para evaluar una suma
+#'
+#' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' crear_insumos_suma_desagrega(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
+
 crear_insumos_suma_desagrega <- function(var, dominios = NULL, subpop = NULL, disenio) {
-  # Generar un string con el nombre de la variable
-  var_string <-  rlang::expr_name(rlang::enexpr(var))
-  return(var_string)
+
+  # COnvertir a string todas las variables de entrada
+  var_string <-  rlang::expr_name(rlang::enexpr(var)) %>%
+    stringr::str_remove("~")
+   dominios_string <-  rlang::expr_name(rlang::enexpr(dominios))%>%
+     stringr::str_remove("~")
+   subpop_string <-  rlang::expr_name(rlang::enexpr(subpop))%>%
+     stringr::str_remove("~")
+
   # Esto corre para el caso en el que NO hay subpop
-  if (is.null(rlang::enexpr(subpop))) {
+  if (subpop_string == "NULL") {
 
     #Identificar las variables ingresadas para la desagregación
-    agrupacion <- rlang::expr_name(rlang::enexprs(dominios)[[1]]) %>%
+    agrupacion <- dominios_string %>%
       stringr::str_split(pattern = "\\+")
+
     agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
     agrup1 <- c(agrupacion, var_string)
 
     # Agregar ~ para adecuar a formato de survey
-    dominios_form <- paste0("~", rlang::enexprs(dominios)) %>%
+    dominios_form <- paste0("~", dominios_string) %>%
       as.formula()
 
     # Esto corre para subpop
-  } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
-
-    # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
-    es_prop <- disenio$variables %>%
-      dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
-    if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
+  } else if (subpop_string != "NULL") { # caso que tiene subpop
 
     #Identificar las variables ingresadas para la desagregación
-    agrupacion <- rlang::expr_name(rlang::enexprs(dominios)[[1]]) %>%
+    agrupacion <- dominios_string %>%
       stringr::str_split(pattern = "\\+")
     agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
-    agrupacion <- c(rlang::quo_text(rlang::enquo(subpop)), agrupacion  )
+    agrupacion <- c(subpop_string, agrupacion)
     agrup1 <- c(agrupacion, var_string)
 
-    #dominios_form <- paste(agrupacion, "+")
-    dominios_form <- paste(rlang::enexpr(subpop), rlang::enexprs(dominios), sep =  "+")
+
+    dominios_form <- paste(subpop_string, dominios_string, sep =  "+")
     dominios_form <- paste0("~", dominios_form) %>%
       as.formula()
 
   }
-  # Pasar a la variable objetivo al formato de survey
-  var_formula <- paste0("~", rlang::enexpr(var)) %>%
+  # Pasar la variable objetivo al formato de survey
+  var_formula <- paste0("~", var_string) %>%
     as.formula()
 
-
   tabla1 <- survey::svyby(formula = var_formula, by = dominios_form, design = disenio, FUN = survey::svytotal)
-
 
   gl <- calcular_upm(disenio$variables, agrupacion) %>%
     dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
     dplyr::mutate(gl = upm - varstrat)  %>%
     #dplyr::filter(!!rlang::enquo(var) == 1)  %>%
     dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
-
 
   cv <- survey::cv(tabla1, design = disenio) %>%
     as.data.frame() %>%
@@ -436,6 +450,7 @@ crear_insumos_suma_desagrega <- function(var, dominios = NULL, subpop = NULL, di
     dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
                      by = agrupacion) %>%
     dplyr::left_join(cv, by = agrupacion)
+
 
   final
 }
@@ -459,8 +474,9 @@ crear_insumos_suma_desagrega <- function(var, dominios = NULL, subpop = NULL, di
 #' @export
 
 crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, sumar = F) {
-  #x <- crear_insumos_suma_desagrega(var, dominios, subpop, disenio)
-  #return(x)
+
+  # Generar un string con el nombre de la variable. Se usa más adelante
+  var_string <-  rlang::expr_name(rlang::enexpr(var))
 
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
@@ -469,8 +485,11 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, suma
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
   if (!is.null(rlang::enexprs(dominios)[[1]])) {
 
-    # Generar un string con el nombre de la variable
-    var_string <-  rlang::expr_name(rlang::enexpr(var))
+    # Este código corre para los casos en los que se quiere sumar una variable
+    if (sumar == T) {
+      suma <- crear_insumos_suma_desagrega(!!rlang::enquo(var), !!rlang::enquo(dominios), !!rlang::enquo(subpop), disenio)
+      return(suma)
+    }
 
     # Verificar que la variabe de entrada es correcta
     if (!is.numeric(disenio$variables[[var_string]])) stop("¡La variable debe ser numérica!")
@@ -562,11 +581,13 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, suma
       stringr::str_split(pattern = "\\+")
     agrup1 <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
 
-
-    # Convertir variables a string. Esto se hace debido a que survey tiene distintos tratamientos para variables numéricas o de string
+    # Esto se hace cuando no se activa la función de sumar
+    if (sumar == F) {
+      # Convertir variables a string. Esto se hace debido a que survey tiene distintos tratamientos para variables numéricas o de string
       disenio <- survey::svydesign(ids = ~varunit, strata = ~varstrat,
                                    data = disenio$variables %>% dplyr::mutate_at(.vars = dplyr::vars(agrup1), list(as.character)),
                                    weights = ~fe)
+    }
 
     # Acomodar a formato de survey
     var_formula <- paste0("~", rlang::enexprs(var)) %>%
@@ -594,19 +615,49 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, suma
     totales <- as.data.frame(tabla1) %>%
       tibble::rownames_to_column(var = "variable")
 
-    # Tamaño muestral
-    n <- purrr::map(agrup1, calcular_n_total, datos = disenio$variables) %>%
-      purrr::reduce(dplyr::bind_rows)
-    return(list(n, totales))
+    # Esto se hace para el caso de las sumas (ingreso, gasto, etc)
+    if (sumar == T) {
+      # Tabla con los totales
+      totales <- as.data.frame(tabla1) %>%
+        tibble::rownames_to_column(var = "variable") %>%
+        dplyr::rename(se = var_string)
 
-    # Grados de libertad
-    gl <- calcular_gl_total(agrup1, disenio$variables)
+      # Tamaño muestral
+      n <- nrow(disenio$variables) %>%
+        as.data.frame() %>%
+        dplyr::mutate(variable = var_string) %>%
+        dplyr::rename(n = ".")
 
-    #Extrear el coeficiente de variación
-    cv <- cv(tabla1, design = disenio) * 100
-    cv <- as.data.frame(cv) %>%
-      tibble::rownames_to_column(var = "variable") %>%
-      dplyr::rename(coef_var = cv)
+      # Grados de libertad
+      upm <- length(unique(disenio$variables$varunit))
+      varstrat <- length(unique(disenio$variables$varstrat))
+      gl <- cbind(upm, varstrat)
+      gl <- gl %>%
+        as.data.frame() %>%
+        dplyr::mutate(variable = var_string,
+                      gl =  upm - varstrat)
+
+      # Coeficiente de variación
+      cv <- cv(tabla1, design = disenio) * 100
+      cv <- as.data.frame(cv) %>%
+        tibble::rownames_to_column(var = "variable") %>%
+        dplyr::rename(coef_var = var_string)
+
+    # Esto es para el caso del conteo de unidades
+    } else {
+      # Tamaño muestral
+      n <- purrr::map(agrup1, calcular_n_total, datos = disenio$variables) %>%
+        purrr::reduce(dplyr::bind_rows)
+
+      # Grados de libertad
+      gl <- calcular_gl_total(agrup1, disenio$variables)
+
+      #Extrear el coeficiente de variación
+      cv <- cv(tabla1, design = disenio) * 100
+      cv <- as.data.frame(cv) %>%
+        tibble::rownames_to_column(var = "variable") %>%
+        dplyr::rename(coef_var = cv)
+    }
 
     # COnstruir tabla final
     final <- totales %>%
@@ -615,14 +666,13 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, suma
       dplyr::left_join(cv, by = "variable")
 
   }
-  names(final) <- tolower(names(final))
 
   # Las filas en las que no exsiten casos generan valores NA. Esos casos se eliminan
+  names(final) <- tolower(names(final))
   final <- final %>%
     dplyr::filter(!is.nan(coef_var))
 
   return(final)
-
 }
 
 

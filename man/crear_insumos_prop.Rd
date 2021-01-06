@@ -4,7 +4,7 @@
 \alias{crear_insumos_prop}
 \title{Crea los insumos necesarios para hacer la evaluación de estimadores de proporción}
 \usage{
-crear_insumos_prop(var, dominios = NULL, disenio)
+crear_insumos_prop(var, dominios = NULL, subpop = NULL, disenio)
 }
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}.}
