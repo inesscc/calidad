@@ -4,7 +4,7 @@
 \alias{crear_insumos_tot}
 \title{Crea los insumos necesarios para hacer la evaluación de estimadores de totales}
 \usage{
-crear_insumos_tot(var, dominios = NULL, subpop = NULL, disenio, sumar = F)
+crear_insumos_tot(var, dominios = NULL, subpop = NULL, disenio)
 }
 \arguments{
 \item{var}{string. Variable para la cual se quiere calcular un total. Pueden introducirse varias variables separadas por un +, para obtener más totales en la tabla}
