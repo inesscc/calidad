@@ -1,3 +1,27 @@
+### función par homologar variables upm ####
+unificar_variables_upm = function(disenio){
+  stringr::str_replace(paste(disenio$call)[2],"~","")
+}
+
+#-----------------------------------------------------------------------
+
+
+### función par homologar variables estratos ####
+unificar_variables_estrato = function(disenio){
+  stringr::str_replace(paste(disenio$call)[3],"~","")
+}
+
+#-----------------------------------------------------------------------
+
+
+### función par homologar variables factor expansión ####
+unificar_variables_factExp = function(disenio){
+  stringr::str_replace(paste(disenio$call)[5],"~","")
+}
+
+#-----------------------------------------------------------------------
+
+
 #' Calcula medias a partir de cierta agregación
 #'
 #' Genera una tabla con estimaciones para una agregación determinada
@@ -238,7 +262,10 @@ crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
-  chequear_var_disenio(disenio$variables)
+  # chequear_var_disenio(disenio$variables)
+
+  disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
+  disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
 
   # Encapsular inputs para usarlos después
   enquo_var <-  rlang::enquo(var)
@@ -252,7 +279,6 @@ crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
     dplyr::mutate(es_prop = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
 
   if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("¡Parece que tu variable es de proporción!")
-
 
 
   #Convertir los inputs en fórmulas para adecuarlos a survey
@@ -271,7 +297,7 @@ crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
       #Generar la tabla con los cálculos
       tabla <- calcular_tabla(var, dominios, disenio)
 
-    # Esto corre para subpop
+      # Esto corre para subpop
     } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
 
       # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
@@ -288,35 +314,35 @@ crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
         dplyr::filter(!!rlang::enquo(subpop) == 1)
     }
 
-  #Extraer nombres
-  nombres <- names(tabla)
-  agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
+    #Extraer nombres
+    nombres <- names(tabla)
+    agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
 
-  #Calcular el tamaño muestral de cada grupo
-  n <- calcular_n(disenio$variables, agrupacion)
+    #Calcular el tamaño muestral de cada grupo
+    n <- calcular_n(disenio$variables, agrupacion)
 
-  #Calcular los grados de libertad de todos los cruces
-  gl <- calcular_upm(disenio$variables, agrupacion) %>%
-    dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
-    dplyr::mutate(gl = upm - varstrat)
+    #Calcular los grados de libertad de todos los cruces
+    gl <- calcular_upm(disenio$variables, agrupacion) %>%
+      dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
+      dplyr::mutate(gl = upm - varstrat)
 
-  #Extrear el coeficiente de variación
-  cv <- cv(tabla, design = disenio) * 100
+    #Extrear el coeficiente de variación
+    cv <- cv(tabla, design = disenio) * 100
 
-  cv <- tabla %>%
-    dplyr::select(agrupacion) %>%
-    dplyr::bind_cols(coef_var = cv)
+    cv <- tabla %>%
+      dplyr::select(agrupacion) %>%
+      dplyr::bind_cols(coef_var = cv)
 
-  #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
-  final <- tabla %>%
-    dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
-              by = agrupacion) %>%
-    dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
-              by = agrupacion) %>%
-    dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
-              by = agrupacion)
+    #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
+    final <- tabla %>%
+      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
+                       by = agrupacion) %>%
+      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
+                       by = agrupacion) %>%
+      dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
+                       by = agrupacion)
 
-  # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
+    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
   } else {
 
 
@@ -362,6 +388,7 @@ crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
 }
 
+
 #--------------------------------------------------------------------
 
 #' Crea los insumos para el caso específico de estimaciones de suma
@@ -380,21 +407,26 @@ crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
 crear_insumos_suma <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
+  # chequear_var_disenio(disenio$variables)
+
+  disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
+  disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
+
   # COnvertir a string todas las variables de entrada
   var_string <-  rlang::expr_name(rlang::enexpr(var)) %>%
     stringr::str_remove("~")
-   dominios_string <-  rlang::expr_name(rlang::enexpr(dominios))%>%
-     stringr::str_remove("~")
-   subpop_string <-  rlang::expr_name(rlang::enexpr(subpop))%>%
-     stringr::str_remove("~")
+  dominios_string <-  rlang::expr_name(rlang::enexpr(dominios))%>%
+    stringr::str_remove("~")
+  subpop_string <-  rlang::expr_name(rlang::enexpr(subpop))%>%
+    stringr::str_remove("~")
 
-   # Verificar que la variable de estimación sea numérica. Se interrumpe si no es numérica
+  # Verificar que la variable de estimación sea numérica. Se interrumpe si no es numérica
   if (!is.numeric(disenio$variables[[var_string]]) ) stop("Debes usar una variable numérica")
 
 
-   # Pasar la variable objetivo al formato de survey
-   var_formula <- paste0("~", var_string) %>%
-     as.formula()
+  # Pasar la variable objetivo al formato de survey
+  var_formula <- paste0("~", var_string) %>%
+    as.formula()
 
   # ESTO CORRESPONDE AL CASO EN EL QUE HAY DESAGREGACIÓN
   if (dominios_string != "NULL") {
@@ -468,7 +500,7 @@ crear_insumos_suma <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
 
 
-  # ESTE ES EL CASO NO AGREGADO
+    # ESTE ES EL CASO NO AGREGADO
   } else {
 
     tabla1 <- survey::svytotal(x = var_formula, design = disenio )
@@ -507,11 +539,12 @@ crear_insumos_suma <- function(var, dominios = NULL, subpop = NULL, disenio) {
       dplyr::left_join(cv, by = "variable")
 
 
- }
+  }
 
 
   final
 }
+
 
 
 #--------------------------------------------------------------------
@@ -538,7 +571,11 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
-  chequear_var_disenio(disenio$variables)
+  # chequear_var_disenio(disenio$variables)
+
+  disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
+  disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
+  disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
   if (!is.null(rlang::enexprs(dominios)[[1]])) {
@@ -625,7 +662,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
                        by = agrupacion) %>%
       dplyr::left_join(cv, by = agrupacion)
 
-  # ESTO CORRESPONDE AL CASO SIN DESAGRAGACIÓN
+    # ESTO CORRESPONDE AL CASO SIN DESAGRAGACIÓN
   } else {
 
     # Identificar las variables ingresadas por el usuario
@@ -666,17 +703,17 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
       tibble::rownames_to_column(var = "variable")
 
     # Tamaño muestral
-      n <- purrr::map(agrup1, calcular_n_total, datos = disenio$variables) %>%
-        purrr::reduce(dplyr::bind_rows)
+    n <- purrr::map(agrup1, calcular_n_total, datos = disenio$variables) %>%
+      purrr::reduce(dplyr::bind_rows)
 
-      # Grados de libertad
-      gl <- calcular_gl_total(agrup1, disenio$variables)
+    # Grados de libertad
+    gl <- calcular_gl_total(agrup1, disenio$variables)
 
-      #Extrear el coeficiente de variación
-      cv <- cv(tabla1, design = disenio) * 100
-      cv <- as.data.frame(cv) %>%
-        tibble::rownames_to_column(var = "variable") %>%
-        dplyr::rename(coef_var = cv)
+    #Extrear el coeficiente de variación
+    cv <- cv(tabla1, design = disenio) * 100
+    cv <- as.data.frame(cv) %>%
+      tibble::rownames_to_column(var = "variable") %>%
+      dplyr::rename(coef_var = cv)
 
     # COnstruir tabla final
     final <- totales %>%
@@ -693,6 +730,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
   return(final)
 }
+
 
 
 #-----------------------------------------------------------------------
@@ -715,7 +753,11 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
 crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
-  chequear_var_disenio(disenio$variables)
+  # chequear_var_disenio(disenio$variables)
+  disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
+  disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
+
+
 
   # Encapsular inputs para usarlos más tarde
   var_string <-  rlang::expr_name(rlang::enexpr(var))
@@ -743,7 +785,7 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
       dominios <- paste0("~", rlang::enexprs(dominios)) %>%
         as.formula()
 
-    # Esto corre para subpop
+      # Esto corre para subpop
     } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
 
       # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
@@ -752,41 +794,41 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
-        dominios <- paste(rlang::enexprs(dominios), rlang::enexpr(subpop), sep = "+")
-        dominios <- paste0("~", dominios) %>%
-          as.formula()
+      dominios <- paste(rlang::enexprs(dominios), rlang::enexpr(subpop), sep = "+")
+      dominios <- paste0("~", dominios) %>%
+        as.formula()
     }
 
-  #Generar la tabla con los cálculos
-  tabla <- calcular_tabla(var, dominios, disenio)
+    #Generar la tabla con los cálculos
+    tabla <- calcular_tabla(var, dominios, disenio)
 
     #Extraer nombres
-  nombres <- names(tabla)
-  agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
-  var_prop <- nombres[length(nombres) - 1]
+    nombres <- names(tabla)
+    agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
+    var_prop <- nombres[length(nombres) - 1]
 
-  #Calcular el tamaño muestral de cada grupo
-  n <- calcular_n(disenio$variables, agrupacion)
+    #Calcular el tamaño muestral de cada grupo
+    n <- calcular_n(disenio$variables, agrupacion)
 
 
-  #Calcular los grados de libertad de todos los cruces
-  gl <- calcular_upm(disenio$variables, agrupacion) %>%
-    dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
-    dplyr::mutate(gl = upm - varstrat)
+    #Calcular los grados de libertad de todos los cruces
+    gl <- calcular_upm(disenio$variables, agrupacion) %>%
+      dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
+      dplyr::mutate(gl = upm - varstrat)
 
-  #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
-  final <- tabla %>%
-    dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
-              by = agrupacion) %>%
-    dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
-              by = agrupacion)
+    #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
+    final <- tabla %>%
+      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
+                       by = agrupacion) %>%
+      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
+                       by = agrupacion)
 
-  #Cambiar el nombre de la variable objetivo para que siempre sea igual.
-  final <- final  %>%
-    dplyr::rename(objetivo = var_prop) %>%
-    dplyr::filter(objetivo > 0) # se eliminan los ceros de la tabla
+    #Cambiar el nombre de la variable objetivo para que siempre sea igual.
+    final <- final  %>%
+      dplyr::rename(objetivo = var_prop) %>%
+      dplyr::filter(objetivo > 0) # se eliminan los ceros de la tabla
 
-  # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
+    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
   } else {
 
     # Si el usuario ingresa subpoblación, se filtra la base de datos para la subpoblación de referencia
@@ -803,30 +845,30 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
     }
 
-  #Generar la tabla con los cálculos
-  tabla <- calcular_tabla(var, dominios, disenio)
+    #Generar la tabla con los cálculos
+    tabla <- calcular_tabla(var, dominios, disenio)
 
     # Tamaño muestral
-  n <- nrow(disenio$variables)
+    n <- nrow(disenio$variables)
 
-  # Calcular grados de libertad
-  varstrat <- length(unique(disenio$variables$varstrat))
-  varunit <- length(unique(disenio$variables$varunit))
-  gl <- varunit - varstrat
+    # Calcular grados de libertad
+    varstrat <- length(unique(disenio$variables$varstrat))
+    varunit <- length(unique(disenio$variables$varunit))
+    gl <- varunit - varstrat
 
-  # Calcular coeficiente de variación
-  cv <- cv(tabla, design = disenio) * 100
+    # Calcular coeficiente de variación
+    cv <- cv(tabla, design = disenio) * 100
 
-  # Armar tabla final
-  final <- data.frame(tabla )
+    # Armar tabla final
+    final <- data.frame(tabla )
 
-  # Armar tabla completa con todos los insumos
-  final <- dplyr::bind_cols(final, "gl" = gl, "n" = n)
-  names(final)[2] <- "se"
+    # Armar tabla completa con todos los insumos
+    final <- dplyr::bind_cols(final, "gl" = gl, "n" = n)
+    names(final)[2] <- "se"
 
-  #Cambiar el nombre de la variable objetivo para que siempre sea igual
-  final <- final %>%
-    dplyr::rename(objetivo = mean)
+    #Cambiar el nombre de la variable objetivo para que siempre sea igual
+    final <- final %>%
+      dplyr::rename(objetivo = mean)
 
   }
 
