@@ -1,10 +1,18 @@
 context("test-creacion_insumos_tot")
 
+ene <- ene %>%
+  dplyr::mutate(fdt = dplyr::if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0),
+                ocupado = dplyr::if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0),
+                desocupado = dplyr::if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0))
+
+
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 options(survey.lonely.psu = "certainty")
 
-dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene,
-                            weights = ~fe)
+dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene,
+                            weights = ~fact_cal)
+
+
 
 
 ######################

@@ -440,6 +440,7 @@ crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' crear_insumos_suma(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
+#' @export
 
 crear_insumos_suma <- function(var, dominios = NULL, subpop = NULL, disenio) {
 

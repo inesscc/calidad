@@ -2,9 +2,11 @@
 
 export(crear_insumos)
 export(crear_insumos_prop)
+export(crear_insumos_suma)
 export(crear_insumos_tot)
 export(evaluacion_calidad)
 export(evaluacion_calidad_prop)
+export(evaluacion_calidad_suma)
 export(evaluacion_calidad_tot)
 export(tabla_html)
 import(kableExtra)

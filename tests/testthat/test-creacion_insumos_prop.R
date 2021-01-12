@@ -8,10 +8,18 @@ enusc <-  readRDS("C:/Users/klehm/Downloads/bkish_2019.rds")
 
 # Diseños muestrales
 
+ene <- ene %>%
+  dplyr::mutate(fdt = dplyr::if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0),
+         ocupado = dplyr::if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0),
+         desocupado = dplyr::if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0))
+
+
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene %>%
+dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene %>%
                               dplyr::mutate(desocupado2 = dplyr::if_else(desocupado == 1 & fdt == 1, 1, 0)),
-                              weights = ~fe)
+                              weights = ~fact_cal)
+
+
 enusc <- enusc %>%
   dplyr::rename(varunit = Conglomerado,
          varstrat = VarStrat) %>%
@@ -99,7 +107,7 @@ test4 <-  crear_insumos_prop(desocupado, sexo+region, disenio = dc_ene) %>%
 insumo <- ene %>%
   dplyr::filter(sexo == 2 & region == 1)
 
-gl <- length(unique(insumo$varunit)) - length(unique(insumo$varstrat))
+gl <- length(unique(insumo$conglomerado)) - length(unique(insumo$estrato_unico))
 
 test_that("gl proporción desagregado ene", {
   expect_equal(test4, gl)

@@ -6,7 +6,7 @@ options(survey.lonely.psu = "certainty")
 
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas %>% dplyr::group_by(folio) %>% dplyr::slice(1), weights = ~fe)
 
-dc_ene <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = ene %>% dplyr::mutate(hombre = dplyr::if_else(sexo == 1, 1, 0)), weights = ~fe)
+dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene %>% dplyr::mutate(hombre = dplyr::if_else(sexo == 1, 1, 0)), weights = ~fact_cal)
 
 
 ##############################
