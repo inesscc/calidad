@@ -1,10 +1,35 @@
-### función par homologar variables upm ####
+
+#-----------------------------------------------------------------------
+
+#' Homologa nombre de variable que hace referencia a los conglomerados, con el objetivo de evitar posible errores.
+#'
+#' Identifica el nombre de la variable asignada para los conglomerados en el diseño complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creación de insumos.
+#'
+#' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#'
+#' @return \code{vector} que contiene la variable con los conglomerados.
+#' @import survey
+#' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' unificar_variables_estrato(dc)
+
 unificar_variables_upm = function(disenio){
   stringr::str_replace(paste(disenio$call)[2],"~","")
 }
 
 #-----------------------------------------------------------------------
 
+#' Homologa nombre de variable que hace referencia a los estratos de conglomerados, con el objetivo de evitar posible errores.
+#'
+#' Identifica el nombre de la variable asignada para los estratos de conglomerados en el diseño complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creación de insumos.
+#'
+#' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#'
+#' @return \code{vector} que contiene la variable con los estratos de conglomerados.
+#' @import survey
+#' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' unificar_variables_estrato(dc)
 
 ### función par homologar variables estratos ####
 unificar_variables_estrato = function(disenio){
@@ -13,6 +38,17 @@ unificar_variables_estrato = function(disenio){
 
 #-----------------------------------------------------------------------
 
+#' Homologa nombre de variable que hace referencia al factor de expansión utilizado por el usuario, con el objetivo de evitar posible errores.
+#'
+#' Identifica el nombre de la variable asignada para el factor de expansión en el diseño complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creación de insumos.
+#'
+#' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#'
+#' @return \code{vector} que contiene la variable con los datos del factor de expansión.
+#' @import survey
+#' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' unificar_variables_estrato(dc)
 
 ### función par homologar variables factor expansión ####
 unificar_variables_factExp = function(disenio){
