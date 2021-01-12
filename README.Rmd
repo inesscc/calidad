@@ -1,5 +1,5 @@
 ---
-title: "Instrucciones para usar paquete para evaluar calidad de estimaciones"
+title: "Instrucciones de uso paquete para evaluar calidad de estimaciones"
 output: github_document
 always_allow_html: true
 ---
@@ -141,9 +141,9 @@ En el caso de un tabulado de total de desempleados por región, el resultado de 
 
 ## Visualización en html
 
-Actualmente, estám en desarrollo algunas funcionalidades para visualizar los resultados. La función `tabla_html` genera una tabla en html que señaliza con los colores amarillo, verde y rojo la calidad de las estimaciones. Además, indica cuál de los insumos es el que está afectando a la clasificación de calidad. 
+Actualmente, están en desarrollo algunas funcionalidades para visualizar los resultados. La función `tabla_html` genera una tabla en html que señaliza con los colores amarillo, verde y rojo la calidad de las estimaciones. Además, indica cuál de los insumos es el que está afectando a la clasificación de calidad.  
 
-```{r}
+```{r, eval=F}
 tabla_html(evaluacion_tot_desagreg)
 ```
 
