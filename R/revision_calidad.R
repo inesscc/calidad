@@ -44,7 +44,7 @@ cuadratica <- function(p) {
 #' @export
 
 
-evaluacion_calidad <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluar_calidad_media <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -104,7 +104,7 @@ evaluacion_calidad <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #' @export
 
 
-evaluacion_calidad_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluar_calidad_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -165,7 +165,7 @@ evaluacion_calidad_prop <- function(tabulado, condicion = NULL, publicar = FALSE
 #' @export
 
 
-evaluacion_calidad_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluar_calidad_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -229,7 +229,7 @@ evaluacion_calidad_tot <- function(tabulado, condicion = NULL, publicar = FALSE)
 #' @export
 
 
-evaluacion_calidad_suma <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluar_calidad_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {

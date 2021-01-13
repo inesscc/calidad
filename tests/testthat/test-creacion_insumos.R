@@ -15,7 +15,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 
 # Testear la media sin desagregación
 
-test1 <-  crear_insumos(gastot_hd, disenio = dc)
+test1 <-  crear_insumos_media(gastot_hd, disenio = dc)
 
 test_that("Insumo media", {
   expect_equal(round(test1$mean), 1121925)
@@ -23,14 +23,14 @@ test_that("Insumo media", {
 
 
 # Testear la media con desagregación
-test2 <-  crear_insumos(gastot_hd, zona, disenio = dc)
+test2 <-  crear_insumos_media(gastot_hd, zona, disenio = dc)
 
 test_that("Insumo media zona", {
   expect_equal(round(test2$gastot_hd), c(1243155, 969048))
 })
 
 # Testear grados de libertad con desagregación
-test3 <-  crear_insumos(gastot_hd, zona, disenio = dc) %>%
+test3 <-  crear_insumos_media(gastot_hd, zona, disenio = dc) %>%
   dplyr::filter(zona == 1) %>%
   dplyr::select(gl) %>%
   dplyr::pull()
@@ -45,7 +45,7 @@ test_that("gl media desagregado", {
 })
 
 # Testear tamaño muestral desagregado
-test4 <-  crear_insumos(gastot_hd, zona, disenio = dc) %>%
+test4 <-  crear_insumos_media(gastot_hd, zona, disenio = dc) %>%
   dplyr::filter(zona == 2) %>%
   dplyr::select(n) %>%
   dplyr::pull()

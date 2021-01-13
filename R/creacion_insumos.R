@@ -294,7 +294,7 @@ calcular_gl_total <- function(variables, datos) {
 #' crear_insumos(gastot_hd, zona+sexo, dc)
 #' @export
 
-crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
+crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
@@ -442,7 +442,7 @@ crear_insumos <- function(var, dominios = NULL, subpop = NULL, disenio) {
 #' crear_insumos_suma(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
 #' @export
 
-crear_insumos_suma <- function(var, dominios = NULL, subpop = NULL, disenio) {
+crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
   # chequear_var_disenio(disenio$variables)
 

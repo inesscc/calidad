@@ -10,7 +10,9 @@ En este tutorial se utilizan 2 conjuntos de datos:
   - VIII Encuesta de Presupuestos Familiares
 
 Ambos datasets están dentro del paquete y pueden ser utilizados cuando
-calidad está cargado \[1\].
+calidad está cargado \[1\]. La edición en el caso de la ENE tiene el
+objetivo de generar variables que identifiquen subpoblaciones de interés
+(fuerza de trabajo, ocupados, desocupados)
 
 ``` r
 library(survey)
@@ -19,9 +21,9 @@ library(tidyverse)
 
 # Generar algunas variables para la ENE
 ene <- ene %>% 
-  mutate(fdt = if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0),
-         ocupado = if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0),
-         desocupado = if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0))
+  mutate(fdt = if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0), # fuerza de trabajo
+         ocupado = if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0), # persona ocupada
+         desocupado = if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0)) # persona desocupada
 
 # Llevar epf a nivel de hogar
 epf <- epf_personas %>% 
@@ -33,9 +35,9 @@ epf <- epf_personas %>%
 
 Antes de comenzar a usar el paquete `calidad` es necesario declarar el
 diseño muestral de la encuesta que se está evaluando, para lo cual
-utilizamos el paquete `survey`. Se debe declarar cuál es la UPM, el
-estrato y el factor de expansión. Declaramos el diseño para las dos
-encuestas (EPF y ENE)
+utilizamos el paquete `survey`. Se debe declarar el conglomerado de
+varianza, el estrato estrato de varianza y el factor de expansión.
+Declaramos el diseño para las dos encuestas (EPF y ENE)
 
 ``` r
 options(survey.lonely.psu = "certainty")
@@ -53,26 +55,30 @@ dc_epf <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~f
 
 Para evaluar la calidad de una estimación, la [metodología del
 INE](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4)
-establece criterios diferenciados para estimaciones de nivel y
-estimaciones de proporción. En el caso estimaciones de nivel se requiere
-contar con el tamaño muestral, los grados de libertad y el coeficiente
-de variación. Por su parte, la estimaciones de proporción requieren el
-tamaño muestral, los grados de libertad y el error estándar.
+establece criterios diferenciados para estimaciones de proporción (o
+razón), por un lado, y estimaciones de media y total, por otro. En el
+caso de estimaciones de proporción se requiere contar con el tamaño
+muestral, los grados de libertad y el error estándar. Las otras
+estimaciones requieren el tamaño muestral, los grados de libertad y el
+coeficiente de variación.
 
-El paquete incluye funciones diferenciadas para crear los insumos de
-distintos tipos de estimaciones. El uso de cada uno de ellos es el
-siguiente:
+El paquete incluye funciones diferenciadas para crear los insumos para
+estimaciones de **media, proporción y total**. A continuación se muestra
+cómo se utilizan las funciones de proporción y total.
 
 ``` r
 insumos_prop <- crear_insumos_prop(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 insumos_total <-  crear_insumos_tot(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 ```
 
-  - `var`: variable que se quiere estimar. Debe ser una variable dummy
+  - `var`: variable que se quiere estimar. Debe ser una variable
+    dummy\[2\]
   - `dominios`: desagregación que se requiere.
   - `subpop`: selección de una subpoblación de referencia. Es opcional y
     funciona a modo de filtro (debe ser una variable dummy)
   - `disenio`: diseño muestral
+
+La función retorna todos los insumos necesarios para generar el estándar
 
 Para obtener más desagregaciones, podemos usar el símbolo “+” de la
 siguiente manera:
@@ -86,29 +92,34 @@ desagregar <- crear_insumos_prop(var = desocupado, dominios = sexo+region, subpo
 En ciertas ocasiones puede ser de interés evaluar la calidad de una
 suma. Por ejemplo, la suma de todos los ingresos de la EPF a nivel de
 zona geográfica (Gran Santiago y resto de capitales regionales). Para
-ello, existe la función `crear_insumos_suma`
+ello, existe la función `crear_insumos_tot_con`. Esta función recibe una
+variable continua como horas, gasto o ingreso y genera totales al nivel
+solicitado. La terminación “con” de la función hace alusión a que se
+está usando una variable continua.
 
 ``` r
-insumos_suma <-  crear_insumos_suma(var = gastot_hd, dominios = zona, disenio =  dc_epf)
+insumos_suma <-  crear_insumos_tot_con(var = gastot_hd, dominios = zona, disenio =  dc_epf)
 ```
 
 Si queremos evaluar la estimación de una media, contamos con la función
-`crear_insumos`. En este caso, calcularemos la media de gasto de los
-hogares, según área geográfica.
+`crear_insumos_media`. En este caso, calcularemos la media de gasto de
+los hogares, según área geográfica.
 
 ``` r
-insumos_media <-  crear_insumos(var = gastot_hd, dominios = zona, disenio =  dc_epf)
+insumos_media <-  crear_insumos_media(var = gastot_hd, dominios = zona, disenio =  dc_epf)
 ```
 
 Cabe mencionar que el uso por defecto es no desagregar, en cuyo caso las
 funciones deben ser utilizadas del siguiente modo:
 
 ``` r
+# Usando datos de la ENE
 insumos_prop_nacional <- crear_insumos_prop(desocupado, subpop = fdt, disenio = dc_ene)
 insumos_total_nacional <-  crear_insumos_tot(desocupado, subpop = fdt, disenio = dc_ene)
 
-insumos_suma_nacional <- crear_insumos_suma(gastot_hd, disenio = dc_epf)
-insumos_media_nacional <-  crear_insumos(gastot_hd, disenio = dc_epf)
+# Usando datos de la EPF
+insumos_suma_nacional <- crear_insumos_tot_con(gastot_hd, disenio = dc_epf)
+insumos_media_nacional <-  crear_insumos_media(gastot_hd, disenio = dc_epf)
 ```
 
 Nótese que en el caso de las funciones `crear_insumos_prop` y
@@ -123,11 +134,11 @@ Nuevamente, usamos funciones diferentes para cada uno de los tipos de
 estimación.
 
 ``` r
-evaluacion_prop <- evaluacion_calidad_prop(insumos_prop)
-evaluacion_tot <- evaluacion_calidad_tot(insumos_total)
+evaluacion_prop <- evaluar_calidad_prop(insumos_prop)
+evaluacion_tot <- evaluar_calidad_tot(insumos_total)
 
-evaluacion_suma <- evaluacion_calidad_suma(insumos_suma)
-evaluacion_media <- evaluacion_calidad(insumos_media)
+evaluacion_suma <- evaluar_calidad_tot_con(insumos_suma)
+evaluacion_media <- evaluar_calidad_media(insumos_media)
 ```
 
 La salida de estas últimas funciones es un `dataframe` que, además de
@@ -136,7 +147,7 @@ la estimación es no fiable, poco fiable o fiable.
 
 Las mismas funciones para evaluar tienen un parámetro que nos permite
 saber si el tabulado debe o no ser publicado. Siguiendo el criterio del
-estándar, si menos del 50% de las estimaciones de un tabulado no son
+estándar, si más del 50% de las estimaciones de un tabulado no son
 fiables, este no debería ser publicado.
 
 ``` r
@@ -144,7 +155,7 @@ fiables, este no debería ser publicado.
 desagregar <- crear_insumos_tot(var = desocupado, dominios = region, subpop = fdt, disenio =  dc_ene)
 
 # Evaluar tabulado
-evaluacion_tot_desagreg <- evaluacion_calidad_tot(desagregar, publicar = T)
+evaluacion_tot_desagreg <- evaluar_calidad_tot(desagregar, publicar = T)
 ```
 
 En el caso de un tabulado de total de desempleados por región, el
@@ -168,3 +179,8 @@ tabla_html(evaluacion_tot_desagreg)
     pueden tener alguna colisión con las funciones de calidad. Si se
     quiere importar un archivo dta, se deben convertir a numeric o
     character todas las variables que sean de tipo haven::labelled.
+
+2.  Cuando se está desagregando, es decir, cuando se utiliza el
+    parámetro dominios, se debe usar siempre una variable dummy. Por
+    otro lado, cuando no se quiere desagregar, es posible agregar una
+    variable discreta con más cateorías, como por ejemplo, región.

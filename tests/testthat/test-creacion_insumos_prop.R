@@ -120,7 +120,7 @@ test_that("gl proporción desagregado ene", {
 
 # Tamaño muestral  desagregado ENUSC
 insumos_prop <- crear_insumos_prop(VP_DC, enc_region16FIX+rph_sexo, disenio = dc_enusc) %>%
-  evaluacion_calidad_prop()
+  evaluar_calidad_prop()
 
 test <- insumos_prop %>%
   dplyr::filter(rph_sexo == 1 & enc_region16FIX  == "Arica y Parinacota") %>%
