@@ -797,6 +797,7 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
   # Encapsular inputs para usarlos más tarde
   var_string <-  rlang::expr_name(rlang::enexpr(var))
   enquo_var <-  rlang::enquo(var)
+  #return(list(rlang::enexprs(dominios)[[1]], enquo_var) )
 
   # Chequear que la variable no sea character
   if (is.character(disenio$variables[[var_string]]) == T) stop("¡Estás usando una variable character!")
@@ -805,7 +806,10 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
   es_prop <- disenio$variables %>%
     dplyr::mutate(es_prop_var = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
 
+  #es_prop <- disenio$variables %>%
+  #  dplyr::mutate(es_prop_var = dplyr::if_else(!!sym(var_string)  == 1 |  !!sym(var_string) == 0, 1, 0))
 
+  #return(list(es_prop %>% select(es_prop_var, desocupado) %>% slice(1), sym(var_string), var_string))
   if (sum(es_prop$es_prop_var) != nrow(es_prop)) stop("¡La variable no es de proporción!")
 
   #COnvertir los inputs en fórmulas para adecuarlos a survey

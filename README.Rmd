@@ -60,6 +60,10 @@ Para evaluar la calidad de una estimación, la [metodología del INE](https://ww
 El paquete incluye funciones diferenciadas para crear los insumos para estimaciones de **media, proporción y total**. A continuación se muestra cómo se utilizan las funciones de proporción y total.
 
 ```{r}
+
+variable <- "desocupado"
+crear_insumos_prop(var = enexpr(variable), dominios = sexo, subpop = fdt, disenio =  dc_ene)
+
 insumos_prop <- crear_insumos_prop(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 insumos_total <-  crear_insumos_tot(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 
