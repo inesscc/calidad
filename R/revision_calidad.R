@@ -77,7 +77,8 @@ evaluar_calidad_media <- function(tabulado, condicion = NULL, publicar = FALSE) 
       dplyr::ungroup() %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0("pasa el ", pasa, "%"))
+                    aprueba = paste0("pasa el ", pasa, "%")) %>%
+      dplyr::select(-pasa)
   }
 
 
@@ -138,7 +139,8 @@ evaluar_calidad_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
       dplyr::ungroup() %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0("pasa el ", pasa, "%"))
+                    aprueba = paste0("pasa el ", pasa, "%"))%>%
+      dplyr::select(-pasa)
   }
 
 
@@ -200,7 +202,8 @@ evaluar_calidad_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
       dplyr::ungroup() %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0("pasa el ", pasa, "%"))
+                    aprueba = paste0("pasa el ", pasa, "%")) %>%
+      dplyr::select(-pasa)
   }
 
 
@@ -264,7 +267,8 @@ evaluar_calidad_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE
       dplyr::ungroup() %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0("pasa el ", pasa, "%"))
+                    aprueba = paste0("pasa el ", pasa, "%")) %>%
+      dplyr::select(-pasa)
   }
 
 

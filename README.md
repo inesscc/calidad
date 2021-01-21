@@ -36,8 +36,8 @@ epf <- epf_personas %>%
 Antes de comenzar a usar el paquete `calidad` es necesario declarar el
 diseño muestral de la encuesta que se está evaluando, para lo cual
 utilizamos el paquete `survey`. Se debe declarar el conglomerado de
-varianza, el estrato estrato de varianza y el factor de expansión.
-Declaramos el diseño para las dos encuestas (EPF y ENE)
+varianza, el estrato de varianza y el factor de expansión. Declaramos el
+diseño para las dos encuestas (EPF y ENE)
 
 ``` r
 options(survey.lonely.psu = "certainty")
