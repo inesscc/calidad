@@ -38,7 +38,7 @@ epf <- epf_personas %>%
 ```
 
 ## Declarar el diseño muestral
-Antes de comenzar a usar el paquete `calidad` es necesario declarar el diseño muestral de la encuesta que se está evaluando, para lo cual utilizamos el paquete `survey`. Se debe declarar el conglomerado de varianza, el estrato estrato de varianza y el factor de expansión. Declaramos el diseño para las dos encuestas (EPF y ENE)
+Antes de comenzar a usar el paquete `calidad` es necesario declarar el diseño muestral de la encuesta que se está evaluando, para lo cual utilizamos el paquete `survey`. Se debe declarar el conglomerado de varianza, el estrato de varianza y el factor de expansión. Declaramos el diseño para las dos encuestas (EPF y ENE)
 
 ```{r}
 options(survey.lonely.psu = "certainty")
@@ -59,11 +59,9 @@ Para evaluar la calidad de una estimación, la [metodología del INE](https://ww
 
 El paquete incluye funciones diferenciadas para crear los insumos para estimaciones de **media, proporción y total**. A continuación se muestra cómo se utilizan las funciones de proporción y total.
 
+
+
 ```{r}
-
-variable <- "desocupado"
-crear_insumos_prop(var = enexpr(variable), dominios = sexo, subpop = fdt, disenio =  dc_ene)
-
 insumos_prop <- crear_insumos_prop(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 insumos_total <-  crear_insumos_tot(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 
