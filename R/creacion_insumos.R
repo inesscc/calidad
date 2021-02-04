@@ -803,7 +803,7 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
   #Chequear que la variable sea de proporción. Si no lo es, se interrumpe la ejecución
   es_prop <- disenio$variables %>%
-    dplyr::mutate(es_prop_var = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
+    dplyr::mutate(es_prop_var = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0 | is.na(!!enquo_var), 1, 0))
 
   if (sum(es_prop$es_prop_var) != nrow(es_prop)) stop("¡La variable no es de proporción!")
 
@@ -909,8 +909,6 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
   return(final)
 
 }
-
-
 
 
 

@@ -2,8 +2,18 @@ Package: calidad
 Type: Package
 Title: Evalúa la calidad de las estimaciones hechas por encuestas de hogares 
 Version: 0.1.0
-Author: Klaus Lehmann
-Maintainer: Klaus Lehmann <klehmann@fen.uchile.cl>
+Authors@R: c(
+      person(given = "Klaus",
+        family = "Lehmann",
+        role = c("aut","cre"),
+        email = "klehmann@fen.uchile.cl"),
+      person(given = "Ricardo",
+        family = "Pizarro",
+        role = c("ctb")),
+      person(given = "Ignacio",
+        family = "Agloni",
+        role = c("ctb"))
+    )
 Description: El paquete evalúa la calidad de estimaciones hechas por encuestas de hogares, 
     siguiendo la metodología desarrollada por el Instituto Nacional de Estadísticas. Es
     posible implementar la evaluación para estimaciones de media y de proporción. 
@@ -20,5 +30,10 @@ Imports:
     survey,
     kableExtra,
     tibble,
-    stringr
+    stringr,
+    glue,
+    digest
+
+
+
 
