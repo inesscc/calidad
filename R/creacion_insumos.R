@@ -275,8 +275,52 @@ calcular_gl_total <- function(variables, datos) {
   return(gl)
 
 }
+#--------------------------------------------------------------------
+
+calcular_intervalos <- function(env = parent.frame() ) { #
+  gl <- get("gl", env)
+  agrupacion <- get("agrupacion", env)
+  disenio <- get("disenio", env)
+  tabla <- get("tabla", env)
+  n <- get("n", env)
+  cv <- get("cv", env)
 
 
+  valores <- gl %>%
+    dplyr::select(agrupacion)
+
+  gl_vector <- gl %>%
+    dplyr::ungroup() %>%
+    dplyr::pull(gl)
+
+
+  # Guardar los filtros para hacer cada una de las celdas
+  filtros <- purrr::map(1:nrow(valores), ~rlang::parse_expr(paste(names(valores), "==", valores[.x, ] , collapse = ' & ')))
+
+  # Calcular intervalos de confianza, considerando grados de libertad de cada estimación
+  intervalos <- purrr::map2_df(filtros, gl_vector,  ~survey::svymean(~ing_t_p, design = subset(disenio, rlang::eval_tidy(.x))) %>%
+                                 confint(df = .y) %>%
+                                 as.data.frame()) %>%
+    dplyr::rename(li = "2.5 %",
+                  ls = "97.5 %") %>%
+    dplyr::bind_cols(valores) %>%
+    tibble::remove_rownames()
+
+  #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
+
+  final <- tabla %>%
+    dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
+    dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
+                     by = agrupacion) %>%
+     dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
+                      by = agrupacion) %>%
+    dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
+                     by = agrupacion) %>%
+    dplyr::left_join(intervalos, by = agrupacion)
+
+  return(final)
+
+}
 
 #--------------------------------------------------------------------
 #' Crea los insumos necesarios para hacer la evaluación de estimadores de la media
@@ -294,7 +338,7 @@ calcular_gl_total <- function(variables, datos) {
 #' crear_insumos(gastot_hd, zona+sexo, dc)
 #' @export
 
-crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio) {
+crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F) {
 
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
@@ -355,28 +399,39 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio) {
     agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
 
     #Calcular el tamaño muestral de cada grupo
-    n <- calcular_n(disenio$variables, agrupacion)
+    n <- calcular_n(disenio$variables, agrupacion) %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
     #Calcular los grados de libertad de todos los cruces
     gl <- calcular_upm(disenio$variables, agrupacion) %>%
       dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
-      dplyr::mutate(gl = upm - varstrat)
+      dplyr::mutate(gl = upm - varstrat) %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
+
 
     #Extrear el coeficiente de variación
     cv <- cv(tabla, design = disenio) * 100
 
     cv <- tabla %>%
       dplyr::select(agrupacion) %>%
-      dplyr::bind_cols(coef_var = cv)
+      dplyr::bind_cols(coef_var = cv) %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
     #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
     final <- tabla %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
       dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
                        by = agrupacion) %>%
       dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
                        by = agrupacion) %>%
       dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
                        by = agrupacion)
+
+    # Se calculan los intervalos de confianza solo si el usuario lo requiere
+    if (ci == T) {
+      final <- calcular_intervalos()
+
+    }
 
     # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
   } else {
@@ -442,7 +497,7 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio) {
 #' crear_insumos_suma(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
 #' @export
 
-crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio) {
+crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F) {
 
   # chequear_var_disenio(disenio$variables)
 
@@ -506,15 +561,14 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio) 
     }
 
 
-    tabla1 <- survey::svyby(formula = var_formula, by = dominios_form, design = disenio, FUN = survey::svytotal)
+    tabla <- survey::svyby(formula = var_formula, by = dominios_form, design = disenio, FUN = survey::svytotal)
 
     gl <- calcular_upm(disenio$variables, agrupacion) %>%
       dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
       dplyr::mutate(gl = upm - varstrat)  %>%
-      #dplyr::filter(!!rlang::enquo(var) == 1)  %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
-    cv <- survey::cv(tabla1, design = disenio) %>%
+    cv <- survey::cv(tabla, design = disenio) %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "variable") %>%
       tidyr::separate(variable, agrupacion) %>%
@@ -523,11 +577,10 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio) 
       dplyr::mutate(coef_var = coef_var * 100)
 
     n <- calcular_n(disenio$variables, dominios = agrupacion) %>%
-      #dplyr::filter(!!rlang::enquo(var) == 1) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
     # Unir todo y generar la tabla final
-    final <- tabla1 %>%
+    final <- tabla %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
       dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
                        by = agrupacion) %>%
@@ -535,15 +588,21 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio) 
                        by = agrupacion) %>%
       dplyr::left_join(cv, by = agrupacion)
 
+    #Se calculan los intervalos de confianza solo si el usuario lo requiere
+    if (ci == T) {
+      final <- calcular_intervalos()
 
+    }
+
+    #return(final)
 
     # ESTE ES EL CASO NO AGREGADO
   } else {
 
-    tabla1 <- survey::svytotal(x = var_formula, design = disenio )
+    tabla <- survey::svytotal(x = var_formula, design = disenio )
 
     # Tabla con los totales
-    totales <- as.data.frame(tabla1) %>%
+    totales <- as.data.frame(tabla) %>%
       tibble::rownames_to_column(var = "variable") %>%
       dplyr::rename(se = var_string)
 
@@ -564,7 +623,7 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio) 
                     gl =  upm - varstrat)
 
     # Coeficiente de variación
-    cv <- cv(tabla1, design = disenio) * 100
+    cv <- cv(tabla, design = disenio) * 100
     cv <- as.data.frame(cv) %>%
       tibble::rownames_to_column(var = "variable") %>%
       dplyr::rename(coef_var = var_string)
@@ -668,7 +727,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
       as.formula()
 
     # Generar la tabla de estimaciones
-    tabla1 <- survey::svyby(formula = var_formula, by = dominios_form, design = disenio, FUN = survey::svytotal)
+    tabla <- survey::svyby(formula = var_formula, by = dominios_form, design = disenio, FUN = survey::svytotal)
 
     gl <- calcular_upm(disenio$variables, agrup1) %>%
       dplyr::left_join(calcular_estrato(disenio$variables, agrup1), by = agrup1) %>%
@@ -677,7 +736,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
 
-    cv <- survey::cv(tabla1, design = disenio) %>%
+    cv <- survey::cv(tabla, design = disenio) %>%
       as.data.frame() %>%
       tibble::rownames_to_column(var = "variable") %>%
       tidyr::separate(variable, agrupacion) %>%
@@ -691,7 +750,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
     # Unir todo y generar la tabla final
-    final <- tabla1 %>%
+    final <- tabla %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
       dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
                        by = agrupacion) %>%
@@ -733,10 +792,10 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
 
     # Tabla que se usa luego para calcular cv
-    tabla1 <- survey::svytotal(x = var_formula, design = disenio )
+    tabla <- survey::svytotal(x = var_formula, design = disenio )
 
     # Tabla con los totales
-    totales <- as.data.frame(tabla1) %>%
+    totales <- as.data.frame(tabla) %>%
       tibble::rownames_to_column(var = "variable")
 
     # Tamaño muestral
@@ -747,7 +806,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
     gl <- calcular_gl_total(agrup1, disenio$variables)
 
     #Extrear el coeficiente de variación
-    cv <- cv(tabla1, design = disenio) * 100
+    cv <- cv(tabla, design = disenio) * 100
     cv <- as.data.frame(cv) %>%
       tibble::rownames_to_column(var = "variable") %>%
       dplyr::rename(coef_var = cv)
