@@ -275,48 +275,36 @@ calcular_gl_total <- function(variables, datos) {
   return(gl)
 
 }
-#--------------------------------------------------------------------
-
-calcular_intervalos <- function(env = parent.frame() ) { #
-  gl <- get("gl", env)
-  agrupacion <- get("agrupacion", env)
-  disenio <- get("disenio", env)
-  tabla <- get("tabla", env)
-  n <- get("n", env)
-  cv <- get("cv", env)
 
 
-  valores <- gl %>%
-    dplyr::select(agrupacion)
 
-  gl_vector <- gl %>%
-    dplyr::ungroup() %>%
-    dplyr::pull(gl)
+#------------------------------
+
+#' Genera intervalos de confianza para todos los dominios estimados
+#'
+#' Usa la tabla creada para calcular el estándar y le agrega dos columnas con el límite inferior y superior del intervalo de confianza
+#'
+#' @param data \code{dataframe} con todos los datos necesarios para calcular el estándar
+#' @param env \code{environment} toma el ambiente de la función contenedora, para usar los elementos requeridos
+#' @param tipo \code{string} que indica cuál es el tipo de estimación que se realiza.
+#' @return \code{dataframe} que contiene todos los elementos del estándar, junto a tres columnas nuevas que contienen el límite inferior, el límite superior y el valor t
+#'
+#' @examples
+#' calcular_intervalos(tabla, tipo = media_agregado)
 
 
-  # Guardar los filtros para hacer cada una de las celdas
-  filtros <- purrr::map(1:nrow(valores), ~rlang::parse_expr(paste(names(valores), "==", valores[.x, ] , collapse = ' & ')))
+calcular_ic <-  function(data, env = parent.frame(), tipo = "resto") {
 
-  # Calcular intervalos de confianza, considerando grados de libertad de cada estimación
-  intervalos <- purrr::map2_df(filtros, gl_vector,  ~survey::svymean(~ing_t_p, design = subset(disenio, rlang::eval_tidy(.x))) %>%
-                                 confint(df = .y) %>%
-                                 as.data.frame()) %>%
-    dplyr::rename(li = "2.5 %",
-                  ls = "97.5 %") %>%
-    dplyr::bind_cols(valores) %>%
-    tibble::remove_rownames()
+  est <- switch(tipo, "resto" =  get("var_string", env),
+                "media_agregado" = "mean",
+                "prop_agregado" = "objetivo",
+                "total_agregado" = "total")
 
-  #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
 
-  final <- tabla %>%
-    dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-    dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
-                     by = agrupacion) %>%
-     dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
-                      by = agrupacion) %>%
-    dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
-                     by = agrupacion) %>%
-    dplyr::left_join(intervalos, by = agrupacion)
+  final <- data %>%
+    dplyr::mutate(t = qt(c(.975), df = gl),
+                  li = !!rlang::parse_expr(est) - se*t,
+                  ls = !!rlang::parse_expr(est) + se*t)
 
   return(final)
 
@@ -429,8 +417,7 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
 
     # Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
-      final <- calcular_intervalos()
-
+      final <- calcular_ic(final)
     }
 
     # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
@@ -471,6 +458,12 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
     # Armar tabla completa con todos los insumos
     final <- dplyr::bind_cols(final, "gl" = gl , "n" = n, "coef_var" = cv[1])
     names(final)[2] <- "se"
+
+    # Se calcular el intervalo de confianza solo si el usuario lo pide
+    if (ci == T) {
+      final <- calcular_ic(data = final, tipo = "media_agregado")
+    }
+
 
   }
 
@@ -590,11 +583,9 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, 
 
     #Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
-      final <- calcular_intervalos()
-
+      final <- calcular_ic(final)
     }
 
-    #return(final)
 
     # ESTE ES EL CASO NO AGREGADO
   } else {
@@ -635,6 +626,20 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, 
       dplyr::left_join(cv, by = "variable")
 
 
+    # Se calcula el intervalo de confianza solo si el usuario lo pide
+    if (ci == T) {
+      # intervalos <- tabla %>%
+      #   confint(df = degf(disenio)) %>%
+      #   as.data.frame() %>%
+      #   dplyr::rename(li = "2.5 %",
+      #                 ls = "97.5 %") %>%
+      #   tibble::remove_rownames()
+      # final <- final %>%
+      #   bind_cols(intervalos)
+      final <- calcular_ic(data = final, tipo = "total_agregado")
+    }
+
+
   }
 
 
@@ -660,7 +665,7 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, 
 #' crear_insumos_tot(ocupado, zona+sexo, dc)
 #' @export
 
-crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
+crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F) {
 
   # Generar un string con el nombre de la variable. Se usa más adelante
   var_string <-  rlang::expr_name(rlang::enexpr(var))
@@ -758,6 +763,13 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
                        by = agrupacion) %>%
       dplyr::left_join(cv, by = agrupacion)
 
+
+    #Se calculan los intervalos de confianza solo si el usuario lo requiere
+    if (ci == T) {
+      final <- calcular_ic(final)
+    }
+
+
     # ESTO CORRESPONDE AL CASO SIN DESAGRAGACIÓN
   } else {
 
@@ -796,7 +808,9 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
 
     # Tabla con los totales
     totales <- as.data.frame(tabla) %>%
-      tibble::rownames_to_column(var = "variable")
+      tibble::rownames_to_column(var = "variable") %>%
+      dplyr::rename(se = SE)
+
 
     # Tamaño muestral
     n <- purrr::map(agrup1, calcular_n_total, datos = disenio$variables) %>%
@@ -816,6 +830,13 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
       dplyr::left_join(n, by = "variable") %>%
       dplyr::left_join(gl %>% dplyr::select(-upm, -varstrat), by = "variable") %>%
       dplyr::left_join(cv, by = "variable")
+
+
+    # Se calcula el intervalo de confianza solo si el usuario lo pide
+    if (ci == T) {
+      final <- calcular_ic(data = final, tipo = "total_agregado")
+
+    }
 
   }
 
@@ -846,7 +867,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio) {
 #' crear_insumos_prop(ocupado, zona+sexo, dc)
 #' @export
 
-crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
+crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F) {
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
   # chequear_var_disenio(disenio$variables)
@@ -901,25 +922,37 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
     var_prop <- nombres[length(nombres) - 1]
 
     #Calcular el tamaño muestral de cada grupo
-    n <- calcular_n(disenio$variables, agrupacion)
+    n <- calcular_n(disenio$variables, agrupacion) %>%
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
 
 
     #Calcular los grados de libertad de todos los cruces
     gl <- calcular_upm(disenio$variables, agrupacion) %>%
       dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
-      dplyr::mutate(gl = upm - varstrat)
+      dplyr::mutate(gl = upm - varstrat) %>%
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
 
     #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
     final <- tabla %>%
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character) %>%
       dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
                        by = agrupacion) %>%
       dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
                        by = agrupacion)
 
+
+    #Se calculan los intervalos de confianza solo si el usuario lo requiere
+    if (ci == T) {
+      final <- calcular_ic(final)
+    }
+
     #Cambiar el nombre de la variable objetivo para que siempre sea igual.
     final <- final  %>%
       dplyr::rename(objetivo = var_prop) %>%
       dplyr::filter(objetivo > 0) # se eliminan los ceros de la tabla
+
+
+
 
     # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
   } else {
@@ -962,6 +995,13 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio) {
     #Cambiar el nombre de la variable objetivo para que siempre sea igual
     final <- final %>%
       dplyr::rename(objetivo = mean)
+
+
+    # Se calcula el intervalo de confianza solo si el usuario lo pide
+    if (ci == T) {
+      final <- calcular_ic(data = final, tipo = "prop_agregado")
+
+    }
 
   }
 

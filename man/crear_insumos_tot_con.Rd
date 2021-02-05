@@ -4,7 +4,7 @@
 \alias{crear_insumos_tot_con}
 \title{Crea los insumos para el caso específico de estimaciones de suma}
 \usage{
-crear_insumos_tot_con(var, dominios = NULL, subpop = NULL, disenio)
+crear_insumos_tot_con(var, dominios = NULL, subpop = NULL, disenio, ci = F)
 }
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}.}

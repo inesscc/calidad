@@ -4,7 +4,7 @@
 \alias{crear_insumos_media}
 \title{Crea los insumos necesarios para hacer la evaluación de estimadores de la media}
 \usage{
-crear_insumos_media(var, dominios = NULL, subpop = NULL, disenio)
+crear_insumos_media(var, dominios = NULL, subpop = NULL, disenio, ci = F)
 }
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}.}
