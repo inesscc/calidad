@@ -300,7 +300,6 @@ calcular_ic <-  function(data, env = parent.frame(), tipo = "resto") {
                 "prop_agregado" = "objetivo",
                 "total_agregado" = "total")
 
-
   final <- data %>%
     dplyr::mutate(t = qt(c(.975), df = gl),
                   li = !!rlang::parse_expr(est) - se*t,
@@ -798,7 +797,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci =
 
       # Aquí se filtra el diseño
       subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
-      disenio <- disenio[disenio$variables[subpop_text] == 1]
+      disenio <- disenio[disenio$variables[[subpop_text]] == 1]
 
     }
 
