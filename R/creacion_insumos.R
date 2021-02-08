@@ -433,7 +433,7 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
 
       # Aquí se filtra el diseño
       subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
-      disenio <- disenio[disenio$variables[subpop_text] == 1]
+      disenio <- disenio[disenio$variables[[subpop_text]] == 1]
 
     }
 
