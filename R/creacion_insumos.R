@@ -71,12 +71,40 @@ unificar_variables_factExp = function(disenio){
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' calcular_tabla(gastot_hd, zona+sexo, dc)
-calcular_tabla <-  function(var, dominios, disenio) {
+calcular_tabla <-  function(var, dominios, disenio, media = T) {
 
+  # El primer if es para dominios
   if (!is.null(dominios)) {
-    estimacion <- survey::svyby(var , design = disenio, by = dominios , FUN = svymean)
+    if (media == T) { # para calcular la media
+      estimacion <- survey::svyby(var ,
+                                  design = disenio,
+                                  by = dominios,
+                                  FUN = svymean)
+    } else { # para calcular la mediana
+
+      estimacion <- median <- survey::svyby(var,
+                                            by = dominios,
+                                            FUN = survey::svyquantile,
+                                            design = disenio,
+                                            quantile = 0.5,
+                                            method="constant",
+                                            interval.type = "quantile",
+                                            ties="discrete")
+    }
+  # Esto corresponde al caso sin desagregación
   } else {
-    estimacion <- survey::svymean(var, disenio)
+    if (media == T) { # para calcular la media
+      estimacion <- survey::svymean(var, disenio)
+    } else { # para calcular la mediana
+
+      estimacion <-  svyquantile(var,
+                                  design = disenio,
+                                  quantile = 0.5,
+                                  method="constant",
+                                  interval.type = "quantile",
+                                  ties="discrete")
+    }
+
   }
 
   return(estimacion)
@@ -317,7 +345,9 @@ calcular_ic <-  function(data, env = parent.frame(), tipo = "resto") {
 #'
 #' @param var variable objetivo dentro de un \code{dataframe}.
 #' @param dominios dominios de estimación separados por signo +.
+#' @param subpop integer dummy que permite filtrar por una subpoblación
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
@@ -326,10 +356,6 @@ calcular_ic <-  function(data, env = parent.frame(), tipo = "resto") {
 #' @export
 
 crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F) {
-
-  # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
-  #  detiene la ejecución
-  # chequear_var_disenio(disenio$variables)
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -453,7 +479,7 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
     cv <- cv(tabla, design = disenio) * 100
 
     # Armar tabla final
-    final <- data.frame(tabla )
+    final <- data.frame(tabla)
 
     # Armar tabla completa con todos los insumos
     final <- dplyr::bind_cols(final, "gl" = gl , "n" = n, "coef_var" = cv[1])
@@ -482,7 +508,9 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
 #'
 #' @param var variable objetivo dentro de un \code{dataframe}.
 #' @param dominios dominios de estimación separados por signo +.
+#' @param subpop integer dummy que permite filtrar por una subpoblación
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
 #' @return \code{dataframe} que contiene todos los insumos necesarios para evaluar una suma
 #'
 #' @examples
@@ -657,7 +685,9 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, 
 #'
 #' @param var string. Variable para la cual se quiere calcular un total. Pueden introducirse varias variables separadas por un +, para obtener más totales en la tabla
 #' @param dominios string. Dominios de estimación separados por signo +.
+#' @param subpop integer dummy que permite filtrar por una subpoblación
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
@@ -859,7 +889,9 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci =
 #'
 #' @param var variable objetivo dentro de un \code{dataframe}.
 #' @param dominios dominios de estimación separados por signo +.
+#' @param subpop integer dummy que permite filtrar por una subpoblación
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
@@ -1011,5 +1043,174 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci 
 
 
 
+#-----------------------------------------------------------------------
 
+#' Crea los insumos necesarios para hacer la evaluación de estimación de mediana
+#'
+#' Genera una tabla con los siguientes insumos: mediana, grados de libertad,
+#' tamaño muestral y error estándar. La función contempla la posibilidad de desagregar la estimación en uno o más dominios.
+#'
+#' @param var variable objetivo dentro de un \code{dataframe}.
+#' @param dominios dominios de estimación separados por signo +.
+#' @param subpop integer dummy que permite filtrar por una subpoblación
+#' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
+#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#'
+#' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' dc_rep <-  as.svrepdesign(dc , type = "subbootstrap", replicates=10)
+#' crear_insumos_mediana(gastot_hd, zona+sexo, dc)
+#' @export
+
+
+crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10) {
+
+
+  # Ajustar nombre de variables del diseño muestral
+  disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
+  disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
+
+  # Generar el diseño replicado
+  disenio <-  as.svrepdesign(disenio, type = "subbootstrap", replicates = replicas)
+
+  # Encapsular inputs para usarlos después
+  enquo_var <-  rlang::enquo(var)
+  var_string <-  rlang::expr_name(rlang::enexpr(var))
+
+  # Chequear que la variable no sea character
+  if (is.character(disenio$variables[[var_string]]) == T) stop("¡Estás usando una variable character!")
+
+  #Chequear que la variable sea continua. Si no lo es, aparece un warning
+  es_prop <- disenio$variables %>%
+    dplyr::mutate(es_prop = dplyr::if_else(!!enquo_var == 1 | !!enquo_var == 0, 1, 0))
+
+  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("¡Parece que tu variable es de proporción!")
+
+
+  #Convertir los inputs en fórmulas para adecuarlos a survey
+  var <- paste0("~", rlang::enexpr(var)) %>%
+    as.formula()
+
+  # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
+  if (!is.null(rlang::enexprs(dominios)[[1]])) {
+
+    # Esto corre para el caso en el que NO hay subpop
+    if (is.null(rlang::enexpr(subpop))) {
+
+      dominios <- paste0("~", rlang::enexprs(dominios)) %>%
+        as.formula()
+
+      #Generar la tabla con los cálculos
+      tabla <- calcular_tabla(var, dominios, disenio, media = F)
+
+      # Esto corre para subpop
+    } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
+
+      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
+
+      dominios <-   paste(rlang::enexprs(dominios), rlang::enexprs(subpop), sep = "+")
+      dominios <- paste0("~", dominios) %>%
+        as.formula()
+
+      #Generar la tabla con los cálculos
+      tabla <- calcular_tabla(var, dominios, disenio, media = F) %>%
+        dplyr::filter(!!rlang::enquo(subpop) == 1)
+    }
+
+    #Extraer nombres
+    nombres <- names(tabla)
+    agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
+
+    #Calcular el tamaño muestral de cada grupo
+    n <- calcular_n(disenio$variables, agrupacion) %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
+
+    #Calcular los grados de libertad de todos los cruces
+    gl <- calcular_upm(disenio$variables, agrupacion) %>%
+      dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
+      dplyr::mutate(gl = upm - varstrat) %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
+
+
+    #Extrear el coeficiente de variación
+    cv <- cv(tabla, design = disenio) * 100
+
+    cv <- tabla %>%
+      dplyr::select(agrupacion) %>%
+      dplyr::bind_cols(coef_var = cv) %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
+
+    #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
+    final <- tabla %>%
+      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
+      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
+                       by = agrupacion) %>%
+      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
+                       by = agrupacion) %>%
+      dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
+                       by = agrupacion) %>%
+      dplyr::rename(!!enquo_var := V1)
+
+    # Se calculan los intervalos de confianza solo si el usuario lo requiere
+    if (ci == T) {
+      final <- calcular_ic(final)
+    }
+
+    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
+  } else {
+
+
+    # Si el usuario ingresa subpoblación, se filtra la base de datos para la subpoblación de referencia
+    if (!is.null(rlang::enexpr(subpop))) {
+
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
+
+      # Aquí se filtra el diseño
+      subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
+      disenio <- disenio[disenio$variables[[subpop_text]] == 1]
+      #ff
+
+    }
+
+    #Generar la tabla con los cálculos
+    tabla <- calcular_tabla(var, dominios, disenio, media = F)
+
+    # Tamaño muestral
+    n <- nrow(disenio$variables)
+
+    # Calcular grados de libertad
+    varstrat <- length(unique(disenio$variables$varstrat))
+    varunit <- length(unique(disenio$variables$varunit))
+    gl <- varunit - varstrat
+
+    # Calcular coeficiente de variación
+    cv <- cv(tabla, design = disenio) * 100
+
+    # Armar tabla final
+    final <- data.frame(tabla )
+
+    # Armar tabla completa con todos los insumos
+    final <- dplyr::bind_cols(final, "gl" = gl , "n" = n, "coef_var" = cv[1])
+    names(final)[2] <- "se"
+
+    # Se calcular el intervalo de confianza solo si el usuario lo pide
+    if (ci == T) {
+      final <- calcular_ic(data = final, tipo = "media_agregado")
+    }
+
+
+  }
+
+
+  return(final)
+
+
+  }
 

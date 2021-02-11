@@ -4,7 +4,7 @@
 \alias{calcular_tabla}
 \title{Calcula medias a partir de cierta agregación}
 \usage{
-calcular_tabla(var, dominios, disenio)
+calcular_tabla(var, dominios, disenio, media = T)
 }
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~}

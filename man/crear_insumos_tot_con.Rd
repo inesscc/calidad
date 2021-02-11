@@ -11,7 +11,11 @@ crear_insumos_tot_con(var, dominios = NULL, subpop = NULL, disenio, ci = F)
 
 \item{dominios}{dominios de estimación separados por signo +.}
 
+\item{subpop}{integer dummy que permite filtrar por una subpoblación}
+
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
+
+\item{ci}{\code{boolean} que indica si los intervalos de confianza deben calcularse}
 }
 \value{
 \code{dataframe} que contiene todos los insumos necesarios para evaluar una suma
