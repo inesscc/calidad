@@ -35,11 +35,17 @@ tabla_html <- function(tabla) {
         gl < 9  ~ "red",
         gl >= 9 ~ "black"
       ))) %>%
-    kableExtra::kable(format.args = list(decimal.mark = ',', big.mark = "."), format = "html", escape = F) %>%
-    kableExtra::kable_styling("striped", full_width = F) %>%
-    kableExtra::kable_paper("hover")
+    kableExtra::kable(format.args = list(decimal.mark = ',', big.mark = "."),
+                      format = "html",
+                      escape = F,
+                      align = "c",
+                      table.attr = "style = \"color: black;\"")  %>%
+    kableExtra::kable_styling("striped",
+                              full_width = F,
+                              html_font = "arial") %>%
+    kableExtra::kable_paper("hover") %>%
+    kableExtra::row_spec(0, bold = T, color = "black")
 }
-
 
 
 

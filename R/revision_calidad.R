@@ -51,12 +51,20 @@ evaluar_calidad_media <- function(tabulado, condicion = NULL, publicar = FALSE) 
     tabulado <- tabulado %>%
       dplyr::filter(!!rlang::parse_expr(condicion))
   }
-  # Chequear si existen valores NA en los insumos. Si hay NAs, la ejecución se interrumpe
-  if (sum(is.na(tabulado$n)) > 0 | sum(is.na(tabulado$gl)) > 0 |  sum(is.na(tabulado$coef_var)) > 0) {
-    stop("Alguno de los insumos tiene valores NA")
+  # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
+  suma_na <- tabulado %>%
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(coef_var), 1, 0)) %>%
+    dplyr::summarise(suma = sum(contiene_na)) %>%
+    dplyr::pull(suma)
+
+  # mandar un warning cuando se han exlcuido filas
+  if (suma_na > 0) {
+    warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o cv"))
   }
 
+
   evaluacion <- tabulado %>%
+    dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
     dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
            eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
            eval_cv = dplyr::case_when(
@@ -75,10 +83,14 @@ evaluar_calidad_media <- function(tabulado, condicion = NULL, publicar = FALSE) 
   if (publicar == TRUE) {
     evaluacion <- evaluacion %>%
       dplyr::ungroup() %>%
+      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(pasa, 2),
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
                     aprueba = paste0("pasa el ", pasa, "%")) %>%
       dplyr::select(-pasa)
+
+
   }
 
 
@@ -113,9 +125,15 @@ evaluar_calidad_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
       dplyr::filter(!!rlang::parse_expr(condicion))
   }
 
-  # Chequear si existen valores NA en los insumos. Si hay NAs, la ejecución se interrumpe
-  if (sum(is.na(tabulado$n)) > 0 | sum(is.na(tabulado$gl)) > 0 |  sum(is.na(tabulado$se)) > 0) {
-    stop("Alguno de los insumos tiene valores NA")
+  # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
+  suma_na <- tabulado %>%
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(se), 1, 0)) %>%
+    dplyr::summarise(suma = sum(contiene_na)) %>%
+    dplyr::pull(suma)
+
+  # mandar un warning cuando se han exlcuido filas
+  if (suma_na > 0) {
+    warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o se"))
   }
 
   evaluacion <- tabulado %>%
@@ -137,7 +155,9 @@ evaluar_calidad_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
   if (publicar == TRUE) {
     evaluacion <- evaluacion %>%
       dplyr::ungroup() %>%
+      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(se)) %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(pasa, 2),
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
                     aprueba = paste0("pasa el ", pasa, "%"))%>%
       dplyr::select(-pasa)
@@ -175,9 +195,15 @@ evaluar_calidad_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
       dplyr::filter(!!rlang::parse_expr(condicion))
   }
 
-  # Chequear si existen valores NA en los insumos. Si hay NAs, la ejecución se interrumpe
-  if (sum(is.na(tabulado$n)) > 0 | sum(is.na(tabulado$gl)) > 0 |  sum(is.na(tabulado$coef_var)) > 0) {
-    stop("Alguno de los insumos tiene valores NA")
+  # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
+  suma_na <- tabulado %>%
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(coef_var), 1, 0)) %>%
+    dplyr::summarise(suma = sum(contiene_na)) %>%
+    dplyr::pull(suma)
+
+  # mandar un warning cuando se han exlcuido filas
+  if (suma_na > 0) {
+    warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o cv"))
   }
 
 
@@ -200,7 +226,9 @@ evaluar_calidad_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
   if (publicar == TRUE) {
     evaluacion <- evaluacion %>%
       dplyr::ungroup() %>%
+      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(pasa, 2),
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
                     aprueba = paste0("pasa el ", pasa, "%")) %>%
       dplyr::select(-pasa)
@@ -240,9 +268,15 @@ evaluar_calidad_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE
       dplyr::filter(!!rlang::parse_expr(condicion))
   }
 
-  # Chequear si existen valores NA en los insumos. Si hay NAs, la ejecución se interrumpe
-  if (sum(is.na(tabulado$n)) > 0 | sum(is.na(tabulado$gl)) > 0 |  sum(is.na(tabulado$coef_var)) > 0) {
-    stop("Alguno de los insumos tiene valores NA")
+  # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
+  suma_na <- tabulado %>%
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(coef_var), 1, 0)) %>%
+    dplyr::summarise(suma = sum(contiene_na)) %>%
+    dplyr::pull(suma)
+
+  # mandar un warning cuando se han exlcuido filas
+  if (suma_na > 0) {
+    warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o cv"))
   }
 
 
@@ -265,14 +299,93 @@ evaluar_calidad_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE
   if (publicar == TRUE) {
     evaluacion <- evaluacion %>%
       dplyr::ungroup() %>%
+      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(pasa, 2),
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
                     aprueba = paste0("pasa el ", pasa, "%")) %>%
       dplyr::select(-pasa)
+
+
+
   }
 
 
 
   return(evaluacion)
 }
+
+
+#---------------------------------------------------------------------
+#' Evalúa la calidad de las estimaciones de mediana
+#'
+#' Se utiliza la metodología publicada por el INE para la evaluación de la calidad
+#' de las estimaciones. Se consideran 3 variables: tamaño muestral, grados de libertad y
+#' coeficiente de variación.
+#'
+#' @param tabulado \code{dataframe} generado por la función \code{crear_insumos}. Contiene
+#' todos los insumos necesarios para la evaluación.
+#' @param condicion character con la condición de filtro
+#' @return \code{dataframe} con todas las columnas que tiene el input, más una nueva que
+#' contiene una etiqueta que da cuenta de la calidad: fiable, poco fiable o no fiable.
+#'
+#' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' evaluacion_calidad(crear_insumos(gastot_hd, zona+sexo, dc))
+#' @export
+
+
+evaluar_calidad_mediana <- function(tabulado, condicion = NULL, publicar = FALSE) {
+
+  #Aplicar la condición requerida por el usuario
+  if (!is.null(condicion) ) {
+    tabulado <- tabulado %>%
+      dplyr::filter(!!rlang::parse_expr(condicion))
+  }
+  # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
+  suma_na <- tabulado %>%
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(coef_var), 1, 0)) %>%
+    dplyr::summarise(suma = sum(contiene_na)) %>%
+    dplyr::pull(suma)
+
+  # mandar un warning cuando se han exlcuido filas
+  if (suma_na > 0) {
+    warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o cv"))
+  }
+
+
+  evaluacion <- tabulado %>%
+    dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
+    dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
+                  eval_cv = dplyr::case_when(
+                    coef_var <= 15                  ~ "cv <= 15",
+                    coef_var > 15 & coef_var <= 30  ~ "cv entre 15 y 30",
+                    coef_var > 30                   ~ "cv > 30"
+                  ),
+                  calidad = dplyr::case_when(
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv <= 15"         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"
+                  )
+    )
+
+  # Criterio general para la publicación del tabulado
+  if (publicar == TRUE) {
+    evaluacion <- evaluacion %>%
+      dplyr::ungroup() %>%
+      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
+      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(pasa, 2),
+                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0("pasa el ", pasa, "%")) %>%
+      dplyr::select(-pasa)
+
+
+  }
+
+
+  return(evaluacion)
+}
+
 

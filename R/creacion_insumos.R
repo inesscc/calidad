@@ -82,14 +82,14 @@ calcular_tabla <-  function(var, dominios, disenio, media = T) {
                                   FUN = svymean)
     } else { # para calcular la mediana
 
-      estimacion <- median <- survey::svyby(var,
-                                            by = dominios,
-                                            FUN = survey::svyquantile,
-                                            design = disenio,
-                                            quantile = 0.5,
-                                            method="constant",
-                                            interval.type = "quantile",
-                                            ties="discrete")
+      estimacion <- survey::svyby(var,
+                                  by = dominios,
+                                  FUN = survey::svyquantile,
+                                  design = disenio,
+                                  quantile = 0.5,
+                                  method="constant",
+                                  interval.type = "quantile",
+                                  ties="discrete")
     }
   # Esto corresponde al caso sin desagregación
   } else {
@@ -337,6 +337,89 @@ calcular_ic <-  function(data, env = parent.frame(), tipo = "resto") {
 
 }
 
+
+#---------------------------------------------------------------------
+
+calcular_medianas_internal <- function(var, dominios, disenio) {
+
+  # Generar un vector con la desagregación necesaria
+  doms <- as.character(dominios)
+  doms <- stringr::str_split(doms[[2]], "\\+")
+  doms <- stringr::str_remove_all(doms[[1]], " ")
+
+  # Identificar cuáles son las categorías de cada una de las variables de desagregación
+  categorias <- purrr::map(doms, ~sort(unique(as.character(disenio$variables[[.x]]) )))
+
+  # Generar el iterador, según el número de desagregaciones pedidas por el usuario. Además, se calcula el número de combinaciones de celdas.
+  if (length(categorias) == 1) {
+    it <- itertools::ihasNext(itertools::product(categorias[[1]]))
+    combinaciones <- length(categorias[[1]])
+
+  } else if (length(categorias) == 2) {
+    it <- itertools::ihasNext(itertools::product(categorias[[1]], categorias[[2]]))
+    combinaciones <- length(categorias[[1]]) * length(categorias[[2]])
+
+  } else if (length(categorias) == 3) {
+    it <- itertools::ihasNext(itertools::product(categorias[[1]], categorias[[2]], categorias[[3]] ))
+    combinaciones <- length(categorias[[1]]) * length(categorias[[2]]) * length(categorias[[3]])
+
+
+  } else if (length(categorias) == 4) {
+    it <- itertools::ihasNext(itertools::product(categorias[[1]], categorias[[2]], categorias[[3]], categorias[[4]]))
+    combinaciones <- length(categorias[[1]]) * length(categorias[[2]]) * length(categorias[[3]], length(categorias[[4]]))
+
+
+  } else if (length(categorias) == 5) {
+    it <- itertools::ihasNext(itertools::product(categorias[[1]], categorias[[2]], categorias[[3]], categorias[[4]], categorias[[5]] ))
+    combinaciones <- length(categorias[[1]]) * length(categorias[[2]]) * length(categorias[[3]], length(categorias[[4]], length(categorias[[5]])))
+
+  }
+
+  # Crear una matriz para guardar resultados
+  acumulado <- data.frame(matrix(9999, ncol = 3, nrow = combinaciones))
+
+  i <- 1
+  while (itertools::hasNext(it)) {
+    x <- iterators::nextElem(it)
+
+
+    exp <- rlang::parse_expr(paste(doms, "==",  x , collapse = " & "))
+    output <- tryCatch(
+      {
+        median <- svyquantile(var,
+                              design = subset(dc_rep, eval_tidy(exp) ),
+                              quantile = 0.5,
+                              method="constant",
+                              interval.type = "quantile",
+                              ties="discrete")
+      },
+      error=function(cond) {
+        return(data.frame(X1 = NA, X2 = NA))
+      }
+
+    )
+
+    acumulado[i, ] <- output %>%
+      as.data.frame() %>%
+      dplyr::mutate(v = paste(x, collapse = "-"))
+
+    i <- i + 1
+
+
+  }
+  final <- acumulado  %>%
+    tidyr::separate(into = doms, col = X3 , sep = "-") %>%
+    dplyr::rename(se = X2,
+                  V1 = X1) %>%
+    dplyr::relocate(V1, se, .after = dplyr::last_col())
+
+  return(final)
+}
+
+
+
+
+
 #--------------------------------------------------------------------
 #' Crea los insumos necesarios para hacer la evaluación de estimadores de la media
 #'
@@ -395,7 +478,8 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
 
       # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
       es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop) == 1 | !!rlang::enquo(subpop) == 0 |
+                                                        is.na(!!rlang::enquo(subpop)), 1, 0))
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
       dominios <-   paste(rlang::enexprs(dominios), rlang::enexprs(subpop), sep = "+")
@@ -454,7 +538,8 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
 
       # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
       es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop) == 1 | !!rlang::enquo(subpop) == 0 |
+                                                        is.na(!!rlang::enquo(subpop)), 1, 0))
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
       # Aquí se filtra el diseño
@@ -1072,6 +1157,7 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
 
   # Generar el diseño replicado
+  set.seed(1234)
   disenio <-  as.svrepdesign(disenio, type = "subbootstrap", replicates = replicas)
 
   # Encapsular inputs para usarlos después
@@ -1102,14 +1188,18 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
         as.formula()
 
       #Generar la tabla con los cálculos
-      tabla <- calcular_tabla(var, dominios, disenio, media = F)
+      #tabla <- calcular_tabla(var, dominios, disenio, media = F)
+
+      tabla <- calcular_medianas_internal(var, dominios, disenio)
+
 
       # Esto corre para subpop
     } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
 
       # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
       es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop) == 1 | !!rlang::enquo(subpop) == 0 |
+                                                      is.na(!!rlang::enquo(subpop)), 1, 0))
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
       dominios <-   paste(rlang::enexprs(dominios), rlang::enexprs(subpop), sep = "+")
@@ -1119,6 +1209,7 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
       #Generar la tabla con los cálculos
       tabla <- calcular_tabla(var, dominios, disenio, media = F) %>%
         dplyr::filter(!!rlang::enquo(subpop) == 1)
+
     }
 
     #Extraer nombres
@@ -1137,7 +1228,8 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
 
 
     #Extrear el coeficiente de variación
-    cv <- cv(tabla, design = disenio) * 100
+    #cv <- cv(tabla, design = disenio) * 100
+    cv <- tabla$se / tabla$V1
 
     cv <- tabla %>%
       dplyr::select(agrupacion) %>%
@@ -1169,13 +1261,14 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
 
       # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
       es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop)  == 1 | !!rlang::enquo(subpop) == 0, 1, 0))
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop) == 1 | !!rlang::enquo(subpop) == 0 |
+                                                        is.na(!!rlang::enquo(subpop)), 1, 0))
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
       # Aquí se filtra el diseño
       subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
       disenio <- disenio[disenio$variables[[subpop_text]] == 1]
-      #ff
+
 
     }
 
