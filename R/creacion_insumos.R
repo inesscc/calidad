@@ -340,7 +340,14 @@ calcular_ic <-  function(data, env = parent.frame(), tipo = "resto") {
 
 #---------------------------------------------------------------------
 
-calcular_medianas_internal <- function(var, dominios, disenio) {
+calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = parent.frame()) {
+
+  #Si el usuario pone una subpoblación, se hace un filtro en el diseño para agilizar el cálculo
+  if (sub == T) {
+    filtro <-  rlang::parse_expr(get("subpop_text", env))
+    disenio <- subset(disenio,   rlang::eval_tidy(filtro) == 1)
+
+  }
 
   # Generar un vector con la desagregación necesaria
   doms <- as.character(dominios)
@@ -387,7 +394,7 @@ calcular_medianas_internal <- function(var, dominios, disenio) {
     output <- tryCatch(
       {
         median <- svyquantile(var,
-                              design = subset(dc_rep, eval_tidy(exp) ),
+                              design = subset(disenio, rlang::eval_tidy(exp) ),
                               quantile = 0.5,
                               method="constant",
                               interval.type = "quantile",
@@ -1188,10 +1195,8 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
         as.formula()
 
       #Generar la tabla con los cálculos
-      #tabla <- calcular_tabla(var, dominios, disenio, media = F)
-
       tabla <- calcular_medianas_internal(var, dominios, disenio)
-
+      return(tabla)
 
       # Esto corre para subpop
     } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
@@ -1202,14 +1207,21 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
                                                       is.na(!!rlang::enquo(subpop)), 1, 0))
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
+      # Agregar a los dominios, la variable subpop
       dominios <-   paste(rlang::enexprs(dominios), rlang::enexprs(subpop), sep = "+")
       dominios <- paste0("~", dominios) %>%
         as.formula()
 
       #Generar la tabla con los cálculos
-      tabla <- calcular_tabla(var, dominios, disenio, media = F) %>%
-        dplyr::filter(!!rlang::enquo(subpop) == 1)
 
+      subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
+      tabla <- calcular_medianas_internal(var, dominios, disenio, sub = T)
+      return(tabla)
+
+      # tabla <- calcular_tabla(var, dominios, disenio, media = F) %>%
+      #   dplyr::filter(!!rlang::enquo(subpop) == 1)
+
+      return(tabla)
     }
 
     #Extraer nombres
