@@ -326,7 +326,8 @@ calcular_ic <-  function(data, env = parent.frame(), tipo = "resto") {
   est <- switch(tipo, "resto" =  get("var_string", env),
                 "media_agregado" = "mean",
                 "prop_agregado" = "objetivo",
-                "total_agregado" = "total")
+                "total_agregado" = "total",
+                "mediana_agregado" = "quantiles")
 
   final <- data %>%
     dplyr::mutate(t = qt(c(.975), df = gl),
@@ -551,8 +552,9 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
 
       # Aquí se filtra el diseño
       subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
-      disenio <- disenio[disenio$variables[[subpop_text]] == 1]
-      #ff
+      filtro <-  rlang::parse_expr(paste(subpop_text, "== 1"))
+      disenio <- subset(disenio, rlang::eval_tidy(filtro))
+      #disenio <- disenio[disenio$variables[[subpop_text]] == 1]
 
     }
 
@@ -1196,7 +1198,6 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
 
       #Generar la tabla con los cálculos
       tabla <- calcular_medianas_internal(var, dominios, disenio)
-      return(tabla)
 
       # Esto corre para subpop
     } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
@@ -1213,15 +1214,9 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
         as.formula()
 
       #Generar la tabla con los cálculos
-
       subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
       tabla <- calcular_medianas_internal(var, dominios, disenio, sub = T)
-      return(tabla)
 
-      # tabla <- calcular_tabla(var, dominios, disenio, media = F) %>%
-      #   dplyr::filter(!!rlang::enquo(subpop) == 1)
-
-      return(tabla)
     }
 
     #Extraer nombres
@@ -1275,12 +1270,13 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::enquo(subpop) == 1 | !!rlang::enquo(subpop) == 0 |
                                                         is.na(!!rlang::enquo(subpop)), 1, 0))
+
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
       # Aquí se filtra el diseño
       subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
-      disenio <- disenio[disenio$variables[[subpop_text]] == 1]
-
+      filtro <-  rlang::parse_expr(paste(subpop_text, "== 1"))
+      disenio <- subset(disenio, rlang::eval_tidy(filtro))
 
     }
 
@@ -1307,7 +1303,7 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
 
     # Se calcular el intervalo de confianza solo si el usuario lo pide
     if (ci == T) {
-      final <- calcular_ic(data = final, tipo = "media_agregado")
+      final <- calcular_ic(data = final, tipo = "mediana_agregado")
     }
 
 
