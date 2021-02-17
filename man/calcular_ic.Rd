@@ -4,7 +4,7 @@
 \alias{calcular_ic}
 \title{Genera intervalos de confianza para todos los dominios estimados}
 \usage{
-calcular_ic(data, env = parent.frame(), tipo = "resto")
+calcular_ic(data, env = parent.frame(), tipo = "resto", ajuste_ene)
 }
 \arguments{
 \item{data}{\code{dataframe} con todos los datos necesarios para calcular el estándar}

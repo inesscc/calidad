@@ -4,14 +4,27 @@
 \alias{crear_insumos_media}
 \title{Crea los insumos necesarios para hacer la evaluación de estimadores de la media}
 \usage{
-crear_insumos_media(var, dominios = NULL, subpop = NULL, disenio, ci = F)
+crear_insumos_media(
+  var,
+  dominios = NULL,
+  subpop = NULL,
+  disenio,
+  ci = F,
+  ajuste_ene = F
+)
 }
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}.}
 
 \item{dominios}{dominios de estimación separados por signo +.}
 
+\item{subpop}{integer dummy que permite filtrar por una subpoblación}
+
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
+
+\item{ci}{\code{boolean} que indica si los intervalos de confianza deben calcularse}
+
+\item{ajuste_ene}{\code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE}
 }
 \value{
 \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
