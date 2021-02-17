@@ -321,18 +321,30 @@ calcular_gl_total <- function(variables, datos) {
 #' calcular_intervalos(tabla, tipo = media_agregado)
 
 
-calcular_ic <-  function(data, env = parent.frame(), tipo = "resto") {
+calcular_ic <-  function(data, env = parent.frame(), tipo = "resto", ajuste_ene) {
 
-  est <- switch(tipo, "resto" =  get("var_string", env),
-                "media_agregado" = "mean",
-                "prop_agregado" = "objetivo",
-                "total_agregado" = "total",
-                "mediana_agregado" = "quantiles")
+    est <- switch(tipo, "resto" =  get("var_string", env),
+                  "media_agregado" = "mean",
+                  "prop_agregado" = "objetivo",
+                  "total_agregado" = "total",
+                  "mediana_agregado" = "quantiles")
 
-  final <- data %>%
-    dplyr::mutate(t = qt(c(.975), df = gl),
-                  li = !!rlang::parse_expr(est) - se*t,
-                  ls = !!rlang::parse_expr(est) + se*t)
+    # Se calculan los intervalos de la manera tradicional en la generalidad de los casos
+    if (ajuste_ene == F) {
+
+      final <- data %>%
+        dplyr::mutate(t = qt(c(.975), df = gl),
+                      li = !!rlang::parse_expr(est) - se*t,
+                      ls = !!rlang::parse_expr(est) + se*t)
+  # Estos corresponde al ajuste de la ENE: el t se fija en 2
+  } else if (ajuste_ene == T) {
+
+    final <- data %>%
+      dplyr::mutate(t = 2,
+                    li = !!rlang::parse_expr(est) - se*t,
+                    ls = !!rlang::parse_expr(est) + se*t)
+  }
+
 
   return(final)
 
@@ -446,7 +458,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 #' crear_insumos(gastot_hd, zona+sexo, dc)
 #' @export
 
-crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F) {
+crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -581,7 +593,7 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
 
     # Se calcular el intervalo de confianza solo si el usuario lo pide
     if (ci == T) {
-      final <- calcular_ic(data = final, tipo = "media_agregado")
+      final <- calcular_ic(data = final, tipo = "media_agregado",  ajuste_ene = ajuste_ene)
     }
 
 
@@ -705,7 +717,7 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, 
 
     #Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
-      final <- calcular_ic(final)
+      final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
     }
 
 
@@ -758,7 +770,7 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, 
       #   tibble::remove_rownames()
       # final <- final %>%
       #   bind_cols(intervalos)
-      final <- calcular_ic(data = final, tipo = "total_agregado")
+      final <- calcular_ic(data = final, tipo = "total_agregado",  ajuste_ene = ajuste_ene)
     }
 
 
@@ -890,7 +902,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci =
 
     #Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
-      final <- calcular_ic(final)
+      final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
     }
 
 
@@ -958,7 +970,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci =
 
     # Se calcula el intervalo de confianza solo si el usuario lo pide
     if (ci == T) {
-      final <- calcular_ic(data = final, tipo = "total_agregado")
+      final <- calcular_ic(data = final, tipo = "total_agregado",  ajuste_ene = ajuste_ene)
 
     }
 
@@ -1069,7 +1081,7 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci 
 
     #Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
-      final <- calcular_ic(final)
+      final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
     }
 
     #Cambiar el nombre de la variable objetivo para que siempre sea igual.
@@ -1125,7 +1137,7 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci 
 
     # Se calcula el intervalo de confianza solo si el usuario lo pide
     if (ci == T) {
-      final <- calcular_ic(data = final, tipo = "prop_agregado")
+      final <- calcular_ic(data = final, tipo = "prop_agregado",  ajuste_ene = ajuste_ene)
 
     }
 
@@ -1256,7 +1268,7 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
 
     # Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
-      final <- calcular_ic(final)
+      final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
     }
 
     # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
@@ -1303,7 +1315,7 @@ crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, 
 
     # Se calcular el intervalo de confianza solo si el usuario lo pide
     if (ci == T) {
-      final <- calcular_ic(data = final, tipo = "mediana_agregado")
+      final <- calcular_ic(data = final, tipo = "mediana_agregado",  ajuste_ene = ajuste_ene)
     }
 
 
