@@ -451,6 +451,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 #' @param subpop integer dummy que permite filtrar por una subpoblación
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
+#' @param ajuste_ene \code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
@@ -617,6 +618,7 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
 #' @param subpop integer dummy que permite filtrar por una subpoblación
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
+#' @param ajuste_ene \code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE
 #' @return \code{dataframe} que contiene todos los insumos necesarios para evaluar una suma
 #'
 #' @examples
@@ -624,7 +626,7 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
 #' crear_insumos_suma(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
 #' @export
 
-crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F) {
+crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
 
   # chequear_var_disenio(disenio$variables)
 
@@ -794,6 +796,7 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, 
 #' @param subpop integer dummy que permite filtrar por una subpoblación
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
+#' @param ajuste_ene \code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
@@ -801,7 +804,7 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, 
 #' crear_insumos_tot(ocupado, zona+sexo, dc)
 #' @export
 
-crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F) {
+crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,  ajuste_ene = F) {
 
   # Generar un string con el nombre de la variable. Se usa más adelante
   var_string <-  rlang::expr_name(rlang::enexpr(var))
@@ -998,6 +1001,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci =
 #' @param subpop integer dummy que permite filtrar por una subpoblación
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
+#' @param ajuste_ene \code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 #' @examples
@@ -1005,7 +1009,7 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci =
 #' crear_insumos_prop(ocupado, zona+sexo, dc)
 #' @export
 
-crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F) {
+crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
   # chequear_var_disenio(disenio$variables)
@@ -1161,7 +1165,9 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci 
 #' @param subpop integer dummy que permite filtrar por una subpoblación
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
-#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#' @param replicas \code{integer} que indica el número de réplicas a utilizar
+#' @param ajuste_ene \code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE
+#' @return \code{dataframe} que contiene todos los datos del estándar
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
@@ -1170,7 +1176,7 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci 
 #' @export
 
 
-crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10) {
+crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F) {
 
 
   # Ajustar nombre de variables del diseño muestral

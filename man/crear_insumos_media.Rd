@@ -23,6 +23,8 @@ crear_insumos_media(
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 
 \item{ci}{\code{boolean} que indica si los intervalos de confianza deben calcularse}
+
+\item{ajuste_ene}{\code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE}
 }
 \value{
 \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar

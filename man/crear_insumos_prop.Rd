@@ -4,7 +4,14 @@
 \alias{crear_insumos_prop}
 \title{Crea los insumos necesarios para hacer la evaluación de estimadores de proporción}
 \usage{
-crear_insumos_prop(var, dominios = NULL, subpop = NULL, disenio, ci = F)
+crear_insumos_prop(
+  var,
+  dominios = NULL,
+  subpop = NULL,
+  disenio,
+  ci = F,
+  ajuste_ene = F
+)
 }
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}.}
@@ -16,6 +23,8 @@ crear_insumos_prop(var, dominios = NULL, subpop = NULL, disenio, ci = F)
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 
 \item{ci}{\code{boolean} que indica si los intervalos de confianza deben calcularse}
+
+\item{ajuste_ene}{\code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE}
 }
 \value{
 \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar

@@ -10,7 +10,8 @@ crear_insumos_mediana(
   subpop = NULL,
   disenio,
   ci = F,
-  replicas = 10
+  replicas = 10,
+  ajuste_ene = F
 )
 }
 \arguments{
@@ -23,9 +24,13 @@ crear_insumos_mediana(
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 
 \item{ci}{\code{boolean} que indica si los intervalos de confianza deben calcularse}
+
+\item{replicas}{\code{integer} que indica el número de réplicas a utilizar}
+
+\item{ajuste_ene}{\code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE}
 }
 \value{
-\code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+\code{dataframe} que contiene todos los datos del estándar
 }
 \description{
 Genera una tabla con los siguientes insumos: mediana, grados de libertad,
