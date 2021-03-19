@@ -441,25 +441,27 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
 
 #--------------------------------------------------------------------
-#' Crea los insumos necesarios para hacer la evaluación de estimadores de la media
+
+#' Create the inputs to make quality evaluation of mean estimations
 #'
-#' Genera una tabla con los siguientes insumos: media, grados de libertad,
-#' tamaño muestral y coeficiente de variación. La función contempla la posibilidad de desagregar la estimación en uno o más dominios.
+#' \code{create_mean} generates a \code{dataframe} with the following elements: mean,
+#' degrees of freedom, sample size and coefficient of variation. The function allows
+#' grouping in several domains.
 #'
-#' @param var variable objetivo dentro de un \code{dataframe}.
-#' @param dominios dominios de estimación separados por signo +.
-#' @param subpop integer dummy que permite filtrar por una subpoblación
-#' @param disenio disenio complejo creado mediante el paquete \code{survey}
-#' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
-#' @param ajuste_ene \code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE
-#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#' @param var numeric variable within the  \code{dataframe}.
+#' @param dominios domains to be estimated separated by the + character.
+#' @param subpop integer dummy variable to filter the dataframe
+#' @param disenio complex design created by \code{survey} package
+#' @param ci \code{boolean} indicating if the confidence intervals must be calculated
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
+#' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' crear_insumos(gastot_hd, zona+sexo, dc)
+#' create_mean(gastot_hd, zona+sexo,  disenio = dc)
 #' @export
 
-crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
+create_mean <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -608,25 +610,28 @@ crear_insumos_media <- function(var, dominios = NULL, subpop = NULL, disenio, ci
 
 #--------------------------------------------------------------------
 
-#' Crea los insumos para el caso específico de estimaciones de suma
+
+#' Create the inputs to make quality evaluation for total estimations of continuous variables
 #'
-#' Genera una tabla con los siguientes insumos: suma, grados de libertad,
-#' tamaño muestral y coeficiente de variación. La función tiene la posibilidad de utilizar una subpoblación. La variable de subpoblación debe ser dummy.
+#' \code{create_tot_con} generates a \code{dataframe} with the following elements: sum,
+#' degrees of freedom, sample size and coefficient of variation. The function allows
+#' grouping in several domains.
 #'
-#' @param var variable objetivo dentro de un \code{dataframe}.
-#' @param dominios dominios de estimación separados por signo +.
-#' @param subpop integer dummy que permite filtrar por una subpoblación
-#' @param disenio disenio complejo creado mediante el paquete \code{survey}
-#' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
-#' @param ajuste_ene \code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE
-#' @return \code{dataframe} que contiene todos los insumos necesarios para evaluar una suma
+#' @param var numeric variable within the  \code{dataframe}.
+#' @param dominios domains to be estimated separated by the + character.
+#' @param subpop integer dummy variable to filter the dataframe
+#' @param disenio complex design created by \code{survey} package
+#' @param ci \code{boolean} indicating if the confidence intervals must be calculated
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
+#' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' crear_insumos_suma(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
+#' create_tot_con(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
 #' @export
 
-crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
+
+create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
 
   # chequear_var_disenio(disenio$variables)
 
@@ -786,25 +791,28 @@ crear_insumos_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, 
 
 #--------------------------------------------------------------------
 
-#' Crea los insumos necesarios para hacer la evaluación de estimadores de totales
+
+#' Create the inputs to make quality evaluation for total estimations
 #'
-#' Genera una tabla con los siguientes insumos: total expandido, grados de libertad,
-#' tamaño muestral y coeficiente de variación. La función contempla la posibilidad de desagregar la estimación en uno o más dominios.
-#'
-#' @param var string. Variable para la cual se quiere calcular un total. Pueden introducirse varias variables separadas por un +, para obtener más totales en la tabla
-#' @param dominios string. Dominios de estimación separados por signo +.
-#' @param subpop integer dummy que permite filtrar por una subpoblación
-#' @param disenio disenio complejo creado mediante el paquete \code{survey}
-#' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
-#' @param ajuste_ene \code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE
-#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#' \code{create_tot} generates a \code{dataframe} with the following elements: sum,
+#' degrees of freedom, sample size and coefficient of variation. The function allows
+#' grouping in several domains.
+#' @param var numeric variable within the  \code{dataframe}. When the domain parameter is not used,
+#' it is possible to include more than one variable using the + separator. When a value is introduced
+#' in the domain parameter, the estimation variable must be a dummy variable.
+#' @param dominios domains to be estimated separated by the + character.
+#' @param subpop integer dummy variable to filter the dataframe
+#' @param disenio complex design created by \code{survey} package
+#' @param ci \code{boolean} indicating if the confidence intervals must be calculated
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
+#' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' crear_insumos_tot(ocupado, zona+sexo, dc)
+#' create_tot(ocupado, zona+sexo, disenio = dc)
 #' @export
 
-crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,  ajuste_ene = F) {
+create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,  ajuste_ene = F) {
 
   # Generar un string con el nombre de la variable. Se usa más adelante
   var_string <-  rlang::expr_name(rlang::enexpr(var))
@@ -991,25 +999,27 @@ crear_insumos_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci =
 
 #-----------------------------------------------------------------------
 
-#' Crea los insumos necesarios para hacer la evaluación de estimadores de proporción
+
+#' Create the inputs to make quality evaluation of proportion estimations
 #'
-#' Genera una tabla con los siguientes insumos: media, grados de libertad,
-#' tamaño muestral y error estándar. La función contempla la posibilidad de desagregar la estimación en uno o más dominios.
-#'
-#' @param var variable objetivo dentro de un \code{dataframe}.
-#' @param dominios dominios de estimación separados por signo +.
-#' @param subpop integer dummy que permite filtrar por una subpoblación
-#' @param disenio disenio complejo creado mediante el paquete \code{survey}
-#' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
-#' @param ajuste_ene \code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE
-#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#' \code{create_prop} generates a \code{dataframe} with the following elements: sum,
+#' degrees of freedom, sample size and coefficient of variation and standard error. The function allows
+#' grouping in several domains.
+#' @param var numeric variable within the  \code{dataframe}
+#' @param dominios domains to be estimated separated by the + character.
+#' @param subpop integer dummy variable to filter the dataframe
+#' @param disenio complex design created by \code{survey} package
+#' @param ci \code{boolean} indicating if the confidence intervals must be calculated
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
+#' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' crear_insumos_prop(ocupado, zona+sexo, dc)
+#' create_prop(ocupado, zona+sexo, disenio = dc)
 #' @export
 
-crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
+
+create_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
   # chequear_var_disenio(disenio$variables)
@@ -1155,28 +1165,30 @@ crear_insumos_prop <- function(var, dominios = NULL, subpop = NULL, disenio, ci 
 
 #-----------------------------------------------------------------------
 
-#' Crea los insumos necesarios para hacer la evaluación de estimación de mediana
+
+#' Create the inputs to make quality evaluation for median estimations
 #'
-#' Genera una tabla con los siguientes insumos: mediana, grados de libertad,
-#' tamaño muestral y error estándar. La función contempla la posibilidad de desagregar la estimación en uno o más dominios.
+#' \code{create_median} uses a non parametric method to generate a \code{dataframe}
+#' with the following elements: sum, degrees of freedom, sample size and coefficient
+#' of variation. The function allows grouping in several domains.
 #'
-#' @param var variable objetivo dentro de un \code{dataframe}.
-#' @param dominios dominios de estimación separados por signo +.
-#' @param subpop integer dummy que permite filtrar por una subpoblación
-#' @param disenio disenio complejo creado mediante el paquete \code{survey}
-#' @param ci \code{boolean} que indica si los intervalos de confianza deben calcularse
-#' @param replicas \code{integer} que indica el número de réplicas a utilizar
-#' @param ajuste_ene \code{boolean} que indica si debe aplicarse el ajuste por cambio de marco en la ENE
-#' @return \code{dataframe} que contiene todos los datos del estándar
+#' @param var numeric variable within the  \code{dataframe}
+#' @param dominios domains to be estimated separated by the + character.
+#' @param subpop integer dummy variable to filter the dataframe
+#' @param disenio complex design created by \code{survey} package
+#' @param replicas \code{integer} indicating the number of replicates to be used
+#' @param ci \code{boolean} indicating if the confidence intervals must be calculated
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
+#' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' dc_rep <-  as.svrepdesign(dc , type = "subbootstrap", replicates=10)
-#' crear_insumos_mediana(gastot_hd, zona+sexo, dc)
+#' create_median(gastot_hd, zona+sexo, disenio = dc)
 #' @export
 
 
-crear_insumos_mediana <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F) {
+create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F) {
 
 
   # Ajustar nombre de variables del diseño muestral

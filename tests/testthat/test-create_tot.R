@@ -1,4 +1,4 @@
-context("test-creacion_insumos_tot")
+context("test-create_tot")
 
 ene <- ene %>%
   dplyr::mutate(fdt = dplyr::if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0),
@@ -20,7 +20,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 ######################
 
 
-test <-  crear_insumos_tot(ocupado,  disenio = dc_ene)
+test <-  create_tot(ocupado,  disenio = dc_ene)
 
 nombres_obtenidos <-  names(test)
 
@@ -35,7 +35,7 @@ test_that("nombres tabla agregado", {
 # Testear tamaño muestral sin desagregación usando EPF
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 
-test <-  crear_insumos_tot(ocupado, disenio = dc)
+test <-  create_tot(ocupado, disenio = dc)
 
 n <- epf_personas %>%
   dplyr::group_by(ocupado) %>%
@@ -60,7 +60,7 @@ test_that("gl agregado", {
 })
 
 # Testear totales sin desagregación, utilizando la ENE
-test <-  crear_insumos_tot(ocupado,  disenio = dc_ene) %>%
+test <-  create_tot(ocupado,  disenio = dc_ene) %>%
   dplyr::filter(variable == "ocupado1")
 
 test_that("totales agregado", {
@@ -76,13 +76,13 @@ test_that("totales agregado", {
 #############################
 
 # Testear los nombres de la tabla
-test <-  crear_insumos_tot(ocupado, zona+sexo, disenio = dc)
+test <-  create_tot(ocupado, zona+sexo, disenio = dc)
 test_that("nombres desagregado", {
   expect_equal(names(test), c("zona", "sexo", "ocupado", "se", "n", "gl", "coef_var"))
 })
 
 # Testear totales con desagregación, utilizando la ENE
-test <-  crear_insumos_tot(ocupado, sexo,  disenio = dc_ene) %>%
+test <-  create_tot(ocupado, sexo,  disenio = dc_ene) %>%
   dplyr::filter(sexo == 1)
 
 test_that("totales desagregado", {
@@ -91,7 +91,7 @@ test_that("totales desagregado", {
 
 
 # Testear tamaño muestral con desagregación
-test <-  crear_insumos_tot(ocupado, zona+sexo, disenio = dc) %>%
+test <-  create_tot(ocupado, zona+sexo, disenio = dc) %>%
   dplyr::filter(zona == 1 & sexo == 1) %>%
   dplyr::pull(n)
 
@@ -108,7 +108,7 @@ test_that("tamaño muestral desagregado", {
 
 
 # Testear gl con desagregación
-test <-  crear_insumos_tot(ocupado, zona+sexo, disenio = dc) %>%
+test <-  create_tot(ocupado, zona+sexo, disenio = dc) %>%
   dplyr::filter(zona == 1 & sexo == 1) %>%
   dplyr::pull(gl)
 

@@ -1,5 +1,5 @@
 
-context("test-creacion_insumos_mediana")
+context("test-create_median")
 
 dc <- survey::svydesign(ids = ~varunit,
                         strata = ~varstrat,
@@ -16,7 +16,7 @@ options(survey.lonely.psu = "certainty")
 # MEDIANA SIN DESAGREGACIÓN Y SIN SUBPOP#
 #########################################
 
-test <-  crear_insumos_mediana(gastot_hd, replicas = 10, disenio = dc)
+test <-  create_median(gastot_hd, replicas = 10, disenio = dc)
 
 real <- survey::svyquantile(~gastot_hd,
             design = dc_rep,
@@ -33,7 +33,7 @@ test_that("mediana agregada sin subpop", {
 #########################################
 # MEDIANA CON DESAGREGACIÓN Y SIN SUBPOP#
 ########################################
-test <-  crear_insumos_mediana(gastot_hd, dominios = sexo+zona,  replicas = 10, disenio = dc)
+test <-  create_median(gastot_hd, dominios = sexo+zona,  replicas = 10, disenio = dc)
 
 
 real <-  survey::svyby(~gastot_hd,
@@ -55,7 +55,7 @@ test_that("mediana desagregada sin subpop", {
 # MEDIANA SIN DESAGREGACIÓN Y CON SUBPOP#
 ##########################################
 
-test <-  crear_insumos_mediana(gastot_hd, subpop = ocupado,  replicas = 10, disenio = dc)
+test <-  create_median(gastot_hd, subpop = ocupado,  replicas = 10, disenio = dc)
 
 real <- survey::svyquantile(~gastot_hd,
                             design = subset(dc_rep, ocupado == 1),
@@ -74,7 +74,7 @@ test_that("mediana agregada con subpop", {
 # MEDIANA CON DESAGREGACIÓN Y CON SUBPOP#
 ##########################################
 
-test <-  crear_insumos_mediana(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc)
+test <-  create_median(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc)
 
 real <-  survey::svyby(~gastot_hd,
                        ~sexo+zona,
@@ -95,7 +95,7 @@ test_that("mediana desagregada con subpop", {
 # ERROR ESTÁNDAR CON DESAGREGACIÓN Y CON SUBPOP#
 ################################################
 
-test <-  crear_insumos_mediana(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc)
+test <-  create_median(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc)
 
 real <-  survey::svyby(~gastot_hd,
                        ~sexo+zona,

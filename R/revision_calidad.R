@@ -1,21 +1,21 @@
 
 #---------------------------------------------------------------------
+#'
 #' Calcula el valor de una función cuadrática
 #'
-#' Calcula una función diseñada por el INE, que se utiliza para hacer una comparación
-#' con el error estándar. Si este último sobrepasa el valor de la funcíón cuadrática,
-#' es un indicio de que el estimador tiene una alta varianza. Siguiendo la metodología
-#' del INE, existen cálculos diferenciados para los estimadores que están por sobre y por
-#' debajo de 0.5.
+#' \code{quadratic} returns the output of a particular function created by INE Chile, which
+#' is evaluated at the value of the estimated proportion from a sample. If the output of the
+#' function is  higher than the standard error, it is interpreted as a signal that the
+#' estimation is not reliable.
 #'
-#' @param p vector numérico que contiene los valores de cada una de las estimaciones de
-#' proporción
-#' @return vector numérico con el cálculo realizado
+#'
+#' @param p numeric vector with the values of the estimations for proportions
+#' @return  numeric vector
 #'
 #' @examples
-#' cuadratica(c(0.1, 0.7, 0.5))
+#' quadratic(c(0.1, 0.7, 0.5))
 
-cuadratica <- function(p) {
+quadratic <- function(p) {
   purrr::map_dbl(p, function(x) {
   if (x <= 0.5) {
     (x**(2/3))/9
@@ -25,26 +25,29 @@ cuadratica <- function(p) {
   })
 }
 
+
+
 #---------------------------------------------------------------------
-#' Evalúa la calidad de las estimaciones de media
+#' Evaluate the quality of mean estimations
 #'
-#' Se utiliza la metodología publicada por el INE para la evaluación de la calidad
-#' de las estimaciones. Se consideran 3 variables: tamaño muestral, grados de libertad y
-#' coeficiente de variación.
+#' \code{evaluar_calidad_media} evauates the quality of mean estimation using the
+#' methodology created by INE Chile, which considers sample size, degrees of freedom and
+#' coeficient of variation.
 #'
-#' @param tabulado \code{dataframe} generado por la función \code{crear_insumos}. Contiene
-#' todos los insumos necesarios para la evaluación.
-#' @param condicion character con la condición de filtro
-#' @return \code{dataframe} con todas las columnas que tiene el input, más una nueva que
-#' contiene una etiqueta que da cuenta de la calidad: fiable, poco fiable o no fiable.
+#' @param tabulado \code{dataframe} created by \code{crear_insumos_media}
+#' @param publicar \code{boolean} indicating if the evaluation of the complete table
+#' must be added. If it is TRUE, the function adds a new column to the \code{dataframe}
+#' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @return \code{dataframe} with all the columns included in the input table, plus a new column
+#'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' evaluacion_calidad(crear_insumos(gastot_hd, zona+sexo, dc))
+#' evaluate_mean(create_mean(gastot_hd, zona+sexo, dc))
 #' @export
 
 
-evaluar_calidad_media <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -98,26 +101,28 @@ evaluar_calidad_media <- function(tabulado, condicion = NULL, publicar = FALSE) 
 }
 
 #---------------------------------------------------------------------
-#' Evalúa la calidad de las estimaciones de proporción
+
+#' Evaluate the quality of proportion estimations
 #'
-#' Se utiliza la metodología publicada por el INE para la evaluación de la calidad
-#' de las estimaciones. Se consideran 3 variables: tamaño muestral, grados de libertad y
-#' error estándar.
+#' \code{evaluar_calidad_prop} evaluates the quality of proportion estimations using the
+#' methodology created by INE Chile, which considers sample size, degrees of freedom and
+#' standard error.
 #'
-#' @param tabulado \code{dataframe} generado por la función \code{crear_insumos_prop}. Contiene
-#' todos los insumos necesarios para la evaluación.
-#' @param condicion character con la condición de filtro
-#' @return \code{dataframe} con todas las columnas que tiene el input, más una nueva que
-#' contiene una etiqueta que da cuenta de la calidad: fiable, poco fiable o no fiable.
+#' @param tabulado \code{dataframe} created by \code{crear_insumos_prop}
+#' @param publicar \code{boolean} indicating if the evaluation of the complete table
+#' must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}
+#' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @return \code{dataframe} with all the columns included in the input table, plus a new column
+#'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
 #' @importFrom magrittr `%>%`
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' evaluacion_calidad_prop(crear_insumos_prop(ocupado, zona+sexo, dc))
+#' evaluate_prop(crear_insumos_prop(ocupado, zona+sexo, dc))
 #' @export
 
 
-evaluar_calidad_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -169,25 +174,28 @@ evaluar_calidad_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
 }
 
 #---------------------------------------------------------------------
-#' Evalúa la calidad de las estimaciones de totales
+
+
+#' Evaluate the quality of total estimations
 #'
-#' Se utiliza la metodología publicada por el INE para la evaluación de la calidad
-#' de las estimaciones. Se consideran 3 variables: tamaño muestral, grados de libertad y
-#' coeficiente de variación.
+#' \code{evaluate_tot} evaluates the quality of total estimations using the
+#' methodology created by INE Chile, which considers sample size, degrees of freedom and
+#' the coefficient of variation.
 #'
-#' @param tabulado \code{dataframe} generado por la función \code{crear_insumos}. Contiene
-#' todos los insumos necesarios para la evaluación.
-#' @param condicion character con la condición de filtro
-#' @return \code{dataframe} con todas las columnas que tiene el input, más una nueva que
-#' contiene una etiqueta que da cuenta de la calidad: fiable, poco fiable o no fiable.
+#' @param tabulado \code{dataframe} created by \code{crear_insumos_tot}
+#' @param publicar \code{boolean} indicating if the evaluation of the complete table
+#' must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}
+#' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @return \code{dataframe} with all the columns included in the input table, plus a new column
+#'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' evaluacion_calidad_tot(crear_insumos_tot(ocupado_int, zona+sexo, dc))
+#' evaluate_tot(crear_insumos_tot(ocupado_int, zona+sexo, dc))
 #' @export
 
 
-evaluar_calidad_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -242,25 +250,36 @@ evaluar_calidad_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
 
 #---------------------------------------------------------------------
-#' Evalúa la calidad de las estimaciones de sumas
+#' Evaluate the quality of sum estimations for continuous variables
 #'
-#' Se utiliza la metodología publicada por el INE para la evaluación de la calidad
-#' de las estimaciones. Se consideran 3 variables: tamaño muestral, grados de libertad y
-#' coeficiente de variación.
 #'
-#' @param tabulado \code{dataframe} generado por la función \code{crear_insumos}. Contiene
-#' todos los insumos necesarios para la evaluación.
-#' @param condicion character con la condición de filtro
-#' @return \code{dataframe} con todas las columnas que tiene el input, más una nueva que
-#' contiene una etiqueta que da cuenta de la calidad: fiable, poco fiable o no fiable.
+#' \code{evaluate_tot_con} evaluates the quality of total estimations for continuous variables
+#' using the methodology created by INE Chile, which considers sample size, degrees of freedom and
+#' the coefficient of variation.
+#'
+#' @param tabulado \code{dataframe} created by \code{crear_insumos_tot_con}
+#' @param publicar \code{boolean} indicating if the evaluation of the complete table
+#' must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}
+#' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @return \code{dataframe} with all the columns included in the input table, plus a new column
+#'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
 #' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' evaluacion_calidad_suma(crear_insumos_tot(ocupado_int, zona+sexo, dc))
+#'
+#' ```
+#' library(dplyr)
+#' hogar <- epf_personas %>%
+#'   group_by(folio) %>%
+#'   slice(1)
+#'
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
+#' evaluate_tot_con(crear_insumos_tot_con(gastot_hd, zona+sexo, disenio = dc))
+#'
+#' ```
 #' @export
 
 
-evaluar_calidad_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -317,25 +336,30 @@ evaluar_calidad_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE
 
 
 #---------------------------------------------------------------------
-#' Evalúa la calidad de las estimaciones de mediana
+
+
+
+#' Evaluate the quality of median estimations
 #'
-#' Se utiliza la metodología publicada por el INE para la evaluación de la calidad
-#' de las estimaciones. Se consideran 3 variables: tamaño muestral, grados de libertad y
-#' coeficiente de variación.
 #'
-#' @param tabulado \code{dataframe} generado por la función \code{crear_insumos}. Contiene
-#' todos los insumos necesarios para la evaluación.
-#' @param condicion character con la condición de filtro
-#' @return \code{dataframe} con todas las columnas que tiene el input, más una nueva que
-#' contiene una etiqueta que da cuenta de la calidad: fiable, poco fiable o no fiable.
+#' \code{evaluate_median} evaluates the quality median estimations
+#' using the methodology created by INE Chile, which considers sample size, degrees of freedom and
+#' the coefficient of variation.
+#'
+#' @param tabulado \code{dataframe} created by \code{create_median}
+#' @param publicar \code{boolean} indicating if the evaluation of the complete table
+#' must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}
+#' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @return \code{dataframe} with all the columns included in the input table, plus a new column
+#'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' evaluacion_calidad(crear_insumos(gastot_hd, zona+sexo, dc))
+#' evaluate_median(crear_insumos_mediana(gastot_hd, zona+sexo, disenio =  dc))
 #' @export
 
 
-evaluar_calidad_mediana <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
