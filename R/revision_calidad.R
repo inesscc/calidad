@@ -100,78 +100,6 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
   return(evaluacion)
 }
 
-#---------------------------------------------------------------------
-
-#' Evaluate the quality of proportion estimations
-#'
-#' \code{evaluar_calidad_prop} evaluates the quality of proportion estimations using the
-#' methodology created by INE Chile, which considers sample size, degrees of freedom and
-#' standard error.
-#'
-#' @param tabulado \code{dataframe} created by \code{crear_insumos_prop}
-#' @param publicar \code{boolean} indicating if the evaluation of the complete table
-#' must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}
-#' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
-#' @return \code{dataframe} with all the columns included in the input table, plus a new column
-#'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
-#'
-#' @importFrom magrittr `%>%`
-#' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' evaluate_prop(crear_insumos_prop(ocupado, zona+sexo, dc))
-#' @export
-
-
-evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
-
-  #Aplicar la condición requerida por el usuario
-  if (!is.null(condicion) ) {
-    tabulado <- tabulado %>%
-      dplyr::filter(!!rlang::parse_expr(condicion))
-  }
-
-  # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
-  suma_na <- tabulado %>%
-    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(se), 1, 0)) %>%
-    dplyr::summarise(suma = sum(contiene_na)) %>%
-    dplyr::pull(suma)
-
-  # mandar un warning cuando se han exlcuido filas
-  if (suma_na > 0) {
-    warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o se"))
-  }
-
-  evaluacion <- tabulado %>%
-    dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
-           eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
-           prop_est = dplyr::if_else(objetivo <= 0.5, "<= a 0.5", "> a 0.5"),
-           cuadratica = cuadratica(objetivo),
-           eval_se = dplyr::if_else(se <= cuadratica, "se adecuado", "se alto"),
-           calidad = dplyr::case_when(
-             eval_n == "n insuficiente" | eval_gl == "gl insuficiente"                                                 ~ "no fiable",
-             eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "<= a 0.5" & eval_se == "se adecuado" ~ "fiable",
-             eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "<= a 0.5" & eval_se == "se alto"      ~ "poco fiable",
-             eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "se adecuado"  ~ "fiable",
-             eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "se alto"       ~ "poco fiable"
-           )
-    )
-
-  # Criterio general para la publicación del tabulado
-  if (publicar == TRUE) {
-    evaluacion <- evaluacion %>%
-      dplyr::ungroup() %>%
-      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(se)) %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
-                    pasa = round(pasa, 2),
-                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0("pasa el ", pasa, "%"))%>%
-      dplyr::select(-pasa)
-  }
-
-
-  return(evaluacion)
-
-}
 
 #---------------------------------------------------------------------
 
@@ -354,10 +282,9 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
 #' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_gastos, weights = ~fe)
 #' evaluate_median(crear_insumos_mediana(gastot_hd, zona+sexo, disenio =  dc))
 #' @export
-
 
 evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
@@ -410,6 +337,90 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
 
   return(evaluacion)
+}
+
+#---------------------------------------------------------------------
+
+
+#' Evaluate the quality of ratio estimations
+#'
+#'
+#' \code{evaluate_ratio} evaluates the quality ratio estimations
+#' using the methodology created by INE Chile, which considers sample size, degrees of freedom, standard error and
+#' the coefficient of variation.
+#'
+#' It is evaluated according to the standard error or the coefficient of variation, based on the value of the estimation that its
+#' receives as inputs. For estimations < 1 evaluates by standar error & for estimations > 1 evaluates by coefficient of variation.
+#' Evaluates each estimation per row independently
+#'
+#' @param tabulado \code{dataframe} created by \code{create_ratio}
+#' @param publicar \code{boolean} indicating if the evaluation of the complete table
+#' must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}
+#' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @return \code{dataframe} with all the columns included in the input table, plus a new column
+#'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
+#'
+#' @examples
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
+#' evaluate_ratio(create_ratio(var = gasto_div1, denominador = gasto, zona+sexo, dc))
+#' @export
+
+evaluate_ratio <- function(tabulado, condicion = NULL, publicar = FALSE) {
+
+  #Aplicar la condición requerida por el usuario
+  if (!is.null(condicion) ) {
+    tabulado <- tabulado %>%
+      dplyr::filter(!!rlang::parse_expr(condicion))
+  }
+
+  # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
+  suma_na <- tabulado %>%
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(se), 1, 0)) %>%
+    dplyr::summarise(suma = sum(contiene_na)) %>%
+    dplyr::pull(suma)
+
+  # mandar un warning cuando se han exlcuido filas
+  if (suma_na > 0) {
+    warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o se"))
+  }
+
+  evaluacion <- tabulado %>%
+    dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
+                  prop_est = case_when(objetivo <= 0.5 ~ "<= a 0.5",
+                                       objetivo < 1 & objetivo > 0.5 ~ "> a 0.5",
+                                       objetivo > 1 ~ ">= a 1"),
+                  tipo_eval = dplyr::if_else(objetivo < 1, "Eval SE", "Eval CV"),
+                  cuadratica = dplyr::if_else(objetivo < 1,quadratic(objetivo), NA_real_),
+                  eval_se = dplyr::if_else(objetivo < 1,dplyr::if_else(se <= cuadratica, "SE adecuado", "SE alto"), NA_character_),
+                  eval_cv = dplyr::if_else(objetivo < 1, NA_character_, dplyr::case_when(cv <= 15                  ~ "cv <= 15",
+                                                                                         cv > 15 & cv <= 30  ~ "cv entre 15 y 30",
+                                                                                         cv > 30                   ~ "cv > 30"
+                  )),
+                  calidad = dplyr::case_when(
+                    objetivo <1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente"                                                  ~ "no fiable",
+                    objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "<= a 0.5" & eval_se == "SE adecuado"  ~ "fiable",
+                    objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "<= a 0.5" & eval_se == "SE alto"      ~ "poco fiable",
+                    objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "SE adecuado"   ~ "fiable",
+                    objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "SE alto"       ~ "poco fiable",
+                    objetivo >= 1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
+                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv <= 15"         ~ "fiable",
+                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"))
+
+  # Criterio general para la publicación del tabulado
+  if (publicar == TRUE) {
+    evaluacion <- evaluacion %>%
+      dplyr::ungroup() %>%
+      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(se) & !is.na(cv)) %>%
+      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(pasa, 2),
+                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0("pasa el ", pasa, "%"))%>%
+      dplyr::select(-pasa)
+  }
+
+  return(evaluacion)
+
 }
 
 
