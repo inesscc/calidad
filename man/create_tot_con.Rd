@@ -10,7 +10,8 @@ create_tot_con(
   subpop = NULL,
   disenio,
   ci = F,
-  ajuste_ene = F
+  ajuste_ene = F,
+  anidar = F
 )
 }
 \arguments{
@@ -25,6 +26,8 @@ create_tot_con(
 \item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
 
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
+
+\item{anidar}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated
