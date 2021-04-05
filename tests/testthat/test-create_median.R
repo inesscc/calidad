@@ -47,7 +47,7 @@ real <-  survey::svyby(~gastot_hd,
                    ci = T)
 
 test_that("mediana desagregada sin subpop", {
-  expect_equal(real$V1[1], test$gastot_hd[1])
+  expect_equal(real$V1[1], test$median[1])
 })
 
 
@@ -66,7 +66,7 @@ real <- survey::svyquantile(~gastot_hd,
 
 
 test_that("mediana agregada con subpop", {
-  expect_equal(real[1], test$quantiles[1])
+  expect_equal(real[1], test$median[1])
 })
 
 
@@ -87,7 +87,7 @@ real <-  survey::svyby(~gastot_hd,
                        ci = T)
 
 test_that("mediana desagregada con subpop", {
-  expect_equal(real$V1[1], test$gastot_hd[1])
+  expect_equal(real$V1[1], test$median[1])
 })
 
 

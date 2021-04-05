@@ -32,7 +32,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 ##############################
 
 # Testear la proporción sin desagregación
-test1 <-  create_prop(ocupado, disenio = dc)
+test1 <-  create_ratio(ocupado, disenio = dc)
 test_that("Insumo proporción", {
   expect_equal(round(test1$objetivo, 3), unname(round(survey::svymean(x = ~ocupado, dc)[1], 3)))
 })
@@ -43,7 +43,7 @@ test_that("Insumo proporción", {
 ##############################
 
 # Testear la proporción con desagregación con datos de la ENE
-test <-  create_prop(desocupado, fdt+sexo, disenio = dc_ene) %>%
+test <-  create_ratio(desocupado, dominios =  fdt+sexo, disenio = dc_ene) %>%
   dplyr::filter(fdt == 1 & sexo == 1) %>%
   dplyr::pull(objetivo) * 100
 
@@ -52,7 +52,7 @@ test_that("Proporción desagregada", {
 })
 
 
-test <-  create_prop(desocupado, fdt+sexo+region, disenio = dc_ene) %>%
+test <-  create_ratio(desocupado, dominios =   fdt+sexo+region, disenio = dc_ene) %>%
   dplyr::filter(fdt == 1 & sexo == 2 & region == 1) %>%
   dplyr::pull(objetivo) * 100
 
@@ -68,7 +68,7 @@ test <-  create_prop(desocupado, fdt+sexo+region, disenio = dc_ene) %>%
 
 
 # Testear grados de libertad con desagregación EPF
-test2 <-  create_prop(ocupado, sexo+zona, disenio = dc) %>%
+test2 <-  create_ratio(ocupado, dominios =   sexo+zona, disenio = dc) %>%
   dplyr::filter(sexo == 2 & zona == 1) %>%
   dplyr::select(gl) %>%
   dplyr::pull()
@@ -83,7 +83,7 @@ test_that("gl proporción desagregado", {
 })
 
 # Testear tamaño muestral con desagregación EPF
-test3 <-  create_prop(ocupado, sexo+zona+ecivil, disenio = dc) %>%
+test3 <-  create_ratio(ocupado, dominios = sexo+zona+ecivil, disenio = dc) %>%
   dplyr::filter(sexo == 1 & zona == 1 & ecivil == 2) %>%
   dplyr::select(n) %>%
   dplyr::pull()
@@ -99,7 +99,7 @@ test_that("tamaño muestral proporción desagregado", {
 
 
 # Testear grados de libertad con desagregación ENE
-test4 <-  create_prop(desocupado, sexo+region, disenio = dc_ene) %>%
+test4 <-  create_ratio(desocupado, dominios =  sexo+region, disenio = dc_ene) %>%
   dplyr::filter(sexo == 2 & region == 1) %>%
   dplyr::select(gl) %>%
   dplyr::pull()

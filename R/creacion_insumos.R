@@ -646,7 +646,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
   }
 
   if(!is.null(dominios) && !is.null(subpop)){
-    final = final %>% filter(!!rlang::parse_expr(subpop)  == 1) %>% select(-!!rlang::parse_expr(subpop))
+    final = final %>% dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
   }
   return(final)
 }
@@ -826,7 +826,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 
   }
   if(!is.null(dominios) && !is.null(subpop)){
-    final = final %>% filter(!!rlang::parse_expr(subpop) == 1) %>% select(-!!rlang::parse_expr(subpop))
+    final = final %>% dplyr::filter(!!rlang::parse_expr(subpop) == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
   }
 
   return(final)
@@ -1053,7 +1053,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
 
   if(!is.null(dominios) && !is.null(subpop)){
-    final = final %>% filter(!!rlang::parse_expr(subpop)  == 1) %>% select(-!!rlang::parse_expr(subpop))
+    final = final %>% dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
   }
 
   return(final)
@@ -1148,11 +1148,12 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0 |
                                                         is.na(!!rlang::parse_expr(subpop)), 1, 0))
+
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
       # Agregar a los dominios, la variable subpop
       dominios_form <-   paste(dominios, subpop, sep = "+")
-      dominios_form <- paste0("~", dominios) %>%
+      dominios_form <- paste0("~", dominios_form) %>%
         as.formula()
 
       #Generar la tabla con los cálculos
@@ -1197,6 +1198,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       dplyr::rename(!!rlang::parse_expr(var) := V1)
 
     names(final)[grep(var,names(final))] = "median"
+
     # Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
       final <- calcular_ic(final, tipo = "mediana_agregado",ajuste_ene = ajuste_ene)
@@ -1249,8 +1251,12 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     }
 
   }
+
+  # Filtrar filas que no son útiles
   if(!is.null(dominios) && !is.null(subpop)){
-    final = final %>% filter(!!rlang::parse_expr(subpop)  == 1) %>% select(-!!rlang::parse_expr(subpop))
+    final <-  final %>%
+      dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>%
+      dplyr::select(-!!rlang::parse_expr(subpop))
   }
 
   return(final)
@@ -1448,7 +1454,7 @@ if (!is.null(dominios[[1]])) {
 
 if(!is.null(dominios) && !is.null(subpop)){
 
-  final = final %>% filter(!!rlang::parse_expr(subpop)  == 1) %>% select(-!!rlang::parse_expr(subpop))
+  final = final %>% dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
 
 }
 
@@ -1629,7 +1635,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
   }
 
   if(!is.null(dominios) && !is.null(subpop)){
-    final = final %>% filter(!!rlang::parse_expr(subpop)  == 1) %>% select(-!!rlang::parse_expr(subpop))
+    final = final %>% dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
   }
 
   return(final)
@@ -1693,14 +1699,11 @@ create_ratio = function(var, denominador = NULL, dominios = NULL, subpop = NULL,
     }
   }
 
-
   if(!is.null(denominador)){
     final = create_ratio_internal(var,denominador, dominios, subpop, disenio, ci, ajuste_ene)
   }
 
   if(is.null(denominador)){
-    print(denominador)
-
     final = create_prop_internal(var, dominios, subpop, disenio, ci, ajuste_ene)
   }
   return(final)

@@ -26,7 +26,7 @@ test_that("Insumo media", {
 test2 <-  create_mean(gastot_hd, zona, disenio = dc)
 
 test_that("Insumo media zona", {
-  expect_equal(round(test2$gastot_hd), c(1243155, 969048))
+  expect_equal(round(test2$mean), c(1243155, 969048))
 })
 
 # Testear grados de libertad con desagregación
