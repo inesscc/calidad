@@ -1648,7 +1648,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #-----------------------------------------------------------------------
 
 
-#' \code{create_ratio} generates a \code{dataframe} with the following elements: sum,
+#' \code{create_prop} generates a \code{dataframe} with the following elements: sum,
 #' degrees of freedom, sample size, standard error and coefficient of variation. The function allows
 #' grouping in several domains.
 #'
@@ -1673,12 +1673,12 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #' dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 #' create_ratio(var = muj_insg_taxi, denominador = hom_insg_taxi, disenio = dc)
 #'
-#' create_ratio(var = VP_DC, denominador = NULL, disenio = dc, ci = T)
+#' create_prop(var = VP_DC, denominador = NULL, disenio = dc, ci = T)
 #'
 #' @export
 #'
 
-create_ratio = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F,anidar = F){
+create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F,anidar = F){
 
   #  # Encapsular inputs para usarlos más tarde
   if(anidar == F){

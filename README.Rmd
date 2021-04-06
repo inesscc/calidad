@@ -63,7 +63,7 @@ El paquete incluye funciones diferenciadas para crear los insumos para estimacio
 
 
 ```{r}
-insumos_prop <- create_ratio(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
+insumos_prop <- create_prop(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 insumos_total <-  create_tot(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 
 ```
@@ -85,7 +85,7 @@ insumos_total
 Para obtener más desagregaciones, podemos usar el símbolo "+" de la siguiente manera:
 
 ```{r}
-desagregar <- create_ratio(var = desocupado, dominios = sexo+region, subpop = fdt, disenio =  dc_ene)
+desagregar <- create_prop(var = desocupado, dominios = sexo+region, subpop = fdt, disenio =  dc_ene)
 
 ```
 
@@ -112,7 +112,7 @@ Cabe mencionar que el uso por defecto es no desagregar, en cuyo caso las funcion
 
 ```{r}
 # Usando datos de la ENE
-insumos_prop_nacional <- create_ratio(desocupado, subpop = fdt, disenio = dc_ene)
+insumos_prop_nacional <- create_prop(desocupado, subpop = fdt, disenio = dc_ene)
 insumos_total_nacional <-  create_tot(desocupado, subpop = fdt, disenio = dc_ene)
 
 # Usando datos de la EPF

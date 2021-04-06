@@ -69,7 +69,7 @@ estimaciones de **media, proporción, totales y mediana**. A continuación
 se muestra cómo se utilizan las funciones de proporción y total.
 
 ``` r
-insumos_prop <- create_ratio(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
+insumos_prop <- create_prop(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 insumos_total <-  create_tot(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 ```
 
@@ -86,7 +86,7 @@ Para obtener más desagregaciones, podemos usar el símbolo “+” de la
 siguiente manera:
 
 ``` r
-desagregar <- create_ratio(var = desocupado, dominios = sexo+region, subpop = fdt, disenio =  dc_ene)
+desagregar <- create_prop(var = desocupado, dominios = sexo+region, subpop = fdt, disenio =  dc_ene)
 ```
 
 ### Encuesta de Presupuestos Familiares (parte 2)
@@ -116,7 +116,7 @@ funciones deben ser utilizadas del siguiente modo:
 
 ``` r
 # Usando datos de la ENE
-insumos_prop_nacional <- create_ratio(desocupado, subpop = fdt, disenio = dc_ene)
+insumos_prop_nacional <- create_prop(desocupado, subpop = fdt, disenio = dc_ene)
 insumos_total_nacional <-  create_tot(desocupado, subpop = fdt, disenio = dc_ene)
 
 # Usando datos de la EPF

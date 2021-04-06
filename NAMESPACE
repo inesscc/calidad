@@ -2,7 +2,7 @@
 
 export(create_mean)
 export(create_median)
-export(create_ratio)
+export(create_prop)
 export(create_tot)
 export(create_tot_con)
 export(evaluate_mean)
