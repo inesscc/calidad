@@ -11,7 +11,9 @@ options(survey.lonely.psu = "certainty")
 ene <- ene %>%
   dplyr::mutate(fdt = dplyr::if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0),
          ocupado = dplyr::if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0),
-         desocupado = dplyr::if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0))
+         desocupado = dplyr::if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0),
+         hombre = dplyr::if_else(sexo == 1, 1, 0),
+         mujer = dplyr::if_else(sexo == 2, 1, 0))
 
 
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
@@ -120,6 +122,24 @@ gl <- length(unique(insumo$conglomerado)) - length(unique(insumo$estrato_unico))
 test_that("gl proporción desagregado ene", {
   expect_equal(test4, gl)
 })
+
+
+# Testea grados de libertad con modalidad prop
+
+n <- ene %>%
+  dplyr::group_by(sexo, ocupado) %>%
+  dplyr::summarise(contar = dplyr::n()) %>%
+  dplyr::group_by(ocupado) %>%
+  dplyr::summarise(n = sum(contar))
+
+test <-  create_prop(var = mujer, denominador = hombre, dominios = ocupado, disenio = dc_ene)
+
+nrow(dc_ene$variables)
+test_that("gl proporción desagregado ene", {
+  expect_equal(test[1, 5], gl)
+})
+
+
 
 
 ################

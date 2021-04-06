@@ -1662,16 +1662,15 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #' @param anidar \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
-#' @example
-#'
+#' @examples
 #' epf_gastos = epf_gastos %>% mutate(gasto_div1 = dplyr::if_else(d == "01", gasto, 0))
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_gastos, weights = ~fe)
-#' create_ratio(var = gasto_div1, denominador = gasto, disenio =  dc, dominios = zona)
+#' create_prop(var = gasto_div1, denominador = gasto, disenio =  dc, dominios = zona)
 #'
-#' enusc = enusc %>% filter(enusc$Kish == 1) %>%  mutate(muj_insg_taxi = dplyr::if_else(enusc$P9_4_1 %in% c(1,2) & enusc$rph_sexo == 2,1 ,0),
+#' enusc <-  enusc %>% filter(enusc$Kish == 1) %>%  mutate(muj_insg_taxi = dplyr::if_else(enusc$P9_4_1 %in% c(1,2) & enusc$rph_sexo == 2,1 ,0),
 #'                                                        hom_insg_taxi = dplyr::if_else(enusc$P9_4_1 %in% c(1,2) & enusc$rph_sexo == 1,1 ,0))
 #' dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
-#' create_ratio(var = muj_insg_taxi, denominador = hom_insg_taxi, disenio = dc)
+#' create_prop(var = muj_insg_taxi, denominador = hom_insg_taxi, disenio = dc)
 #'
 #' create_prop(var = VP_DC, denominador = NULL, disenio = dc, ci = T)
 #'
