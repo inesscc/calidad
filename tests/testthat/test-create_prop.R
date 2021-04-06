@@ -38,6 +38,14 @@ test_that("Insumo proporción", {
 })
 
 
+# Probar strings
+# anidar <-  function(var,denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F){
+#   create_ratio(var, denominador, dominios, subpop, disenio,ci, anidar = T)
+# }
+#
+# anidar(var = "ocupado", disenio = dc, ci = T)
+
+
 ##############################
 # PROPORCIÓN CON DESAGREGACIÓN
 ##############################

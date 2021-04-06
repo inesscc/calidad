@@ -1481,6 +1481,7 @@ return(final)
 #' create_prop_internal(ocupado, zona+sexo, disenio = dc)
 
 create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, anidar = T){
+
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
   # chequear_var_disenio(disenio$variables)
@@ -1488,7 +1489,8 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
 
 
-  if(anidar == F){
+
+  if (anidar == F){
     #  # Encapsular inputs para usarlos más tarde
     var <- rlang::enexpr(var)
     var <-  rlang::expr_name(var)

@@ -37,16 +37,18 @@ Antes de comenzar a usar el paquete `calidad` es necesario declarar el
 diseño muestral de la encuesta que se está evaluando, para lo cual
 utilizamos el paquete `survey`. Se debe declarar el conglomerado de
 varianza, el estrato de varianza y el factor de expansión. Declaramos el
-diseño para las dos encuestas (EPF y ENE)
+diseño para las dos encuestas (EPF y ENE). Adicionalmente, puede ser
+útil declarar una opción para los estratos que solo tienen un
+conglomerado.
 
 ``` r
-options(survey.lonely.psu = "certainty")
-
 # Declarar el diseño muestral para la ENE
 dc_ene <- svydesign(ids = ~conglomerado , strata = ~estrato_unico, data = ene, weights = ~fact_cal)
 
 # Declarar el diseño muestral para la EPF
 dc_epf <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
+
+options(survey.lonely.psu = "certainty")
 ```
 
 ## Generar insumos para la evaluación
@@ -63,12 +65,12 @@ estimaciones requieren el tamaño muestral, los grados de libertad y el
 coeficiente de variación.
 
 El paquete incluye funciones diferenciadas para crear los insumos para
-estimaciones de **media, proporción y total**. A continuación se muestra
-cómo se utilizan las funciones de proporción y total.
+estimaciones de **media, proporción, totales y mediana**. A continuación
+se muestra cómo se utilizan las funciones de proporción y total.
 
 ``` r
-insumos_prop <- crear_insumos_prop(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
-insumos_total <-  crear_insumos_tot(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
+insumos_prop <- create_ratio(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
+insumos_total <-  create_tot(var = desocupado, dominios = sexo, subpop = fdt, disenio =  dc_ene)
 ```
 
   - `var`: variable que se quiere estimar. Debe ser una variable
@@ -84,7 +86,7 @@ Para obtener más desagregaciones, podemos usar el símbolo “+” de la
 siguiente manera:
 
 ``` r
-desagregar <- crear_insumos_prop(var = desocupado, dominios = sexo+region, subpop = fdt, disenio =  dc_ene)
+desagregar <- create_ratio(var = desocupado, dominios = sexo+region, subpop = fdt, disenio =  dc_ene)
 ```
 
 ### Encuesta de Presupuestos Familiares (parte 2)
@@ -92,13 +94,13 @@ desagregar <- crear_insumos_prop(var = desocupado, dominios = sexo+region, subpo
 En ciertas ocasiones puede ser de interés evaluar la calidad de una
 suma. Por ejemplo, la suma de todos los ingresos de la EPF a nivel de
 zona geográfica (Gran Santiago y resto de capitales regionales). Para
-ello, existe la función `crear_insumos_tot_con`. Esta función recibe una
+ello, existe la función `create_tot_con`. Esta función recibe una
 variable continua como horas, gasto o ingreso y genera totales al nivel
 solicitado. La terminación “con” de la función hace alusión a que se
 está usando una variable continua.
 
 ``` r
-insumos_suma <-  crear_insumos_tot_con(var = gastot_hd, dominios = zona, disenio =  dc_epf)
+insumos_suma <-  create_tot_con(var = gastot_hd, dominios = zona, disenio =  dc_epf)
 ```
 
 Si queremos evaluar la estimación de una media, contamos con la función
@@ -106,7 +108,7 @@ Si queremos evaluar la estimación de una media, contamos con la función
 los hogares, según área geográfica.
 
 ``` r
-insumos_media <-  crear_insumos_media(var = gastot_hd, dominios = zona, disenio =  dc_epf)
+insumos_media <-  create_mean(var = gastot_hd, dominios = zona, disenio =  dc_epf)
 ```
 
 Cabe mencionar que el uso por defecto es no desagregar, en cuyo caso las
@@ -114,12 +116,12 @@ funciones deben ser utilizadas del siguiente modo:
 
 ``` r
 # Usando datos de la ENE
-insumos_prop_nacional <- crear_insumos_prop(desocupado, subpop = fdt, disenio = dc_ene)
-insumos_total_nacional <-  crear_insumos_tot(desocupado, subpop = fdt, disenio = dc_ene)
+insumos_prop_nacional <- create_ratio(desocupado, subpop = fdt, disenio = dc_ene)
+insumos_total_nacional <-  create_tot(desocupado, subpop = fdt, disenio = dc_ene)
 
 # Usando datos de la EPF
-insumos_suma_nacional <- crear_insumos_tot_con(gastot_hd, disenio = dc_epf)
-insumos_media_nacional <-  crear_insumos_media(gastot_hd, disenio = dc_epf)
+insumos_suma_nacional <- create_tot_con(gastot_hd, disenio = dc_epf)
+insumos_media_nacional <-  create_mean(gastot_hd, disenio = dc_epf)
 ```
 
 Nótese que en el caso de las funciones `crear_insumos_prop` y
@@ -134,11 +136,11 @@ Nuevamente, usamos funciones diferentes para cada uno de los tipos de
 estimación.
 
 ``` r
-evaluacion_prop <- evaluar_calidad_prop(insumos_prop)
-evaluacion_tot <- evaluar_calidad_tot(insumos_total)
+evaluacion_prop <- evaluate_ratio(insumos_prop)
+evaluacion_tot <- evaluate_tot(insumos_total)
 
-evaluacion_suma <- evaluar_calidad_tot_con(insumos_suma)
-evaluacion_media <- evaluar_calidad_media(insumos_media)
+evaluacion_suma <- evaluate_tot_con(insumos_suma)
+evaluacion_media <- evaluate_mean(insumos_media)
 ```
 
 La salida de estas últimas funciones es un `dataframe` que, además de
@@ -152,10 +154,10 @@ fiables, este no debería ser publicado.
 
 ``` r
 # Desempleo desagregado por region
-desagregar <- crear_insumos_tot(var = desocupado, dominios = region, subpop = fdt, disenio =  dc_ene)
+desagregar <- create_tot(var = desocupado, dominios = region, subpop = fdt, disenio =  dc_ene)
 
 # Evaluar tabulado
-evaluacion_tot_desagreg <- evaluar_calidad_tot(desagregar, publicar = T)
+evaluacion_tot_desagreg <- evaluate_tot(desagregar, publicar = T)
 ```
 
 En el caso de un tabulado de total de desempleados por región, el
