@@ -3,8 +3,6 @@ context("test-create_prop")
 
 options(survey.lonely.psu = "certainty")
 
-# Cargar base ENUSC
-#enusc <-  readRDS("C:/Users/klehm/Downloads/bkish_2019.rds")
 
 # Diseños muestrales
 
@@ -13,10 +11,12 @@ ene <- ene %>%
          ocupado = dplyr::if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0),
          desocupado = dplyr::if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0),
          hombre = dplyr::if_else(sexo == 1, 1, 0),
-         mujer = dplyr::if_else(sexo == 2, 1, 0))
+         mujer = dplyr::if_else(sexo == 2, 1, 0),
+         metro = dplyr::if_else(region == 13, 1, 0))
 
 
-dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas %>%
+                          dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)), weights = ~fe)
 dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene %>%
                               dplyr::mutate(desocupado2 = dplyr::if_else(desocupado == 1 & fdt == 1, 1, 0)),
                               weights = ~fact_cal)
@@ -60,22 +60,6 @@ test <-  create_prop(desocupado, dominios =  fdt+sexo, disenio = dc_ene) %>%
 test_that("Proporción desagregada", {
   expect_equal(round(test, 1), 7.1)
 })
-
-
-test <-  create_prop(desocupado, dominios =   fdt+sexo+region, disenio = dc_ene) %>%
-  dplyr::filter(fdt == 1 & sexo == 2 & region == 1) %>%
-  dplyr::pull(objetivo) * 100
-
-#test_that("Proporción desagregada", {
-#  expect_equal(round(test, 1), 7.1)
-#})
-
-#ene %>%
-#  mutate(numerador = if_else(desocupado == 1 & fdt == 1 & region == 1 & sexo == 2, fe, 0),
-#         denominador = if_else(fdt == 1 & region == 1 & sexo == 2, fe, 0)) %>%
-#  summarise(tasa = sum(numerador)/sum(denominador))
-
-
 
 # Testear grados de libertad con desagregación EPF
 test2 <-  create_prop(ocupado, dominios =   sexo+zona, disenio = dc) %>%
@@ -124,7 +108,7 @@ test_that("gl proporción desagregado ene", {
 })
 
 
-# Testea grados de libertad con modalidad prop
+# Testear tamaño muestral con modalidad ratio invertido
 
 n <- ene %>%
   dplyr::group_by(sexo, ocupado) %>%
@@ -136,9 +120,48 @@ test <-  create_prop(var = mujer, denominador = hombre, dominios = ocupado, dise
 
 nrow(dc_ene$variables)
 test_that("gl proporción desagregado ene", {
-  expect_equal(test[1, 5], gl)
+  expect_equal(n[2, 2] %>% dplyr::pull(), test[2, 6])
 })
 
+# Testear grados de libertad con modalidad ratio invertido
+
+test <-  create_prop(var = mujer, denominador = hombre, dominios = ocupado+metro, disenio = dc_ene)
+
+gl <- ene %>%
+  dplyr::group_by(ocupado, metro, conglomerado) %>%
+  dplyr::mutate(n_varunit = dplyr::if_else(dplyr::row_number() == 1, 1, 0 )) %>%
+  dplyr::group_by(ocupado, estrato_unico) %>%
+  dplyr::mutate(n_varstrat = dplyr::if_else(dplyr::row_number() == 1, 1, 0 )) %>%
+  dplyr::group_by(ocupado, metro, sexo) %>%
+  dplyr::summarise(n_varunit = sum(n_varunit),
+                   n_varstrat = sum(n_varstrat)) %>%
+  dplyr::mutate(gl = n_varunit - n_varstrat) %>%
+  dplyr::group_by(ocupado, metro) %>%
+  dplyr::summarise(gl = sum(gl))
+
+test_that("gl proporción desagregado ene", {
+  expect_equal(gl[1, 3] %>% dplyr::pull(), test[1, 6])
+})
+
+
+# Testear grados de libertad con modalidad ratio normal
+
+test <-  create_prop(var = gasto_ocup, denominador = gastot_hd, dominios = zona, disenio = dc)
+
+gl <- epf_personas %>%
+  dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)) %>%
+  dplyr::group_by(zona, varunit) %>%
+  dplyr::mutate(n_varunit = dplyr::if_else(dplyr::row_number() == 1, 1, 0 )) %>%
+  dplyr::group_by(zona, varstrat) %>%
+  dplyr::mutate(n_varstrat = dplyr::if_else(dplyr::row_number() == 1, 1, 0 )) %>%
+  dplyr::group_by(zona) %>%
+  dplyr::summarise(n_varunit = sum(n_varunit),
+                   n_varstrat = sum(n_varstrat)) %>%
+  dplyr::mutate(gl = n_varunit - n_varstrat)
+
+test_that("gl proporción desagregado ene", {
+  expect_equal(gl[1, 4] %>% dplyr::pull(), test[1, 5])
+})
 
 
 
