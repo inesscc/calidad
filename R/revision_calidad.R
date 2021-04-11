@@ -345,7 +345,7 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #' Evaluate the quality of ratio estimations
 #'
 #'
-#' \code{evaluate_ratio} evaluates the quality ratio estimations
+#' \code{evaluate_prop} evaluates the quality ratio estimations
 #' using the methodology created by INE Chile, which considers sample size, degrees of freedom, standard error and
 #' the coefficient of variation.
 #'
@@ -362,10 +362,10 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
-#' evaluate_ratio(create_ratio(var = gasto_div1, denominador = gasto, zona+sexo, dc))
+#' evaluate_prop(create_ratio(var = gasto_div1, denominador = gasto, zona+sexo, dc))
 #' @export
 
-evaluate_ratio <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
