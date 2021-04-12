@@ -127,7 +127,7 @@ Nótese que en el caso de las funciones `crear_insumos_prop` y `crear_insumos_to
 Una vez que se han generado los insumos, podemos hacer la evaluación. Nuevamente, usamos funciones diferentes para cada uno de los tipos de estimación. 
 
 ```{r, eval=T, warning=FALSE}
-evaluacion_prop <- evaluate_ratio(insumos_prop)
+evaluacion_prop <- evaluate_prop(insumos_prop)
 evaluacion_tot <- evaluate_tot(insumos_total)
 
 evaluacion_suma <- evaluate_tot_con(insumos_suma)

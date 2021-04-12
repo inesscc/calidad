@@ -11,7 +11,7 @@ create_tot(
   disenio,
   ci = F,
   ajuste_ene = F,
-  anidar = F
+  standard_eval = F
 )
 }
 \arguments{
@@ -29,7 +29,7 @@ in the domain parameter, the estimation variable must be a dummy variable.}
 
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
 
-\item{anidar}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
+\item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

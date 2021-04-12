@@ -11,7 +11,7 @@ create_prop_internal(
   disenio,
   ci = F,
   ajuste_ene = F,
-  anidar = T
+  standard_eval = T
 )
 }
 \arguments{
@@ -27,7 +27,7 @@ create_prop_internal(
 
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
 
-\item{anidar}{\code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.}
+\item{standard_eval}{\code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

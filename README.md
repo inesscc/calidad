@@ -16,6 +16,11 @@ objetivo de generar variables que identifiquen subpoblaciones de interés
 
 ``` r
 library(survey)
+```
+
+    ## Warning: package 'survey' was built under R version 4.0.5
+
+``` r
 library(calidad)
 library(tidyverse)
 
@@ -136,7 +141,7 @@ Nuevamente, usamos funciones diferentes para cada uno de los tipos de
 estimación.
 
 ``` r
-evaluacion_prop <- evaluate_ratio(insumos_prop)
+evaluacion_prop <- evaluate_prop(insumos_prop)
 evaluacion_tot <- evaluate_tot(insumos_total)
 
 evaluacion_suma <- evaluate_tot_con(insumos_suma)

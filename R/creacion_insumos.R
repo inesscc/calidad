@@ -473,7 +473,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 #' @param disenio complex design created by \code{survey} package
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param anidar \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
@@ -481,12 +481,12 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 #' create_mean(gastot_hd, zona+sexo,  disenio = dc)
 #' @export
 
-create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, anidar = F) {
+create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F) {
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
 
-  if(anidar == F){
+  if(standard_eval == F){
 
     var <- rlang::enexpr(var)
     var <- rlang::expr_name(var)
@@ -667,7 +667,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 #' @param disenio complex design created by \code{survey} package
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param anidar \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
@@ -675,14 +675,14 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 #' create_tot_con(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
 #' @export
 
-create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, anidar = F) {
+create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F) {
 
   # chequear_var_disenio(disenio$variables)
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
 
-  if(anidar == F){
+  if(standard_eval == F){
 
     var <- rlang::enexpr(var)
     var <- rlang::expr_name(var)
@@ -849,7 +849,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 #' @param disenio complex design created by \code{survey} package
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param anidar \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
@@ -857,13 +857,13 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 #' create_tot(ocupado, zona+sexo, disenio = dc)
 #' @export
 
-create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, anidar = F) {
+create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F) {
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
-  if(anidar == F){
+  if(standard_eval == F){
 
     var <- rlang::enexpr(var)
     var <- rlang::expr_name(var)
@@ -1076,7 +1076,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 #' @param replicas \code{integer} indicating the number of replicates to be used
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' #' @param anidar \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
@@ -1086,13 +1086,13 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 #' @export
 
 
-create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F,anidar = F) {
+create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F,standard_eval = F) {
 
   # Ajustar nombre de variables del diseño muestral
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
 
-  if(anidar == F){
+  if(standard_eval == F){
 
     var <- rlang::enexpr(var)
     var <- rlang::expr_name(var)
@@ -1275,20 +1275,20 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 #' @param subpop integer dummy variable to filter the dataframe
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param anidar \code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.
+#' @param standard_eval \code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
 #'
 #'
-create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, anidar = T) {
+create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = T) {
 # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
 #  detiene la ejecución
 # chequear_var_disenio(disenio$variables)
 disenio$variables$varunit <- disenio$variables[[unificar_variables_upm(disenio)]]
 disenio$variables$varstrat <- disenio$variables[[unificar_variables_estrato(disenio)]]
 
-# if(anidar == F){
+# if(standard_eval == F){
 #   #  # Encapsular inputs para usarlos más tarde
 #   var <- rlang::enexpr(var)
 #   denominador <- rlang::enexpr(denominador)
@@ -1473,14 +1473,14 @@ return(final)
 #' @param disenio complex design created by \code{survey} package
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param anidar \code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.
+#' @param standard_eval \code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' create_prop_internal(ocupado, zona+sexo, disenio = dc)
 
-create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, anidar = T){
+create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = T){
 
   # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecución
@@ -1490,7 +1490,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 
 
 
-  if (anidar == F){
+  if (standard_eval == F){
     #  # Encapsular inputs para usarlos más tarde
     var <- rlang::enexpr(var)
     var <-  rlang::expr_name(var)
@@ -1659,7 +1659,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #' @param subpop integer dummy variable to filter the dataframe
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param anidar \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
@@ -1677,10 +1677,10 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #' @export
 #'
 
-create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F,anidar = F){
+create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F,standard_eval = F){
 
   #  # Encapsular inputs para usarlos más tarde
-  if(anidar == F){
+  if(standard_eval == F){
 
     var <- rlang::enexpr(var)
     var <- rlang::expr_name(var)
