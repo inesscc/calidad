@@ -21,6 +21,3 @@ Genera una tabla con el conteo de UPM para cada uno de los dominios del tabulado
 La columna que contiene la información de las UPMs debe llamarse varunit
 La función contempla un caso para proporción y un caso para promedio
 }
-\examples{
-calcular_upm(epf_personas, c("zona", "sexo"), "ocupado")
-}

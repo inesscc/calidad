@@ -17,6 +17,3 @@ calcular_n_total(x, datos)
 \description{
 Genera una tabla con el conteo de cada cada una de los dominios de las categorías ingresadas.
 }
-\examples{
-calcular_n_total(c("zona", "sexo"), var = dc$variables)
-}

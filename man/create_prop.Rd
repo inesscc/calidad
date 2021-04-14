@@ -43,13 +43,16 @@ degrees of freedom, sample size, standard error and coefficient of variation. Th
 grouping in several domains.
 }
 \examples{
-epf_gastos = epf_gastos \%>\% mutate(gasto_div1 = dplyr::if_else(d == "01", gasto, 0))
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_gastos, weights = ~fe)
+epf_gastos = epf_gastos \%>\%
+dplyr::mutate(gasto_div1 = dplyr::if_else(d == "01", gasto, 0))
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_gastos, weights = ~fe)
 create_prop(var = gasto_div1, denominador = gasto, disenio =  dc, dominios = zona)
 
-enusc <-  enusc \%>\% filter(enusc$Kish == 1) \%>\%  mutate(muj_insg_taxi = dplyr::if_else(enusc$P9_4_1 \%in\% c(1,2) & enusc$rph_sexo == 2,1 ,0),
+enusc <-  enusc \%>\%
+dplyr::filter(enusc$Kish == 1) \%>\%
+ dplyr::mutate(muj_insg_taxi = dplyr::if_else(enusc$P9_4_1 \%in\% c(1,2) & enusc$rph_sexo == 2,1 ,0),
                                                        hom_insg_taxi = dplyr::if_else(enusc$P9_4_1 \%in\% c(1,2) & enusc$rph_sexo == 1,1 ,0))
-dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
+dc <- survey::svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 create_prop(var = muj_insg_taxi, denominador = hom_insg_taxi, disenio = dc)
 
 create_prop(var = VP_DC, denominador = NULL, disenio = dc, ci = T)

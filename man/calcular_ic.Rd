@@ -19,6 +19,3 @@ calcular_ic(data, env = parent.frame(), tipo = "resto", ajuste_ene)
 \description{
 Usa la tabla creada para calcular el estándar y le agrega dos columnas con el límite inferior y superior del intervalo de confianza
 }
-\examples{
-calcular_intervalos(tabla, tipo = media_agregado)
-}

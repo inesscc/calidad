@@ -19,8 +19,3 @@ calcular_tabla(var, dominios, disenio, media = T)
 \description{
 Genera una tabla con estimaciones para una agregación determinada
 }
-\examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-calcular_tabla(gastot_hd, zona+sexo, dc)
-
-}

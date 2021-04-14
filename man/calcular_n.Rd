@@ -20,6 +20,3 @@ calcular_n(data, dominios, var = NULL)
 Genera una tabla con el conteo de cada cada una de los dominios del tabulado.
 La función contempla un caso para proporción y un caso para promedio
 }
-\examples{
-calcular_n(epf_personas, c("zona", "sexo"), var = NULL)
-}

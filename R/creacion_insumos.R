@@ -9,9 +9,7 @@
 #'
 #' @return \code{vector} que contiene la variable con los conglomerados.
 #' @import survey
-#' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' unificar_variables_estrato(dc)
+
 
 unificar_variables_upm = function(disenio){
   stringr::str_replace(paste(disenio$call)[2],"~","")
@@ -27,9 +25,6 @@ unificar_variables_upm = function(disenio){
 #'
 #' @return \code{vector} que contiene la variable con los estratos de conglomerados.
 #' @import survey
-#' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' unificar_variables_estrato(dc)
 
 ### función par homologar variables estratos ####
 unificar_variables_estrato = function(disenio){
@@ -46,9 +41,6 @@ unificar_variables_estrato = function(disenio){
 #'
 #' @return \code{vector} que contiene la variable con los datos del factor de expansión.
 #' @import survey
-#' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' unificar_variables_estrato(dc)
 
 ### función par homologar variables factor expansión ####
 unificar_variables_factExp = function(disenio){
@@ -67,10 +59,7 @@ unificar_variables_factExp = function(disenio){
 #'
 #' @return \code{dataframe} que contiene variables de agregación, variable objetivo y error estándar
 #' @import survey
-#' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' calcular_tabla(gastot_hd, zona+sexo, dc)
-#'
+
 calcular_tabla <-  function(var, dominios, disenio, media = T) {
 
   # El primer if es para dominios
@@ -123,9 +112,7 @@ calcular_tabla <-  function(var, dominios, disenio, media = T) {
 #'
 #' @return \code{dataframe} que contiene variables de agregación, variable objetivo y error estándar
 #' @import survey
-#' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
-#' calcular_tabla_ratio(var = ~gasto_div1, denominador = ~gasto, zona+sexo, dc)
+
 calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio) {
   if (!is.null(dominios)) {
     estimacion <- survey::svyby(var, denominator = denominador,design =  disenio, by = dominios , FUN = svyratio)
@@ -147,8 +134,7 @@ calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio) {
 #' @param var string que contiene el nombre de la variable de proporción que se evalúa.
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
-#' @examples
-#' calcular_n(epf_personas, c("zona", "sexo"), var = NULL)
+
 calcular_n <- function(data, dominios, var = NULL) {
 
   # Esto es para el caso de proporción
@@ -175,8 +161,6 @@ calcular_n <- function(data, dominios, var = NULL) {
 #' @param datos \code{dataframe} que se está utilizando. Se extrae del disenio muestral
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
-#' @examples
-#' calcular_n_total(c("zona", "sexo"), var = dc$variables)
 
 calcular_n_total <- function(x, datos) {
   datos %>%
@@ -194,8 +178,6 @@ calcular_n_total <- function(x, datos) {
 #' @param data \code{dataframe} que contiene la tabla con la cual se está trabajando
 #' @return un mensaje de error
 #'
-#' @examples
-#' chequear_var_disenio(data = var = dc$variables)
 
 
 chequear_var_disenio <- function(data) {
@@ -224,8 +206,6 @@ chequear_var_disenio <- function(data) {
 #' @param var string que contiene el nombre de la variable de proporción que se evalúa.
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
-#' @examples
-#' calcular_upm(epf_personas, c("zona", "sexo"), "ocupado")
 
 calcular_upm <- function(data, dominios, var = NULL ) {
 
@@ -266,9 +246,6 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 #' @param var variable objetivo. Debe ser un integer que toma los valores 1 o 0
 #' @param dominios vector de caracteres que contiene los dominios a evaluar
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
-#'
-#' @examples
-#' calcular_estrato(epf_personas, c("zona", "sexo"), "ocupado")
 
 calcular_estrato <- function(data, dominios, var = NULL ) {
 
@@ -306,10 +283,6 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #' @param datos \code{dataframe} que contiene los datos que se están evaluando. Se obtiene a partir del diseño muestral
 #' @param variables variables objetivo. vector de strings que contiene los nombres de las variables
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
-#'
-#' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' calcular_gl_total(c("zona", "sexo"), dc$variables)
 
 calcular_gl_total <- function(variables, datos) {
   upm <- purrr::map(variables, ~calcular_upm(datos, .x) %>%
@@ -342,8 +315,6 @@ calcular_gl_total <- function(variables, datos) {
 #' @param tipo \code{string} que indica cuál es el tipo de estimación que se realiza.
 #' @return \code{dataframe} que contiene todos los elementos del estándar, junto a tres columnas nuevas que contienen el límite inferior, el límite superior y el valor t
 #'
-#' @examples
-#' calcular_intervalos(tabla, tipo = media_agregado)
 
 
 calcular_ic <-  function(data, env = parent.frame(), tipo = "resto", ajuste_ene) {
@@ -474,10 +445,11 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' @import survey
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' create_mean(gastot_hd, zona+sexo,  disenio = dc)
 #' @export
 
@@ -671,7 +643,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' create_tot_con(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
 #' @export
 
@@ -851,9 +823,9 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
-#'
+#' @import tidyr
 #' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' create_tot(ocupado, zona+sexo, disenio = dc)
 #' @export
 
@@ -1078,10 +1050,10 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
-#'
+#' @import itertools
 #' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' dc_rep <-  as.svrepdesign(dc , type = "subbootstrap", replicates=10)
+#' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' dc_rep <-  survey::as.svrepdesign(dc , type = "subbootstrap", replicates=10)
 #' create_median(gastot_hd, zona+sexo, disenio = dc)
 #' @export
 
@@ -1278,9 +1250,6 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 #' @param standard_eval \code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
-#' @examples
-#'
-#'
 create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = T) {
 # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
 #  detiene la ejecución
@@ -1476,9 +1445,6 @@ return(final)
 #' @param standard_eval \code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
-#' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' create_prop_internal(ocupado, zona+sexo, disenio = dc)
 
 create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = T){
 
@@ -1663,13 +1629,16 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
-#' epf_gastos = epf_gastos %>% mutate(gasto_div1 = dplyr::if_else(d == "01", gasto, 0))
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_gastos, weights = ~fe)
+#' epf_gastos = epf_gastos %>%
+#' dplyr::mutate(gasto_div1 = dplyr::if_else(d == "01", gasto, 0))
+#' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_gastos, weights = ~fe)
 #' create_prop(var = gasto_div1, denominador = gasto, disenio =  dc, dominios = zona)
 #'
-#' enusc <-  enusc %>% filter(enusc$Kish == 1) %>%  mutate(muj_insg_taxi = dplyr::if_else(enusc$P9_4_1 %in% c(1,2) & enusc$rph_sexo == 2,1 ,0),
+#' enusc <-  enusc %>%
+#' dplyr::filter(enusc$Kish == 1) %>%
+#'  dplyr::mutate(muj_insg_taxi = dplyr::if_else(enusc$P9_4_1 %in% c(1,2) & enusc$rph_sexo == 2,1 ,0),
 #'                                                        hom_insg_taxi = dplyr::if_else(enusc$P9_4_1 %in% c(1,2) & enusc$rph_sexo == 1,1 ,0))
-#' dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
+#' dc <- survey::svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 #' create_prop(var = muj_insg_taxi, denominador = hom_insg_taxi, disenio = dc)
 #'
 #' create_prop(var = VP_DC, denominador = NULL, disenio = dc, ci = T)

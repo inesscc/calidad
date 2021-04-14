@@ -35,7 +35,3 @@ create_prop_internal(
 \description{
 internal function to calculate proportion estimations
 }
-\examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-create_prop_internal(ocupado, zona+sexo, disenio = dc)
-}

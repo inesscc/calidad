@@ -40,7 +40,7 @@ with the following elements: sum, degrees of freedom, sample size and coefficien
 of variation. The function allows grouping in several domains.
 }
 \examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-dc_rep <-  as.svrepdesign(dc , type = "subbootstrap", replicates=10)
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+dc_rep <-  survey::as.svrepdesign(dc , type = "subbootstrap", replicates=10)
 create_median(gastot_hd, zona+sexo, disenio = dc)
 }

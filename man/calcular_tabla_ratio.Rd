@@ -21,7 +21,3 @@ calcular_tabla_ratio(var, denominador, dominios = NULL, disenio)
 \description{
 Genera una tabla con estimaciones para una agregación determinada
 }
-\examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
-calcular_tabla_ratio(var = ~gasto_div1, denominador = ~gasto, zona+sexo, dc)
-}

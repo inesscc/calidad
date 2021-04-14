@@ -40,6 +40,6 @@ degrees of freedom, sample size and coefficient of variation. The function allow
 grouping in several domains.
 }
 \examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 create_tot(ocupado, zona+sexo, disenio = dc)
 }

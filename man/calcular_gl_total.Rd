@@ -17,7 +17,3 @@ calcular_gl_total(variables, datos)
 \description{
 Genera una tabla con el conteo de grados de libertad para cada uno de los dominios del tabulado. Es un wrapper que reune a las funciones calcular_upm y calcular_estrato
 }
-\examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-calcular_gl_total(c("zona", "sexo"), dc$variables)
-}

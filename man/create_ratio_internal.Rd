@@ -38,7 +38,3 @@ create_ratio_internal(
 \description{
 internal function to calculate ratios estimations
 }
-\examples{
-
-
-}

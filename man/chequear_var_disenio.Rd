@@ -15,6 +15,3 @@ un mensaje de error
 \description{
 Comprueba que las variables de diseño se llamen varstrat y varunit. En caso de que no se cumpla, la ejecución se detiene y se genera un error
 }
-\examples{
-chequear_var_disenio(data = var = dc$variables)
-}

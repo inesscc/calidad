@@ -15,7 +15,3 @@ unificar_variables_upm(disenio)
 \description{
 Identifica el nombre de la variable asignada para los conglomerados en el diseño complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creación de insumos.
 }
-\examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-unificar_variables_estrato(dc)
-}

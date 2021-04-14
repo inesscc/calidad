@@ -64,15 +64,6 @@ test_that("tamaño muestral media desagregada", {
 
 
 
-# Probar strings
-anidar <-  function(var,denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F){
-   create_mean(var, dominios, subpop, disenio,ci, anidar = T)
-}
-
-create_mean("gastot_hd", "zona", disenio = dc)
-
-anidar(var = "gastot_hd", disenio = dc, ci = T)
-
 
 
 
