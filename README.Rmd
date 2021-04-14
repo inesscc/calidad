@@ -1,9 +1,13 @@
 ---
-title: "Instrucciones de uso paquete para evaluar calidad de estimaciones"
 output: github_document
 always_allow_html: true
 ---
 
+# calidad <img src="man/figures/logo_calidad.png" align="right" width = "120px"/>
+
+El paquete calidad tiene por objetivo implementar de manera sencilla la [metodología](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4) de INE Chile para la evaluación de estimaciones provenientes de encuestas de hogares.  
+
+El presente tutorial muestra el uso básico del paquete. Se incluye las principales funciones para calcular insumos y se describe la manera en la que la evaluación de calidad debe ser realizada.  
 
 ## Edición de los datos
 
@@ -17,7 +21,7 @@ Ambos datasets están dentro del paquete y pueden ser utilizados cuando calidad 
 [^haven]: Los datos contenidos dentro del paquete tienen algunas ediciones. Es importante tener en consideración que los objetos haven::labelled pueden tener alguna colisión con las funciones de calidad. Si se quiere importar un archivo dta, se deben convertir a numeric o character todas las variables que sean de tipo haven::labelled.         
 
 
-```{r, message=FALSE}
+```{r, message=FALSE, warning=FALSE}
 library(survey)
 library(calidad)
 library(tidyverse)

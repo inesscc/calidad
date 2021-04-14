@@ -1,5 +1,14 @@
-Instrucciones de uso paquete para evaluar calidad de estimaciones
-================
+
+# calidad <img src="man/figures/logo_calidad.png" align="right" width = "120px"/>
+
+El paquete calidad tiene por objetivo implementar de manera sencilla la
+[metodología](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4)
+de INE Chile para la evaluación de estimaciones provenientes de
+encuestas de hogares.
+
+El presente tutorial muestra el uso básico del paquete. Se incluye las
+principales funciones para calcular insumos y se describe la manera en
+la que la evaluación de calidad debe ser realizada.
 
 ## Edición de los datos
 
@@ -16,11 +25,6 @@ objetivo de generar variables que identifiquen subpoblaciones de interés
 
 ``` r
 library(survey)
-```
-
-    ## Warning: package 'survey' was built under R version 4.0.5
-
-``` r
 library(calidad)
 library(tidyverse)
 
