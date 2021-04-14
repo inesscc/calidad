@@ -2,21 +2,21 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{calcular_n}
 \alias{calcular_n}
-\title{Calcula tamaño muestral para las medias}
+\title{Calcula tamanio muestral para las medias}
 \usage{
 calcular_n(data, dominios, var = NULL)
 }
 \arguments{
-\item{data}{\code{dataframe} que contiene los datos que se están evaluando}
+\item{data}{\code{dataframe} que contiene los datos que se estan evaluando}
 
 \item{dominios}{vector de caracteres que contiene los dominios a evaluar}
 
-\item{var}{string que contiene el nombre de la variable de proporción que se evalúa.}
+\item{var}{string que contiene el nombre de la variable de proporcion que se evalua.}
 }
 \value{
 \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 }
 \description{
 Genera una tabla con el conteo de cada cada una de los dominios del tabulado.
-La función contempla un caso para proporción y un caso para promedio
+La funcion contempla un caso para proporcion y un caso para promedio
 }

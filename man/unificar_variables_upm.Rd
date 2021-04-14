@@ -13,5 +13,5 @@ unificar_variables_upm(disenio)
 \code{vector} que contiene la variable con los conglomerados.
 }
 \description{
-Identifica el nombre de la variable asignada para los conglomerados en el diseño complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creación de insumos.
+Identifica el nombre de la variable asignada para los conglomerados en el disenio complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creacion de insumos.
 }

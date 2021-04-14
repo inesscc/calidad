@@ -3,7 +3,7 @@
 
 #' Homologa nombre de variable que hace referencia a los conglomerados, con el objetivo de evitar posible errores.
 #'
-#' Identifica el nombre de la variable asignada para los conglomerados en el diseño complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creación de insumos.
+#' Identifica el nombre de la variable asignada para los conglomerados en el disenio complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creacion de insumos.
 #'
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #'
@@ -19,45 +19,45 @@ unificar_variables_upm = function(disenio){
 
 #' Homologa nombre de variable que hace referencia a los estratos de conglomerados, con el objetivo de evitar posible errores.
 #'
-#' Identifica el nombre de la variable asignada para los estratos de conglomerados en el diseño complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creación de insumos.
+#' Identifica el nombre de la variable asignada para los estratos de conglomerados en el disenio complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creacion de insumos.
 #'
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #'
 #' @return \code{vector} que contiene la variable con los estratos de conglomerados.
 #' @import survey
 
-### función par homologar variables estratos ####
+### funcion par homologar variables estratos ####
 unificar_variables_estrato = function(disenio){
   stringr::str_replace(paste(disenio$call)[3],"~","")
 }
 
 #-----------------------------------------------------------------------
 
-#' Homologa nombre de variable que hace referencia al factor de expansión utilizado por el usuario, con el objetivo de evitar posible errores.
+#' Homologa nombre de variable que hace referencia al factor de expansion utilizado por el usuario, con el objetivo de evitar posible errores.
 #'
-#' Identifica el nombre de la variable asignada para el factor de expansión en el diseño complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creación de insumos.
+#' Identifica el nombre de la variable asignada para el factor de expansion en el disenio complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creacion de insumos.
 #'
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #'
-#' @return \code{vector} que contiene la variable con los datos del factor de expansión.
+#' @return \code{vector} que contiene la variable con los datos del factor de expansion.
 #' @import survey
 
-### función par homologar variables factor expansión ####
+### funcion par homologar variables factor expansion ####
 unificar_variables_factExp = function(disenio){
   stringr::str_replace(paste(disenio$call)[5],"~","")
 }
 
 #-----------------------------------------------------------------------
 
-#' Calcula medias a partir de cierta agregación
+#' Calcula medias a partir de cierta agregacion
 #'
-#' Genera una tabla con estimaciones para una agregación determinada
+#' Genera una tabla con estimaciones para una agregacion determinada
 #'
 #' @param var variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~
-#' @param dominios dominios de estimación separados por signo +. Debe anteponerse ~
+#' @param dominios dominios de estimacion separados por signo +. Debe anteponerse ~
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
-#'
-#' @return \code{dataframe} que contiene variables de agregación, variable objetivo y error estándar
+#' @param media \code{boolean} indicating if the mean must be calculated
+#' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
 calcular_tabla <-  function(var, dominios, disenio, media = T) {
@@ -80,7 +80,7 @@ calcular_tabla <-  function(var, dominios, disenio, media = T) {
                                   interval.type = "quantile",
                                   ties="discrete")
     }
-  # Esto corresponde al caso sin desagregación
+  # Esto corresponde al caso sin desagregacion
   } else {
     if (media == T) { # para calcular la media
       estimacion <- survey::svymean(var, disenio)
@@ -101,16 +101,16 @@ calcular_tabla <-  function(var, dominios, disenio, media = T) {
 
 #-----------------------------------------------------------------------
 
-#' Calcula ratio a partir de cierta agregación
+#' Calcula ratio a partir de cierta agregacion
 #'
-#' Genera una tabla con estimaciones para una agregación determinada
+#' Genera una tabla con estimaciones para una agregacion determinada
 #'
 #' @param var variable objetivo o numerador del ratio a calcular, dentro de un \code{dataframe}. Debe anteponerse ~
 #' @param denominador variable denominador del ratio a calcular, dentro de un \code{dataframe}. Debe anteponerse ~
-#' @param dominios dominios de estimación separados por signo +. Debe anteponerse ~
+#' @param dominios dominios de estimacion separados por signo +. Debe anteponerse ~
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #'
-#' @return \code{dataframe} que contiene variables de agregación, variable objetivo y error estándar
+#' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
 calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio) {
@@ -124,20 +124,20 @@ calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio) {
 
 #-----------------------------------------------------------------------
 
-#' Calcula tamaño muestral para las medias
+#' Calcula tamanio muestral para las medias
 #'
 #' Genera una tabla con el conteo de cada cada una de los dominios del tabulado.
-#' La función contempla un caso para proporción y un caso para promedio
+#' La funcion contempla un caso para proporcion y un caso para promedio
 #'
-#' @param data \code{dataframe} que contiene los datos que se están evaluando
+#' @param data \code{dataframe} que contiene los datos que se estan evaluando
 #' @param dominios vector de caracteres que contiene los dominios a evaluar
-#' @param var string que contiene el nombre de la variable de proporción que se evalúa.
+#' @param var string que contiene el nombre de la variable de proporcion que se evalua.
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 
 calcular_n <- function(data, dominios, var = NULL) {
 
-  # Esto es para el caso de proporción
+  # Esto es para el caso de proporcion
   if (is.null(var)) {
     data %>%
       dplyr::group_by(.dots = as.list(dominios)  ) %>%
@@ -153,12 +153,12 @@ calcular_n <- function(data, dominios, var = NULL) {
 }
 
 #-----------------------------------------------------------------------
-#' Calcula tamaño muestral para la función de totales poblacionales
+#' Calcula tamanio muestral para la funcion de totales poblacionales
 #'
-#' Genera una tabla con el conteo de cada cada una de los dominios de las categorías ingresadas.
+#' Genera una tabla con el conteo de cada cada una de los dominios de las categorias ingresadas.
 #'
-#' @param x  vector de strings que contiene las variables para las cuales se calcula el tamaño muestra
-#' @param datos \code{dataframe} que se está utilizando. Se extrae del disenio muestral
+#' @param x  vector de strings que contiene las variables para las cuales se calcula el tamanio muestra
+#' @param datos \code{dataframe} que se esta utilizando. Se extrae del disenio muestral
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 
@@ -171,11 +171,11 @@ calcular_n_total <- function(x, datos) {
 }
 
 #----------------------------------------------------------------------
-#' Chequea que las variables de diseño tengan el nombre correcto
+#' Chequea que las variables de disenio tengan el nombre correcto
 #'
-#' Comprueba que las variables de diseño se llamen varstrat y varunit. En caso de que no se cumpla, la ejecución se detiene y se genera un error
+#' Comprueba que las variables de disenio se llamen varstrat y varunit. En caso de que no se cumpla, la ejecucion se detiene y se genera un error
 #'
-#' @param data \code{dataframe} que contiene la tabla con la cual se está trabajando
+#' @param data \code{dataframe} que contiene la tabla con la cual se esta trabajando
 #' @return un mensaje de error
 #'
 
@@ -183,11 +183,11 @@ calcular_n_total <- function(x, datos) {
 chequear_var_disenio <- function(data) {
 
   if (sum(grepl(pattern = "varunit" , x = names(data))) == 0) {
-    stop("¡La columna que contiene información de las UPMs debe llamarse varunit!")
+    stop("¡La columna que contiene informacion de las UPMs debe llamarse varunit!")
   }
 
   if (sum(grepl(pattern = "varstrat" , x = names(data))) == 0) {
-    stop("¡La columna que contiene información de los estratos debe llamarse varstrat!")
+    stop("¡La columna que contiene informacion de los estratos debe llamarse varstrat!")
   }
 
 }
@@ -195,15 +195,15 @@ chequear_var_disenio <- function(data) {
 
 #-----------------------------------------------------------------------
 
-#' Calcula el número de UPM
+#' Calcula el numero de UPM
 #'
 #' Genera una tabla con el conteo de UPM para cada uno de los dominios del tabulado.
-#' La columna que contiene la información de las UPMs debe llamarse varunit
-#' La función contempla un caso para proporción y un caso para promedio
+#' La columna que contiene la informacion de las UPMs debe llamarse varunit
+#' La funcion contempla un caso para proporcion y un caso para promedio
 #'
-#' @param data \code{dataframe} que contiene los datos que se están evaluando
+#' @param data \code{dataframe} que contiene los datos que se estan evaluando
 #' @param dominios vector de caracteres que contiene los dominios a evaluar
-#' @param var string que contiene el nombre de la variable de proporción que se evalúa.
+#' @param var string que contiene el nombre de la variable de proporcion que se evalua.
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 #'
 
@@ -211,7 +211,7 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 
   #Chequear que existe variable varunit en el dataset
   if (sum(grepl(pattern = "varunit" , x = names(data))) == 0) {
-    stop("¡La columna que contiene información de las UPMs debe llamarse varunit!")
+    stop("¡La columna que contiene informacion de las UPMs debe llamarse varunit!")
   }
 
 
@@ -236,13 +236,13 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 }
 #-----------------------------------------------------------------------
 
-#' Calcula el número de estratos
+#' Calcula el numero de estratos
 #'
 #' Genera una tabla con el conteo de estratos para cada uno de los dominios del tabulado.
-#' La columna que contiene la información de los estratos debe llamarse varstrat
-#' La función contempla un caso para proporción y un caso para promedio
+#' La columna que contiene la informacion de los estratos debe llamarse varstrat
+#' La funcion contempla un caso para proporcion y un caso para promedio
 #'
-#' @param data \code{dataframe} que contiene los datos que se están evaluando
+#' @param data \code{dataframe} que contiene los datos que se estan evaluando
 #' @param var variable objetivo. Debe ser un integer que toma los valores 1 o 0
 #' @param dominios vector de caracteres que contiene los dominios a evaluar
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
@@ -251,7 +251,7 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 
   #Chequear que existe variable varstrat en el dataset
   if (sum(grepl(pattern = "varstrat" , x = names(data))) == 0) {
-    stop("¡La columna que contiene información de los estratos debe llamarse varstrat!")
+    stop("¡La columna que contiene informacion de los estratos debe llamarse varstrat!")
   }
 
   listado <- c("varstrat", as.list(dominios))
@@ -280,7 +280,7 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #'
 #' Genera una tabla con el conteo de grados de libertad para cada uno de los dominios del tabulado. Es un wrapper que reune a las funciones calcular_upm y calcular_estrato
 #'
-#' @param datos \code{dataframe} que contiene los datos que se están evaluando. Se obtiene a partir del diseño muestral
+#' @param datos \code{dataframe} que contiene los datos que se estan evaluando. Se obtiene a partir del disenio muestral
 #' @param variables variables objetivo. vector de strings que contiene los nombres de las variables
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 
@@ -308,12 +308,13 @@ calcular_gl_total <- function(variables, datos) {
 
 #' Genera intervalos de confianza para todos los dominios estimados
 #'
-#' Usa la tabla creada para calcular el estándar y le agrega dos columnas con el límite inferior y superior del intervalo de confianza
+#' Usa la tabla creada para calcular el estandar y le agrega dos columnas con el limite inferior y superior del intervalo de confianza
 #'
-#' @param data \code{dataframe} con todos los datos necesarios para calcular el estándar
-#' @param env \code{environment} toma el ambiente de la función contenedora, para usar los elementos requeridos
-#' @param tipo \code{string} que indica cuál es el tipo de estimación que se realiza.
-#' @return \code{dataframe} que contiene todos los elementos del estándar, junto a tres columnas nuevas que contienen el límite inferior, el límite superior y el valor t
+#' @param data \code{dataframe} con todos los datos necesarios para calcular el estandar
+#' @param env \code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos
+#' @param tipo \code{string} que indica cual es el tipo de estimacion que se realiza.
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
+#' @return \code{dataframe} que contiene todos los elementos del estandar, junto a tres columnas nuevas que contienen el limite inferior, el limite superior y el valor t
 #'
 
 
@@ -347,24 +348,38 @@ calcular_ic <-  function(data, env = parent.frame(), tipo = "resto", ajuste_ene)
 
 #---------------------------------------------------------------------
 
+#' Calcula medianas con método replicado
+#'
+#' Se usa para acortar un poco el código de la función mediana
+#'
+#' @param disenio disenio complejo creado mediante el paquete \code{survey}
+#' @param var variable a estimar
+#' @param dominios dominios para desagregar
+#' @param sub se usa para filtrar cuando el usuario lo requiere
+#' @param env ambiente en el cual se crean algunas variable relevantes
+#' @return \code{vector} que contiene la variable con los conglomerados.
+#' @import iterators
+
+
+
 calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = parent.frame()) {
 
-  #Si el usuario pone una subpoblación, se hace un filtro en el diseño para agilizar el cálculo
+  #Si el usuario pone una subpoblacion, se hace un filtro en el disenio para agilizar el calculo
   if (sub == T) {
     filtro <-  rlang::parse_expr(get("subpop", env))
     disenio <- subset(disenio,   rlang::eval_tidy(filtro) == 1)
 
   }
 
-  # Generar un vector con la desagregación necesaria
+  # Generar un vector con la desagregacion necesaria
   doms <- as.character(dominios)
   doms <- stringr::str_split(doms[[2]], "\\+")
   doms <- stringr::str_remove_all(doms[[1]], " ")
 
-  # Identificar cuáles son las categorías de cada una de las variables de desagregación
+  # Identificar cuales son las categorias de cada una de las variables de desagregacion
   categorias <- purrr::map(doms, ~sort(unique(as.character(disenio$variables[[.x]]) )))
 
-  # Generar el iterador, según el número de desagregaciones pedidas por el usuario. Además, se calcula el número de combinaciones de celdas.
+  # Generar el iterador, segun el numero de desagregaciones pedidas por el usuario. Ademas, se calcula el numero de combinaciones de celdas.
   if (length(categorias) == 1) {
     it <- itertools::ihasNext(itertools::product(categorias[[1]]))
     combinaciones <- length(categorias[[1]])
@@ -476,20 +491,20 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
   }
 
   # Chequear que la variable no sea character
-  if (is.character(disenio$variables[[var]]) == T) stop("¡Estás usando una variable character!")
+  if (is.character(disenio$variables[[var]]) == T) stop("¡Estas usando una variable character!")
 
   #Chequear que la variable sea continua. Si no lo es, aparece un warning
   es_prop <- disenio$variables %>%
     dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0, 1, 0))
 
-  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("¡Parece que tu variable es de proporción!")
+  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("¡Parece que tu variable es de proporcion!")
 
 
-  #Convertir los inputs en fórmulas para adecuarlos a survey
+  #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- paste0("~",var) %>%
     as.formula()
 
-  # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
+  # ESTO CORRESPONDE AL CASO CON DESAGREGACIoN
   if (!is.null(dominios[[1]])) {
 
     # Esto corre para el caso en el que NO hay subpop
@@ -498,13 +513,13 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       dominios_form <- paste0("~", dominios) %>%
         as.formula()
 
-      #Generar la tabla con los cálculos
+      #Generar la tabla con los calculos
       tabla <- calcular_tabla(var_form, dominios_form, disenio)
 
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
 
-      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
+      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0 |
                                                         is.na(!!rlang::parse_expr(subpop)), 1, 0))
@@ -514,7 +529,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       dominios_form <- paste0("~", dominios_form) %>%
         as.formula()
 
-      #Generar la tabla con los cálculos
+      #Generar la tabla con los calculos
       tabla <- calcular_tabla(var_form, dominios_form, disenio) %>%
         dplyr::filter(!!rlang::parse_expr(subpop) == 1)
     }
@@ -523,7 +538,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     nombres <- names(tabla)
     agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
 
-    #Calcular el tamaño muestral de cada grupo
+    #Calcular el tamanio muestral de cada grupo
     n <- calcular_n(disenio$variables, agrupacion) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
@@ -534,7 +549,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
 
-    #Extrear el coeficiente de variación
+    #Extrear el coeficiente de variacion
     cv <- cv(tabla, design = disenio) * 100
 
     cv <- tabla %>%
@@ -542,7 +557,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       dplyr::bind_cols(coef_var = cv) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
-    #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
+    #Unir toda la informacion. Se hace con join para asegurar que no existan problemas en la union
     final <- tabla %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
       dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
@@ -564,21 +579,21 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
 
 
-    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
+    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIoN
   } else {
 
 
-    # Si el usuario ingresa subpoblación, se filtra la base de datos para la subpoblación de referencia
+    # Si el usuario ingresa subpoblacion, se filtra la base de datos para la subpoblacion de referencia
     if (!is.null(subpop)) {
 
-      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0 |
                                                         is.na(!!rlang::parse_expr(subpop)), 1, 0))
 
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
-      # Aquí se filtra el diseño
+      # Aqui se filtra el disenio
       # subpop <- rlang::expr_text(rlang::enexpr(subpop))
       # filtro <-  paste(subpop, "== 1")
       # disenio <- subset(disenio, !!rlang::parse_expr(filtro))
@@ -587,10 +602,10 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     }
 
     dominios_form = dominios
-    #Generar la tabla con los cálculos
+    #Generar la tabla con los calculos
     tabla <- calcular_tabla(var_form, dominios_form, disenio)
 
-    # Tamaño muestral
+    # Tamanio muestral
     n <- nrow(disenio$variables)
 
     # Calcular grados de libertad
@@ -598,7 +613,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     varunit <- length(unique(disenio$variables$varunit))
     gl <- varunit - varstrat
 
-    # Calcular coeficiente de variación
+    # Calcular coeficiente de variacion
     cv <- cv(tabla, design = disenio) * 100
 
     # Armar tabla final
@@ -671,20 +686,20 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 
   }
 
-  # Verificar que la variable de estimación sea numérica. Se interrumpe si no es numérica
-  if (!is.numeric(disenio$variables[[var]]) ) stop("Debes usar una variable numérica")
+  # Verificar que la variable de estimacion sea numerica. Se interrumpe si no es numerica
+  if (!is.numeric(disenio$variables[[var]]) ) stop("Debes usar una variable numerica")
 
   # Pasar la variable objetivo al formato de survey
   var_form <- paste0("~", var) %>%
     as.formula()
 
-  # ESTO CORRESPONDE AL CASO EN EL QUE HAY DESAGREGACIÓN
+  # ESTO CORRESPONDE AL CASO EN EL QUE HAY DESAGREGACIoN
   if (!is.null(dominios)) {
 
     # Esto corre para el caso en el que NO hay subpop
     if (is.null(subpop)) {
 
-      #Identificar las variables ingresadas para la desagregación
+      #Identificar las variables ingresadas para la desagregacion
       agrupacion <- dominios %>%
         stringr::str_split(pattern = "\\+")
 
@@ -698,13 +713,13 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
 
-      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
+      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
 
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
-      #Identificar las variables ingresadas para la desagregación
+      #Identificar las variables ingresadas para la desagregacion
       agrupacion <- dominios %>%
         stringr::str_split(pattern = "\\+")
       agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
@@ -763,7 +778,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       dplyr::rename(se = var)
 
 
-    # Tamaño muestral
+    # Tamanio muestral
     n <- nrow(disenio$variables) %>%
       as.data.frame() %>%
       dplyr::mutate(variable = var) %>%
@@ -778,7 +793,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       dplyr::mutate(variable = var,
                     gl =  upm - varstrat)
 
-    # Coeficiente de variación
+    # Coeficiente de variacion
     cv <- cv(tabla, design = disenio) * 100
     cv <- as.data.frame(cv) %>%
       tibble::rownames_to_column(var = "variable") %>%
@@ -853,11 +868,11 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
   }
 
 
-  # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
+  # ESTO CORRESPONDE AL CASO CON DESAGREGACIoN
   if (!is.null(dominios)) {
 
     # Verificar que la variabe de entrada es correcta
-    if (!is.numeric(disenio$variables[[var]])) stop("¡La variable debe ser numérica!")
+    if (!is.numeric(disenio$variables[[var]])) stop("¡La variable debe ser numerica!")
 
     # Verificar que la variable es dummy
     test <- disenio$variable %>%
@@ -870,7 +885,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     # Esto corre para el caso en el que NO hay subpop
     if (is.null(subpop)) {
 
-      #Identificar las variables ingresadas para la desagregación
+      #Identificar las variables ingresadas para la desagregacion
       agrupacion <- dominios %>%
         stringr::str_split(pattern = "\\+")
       agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
@@ -883,12 +898,12 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       # Esto corre para subpop
     } else if (!is.null(rlang::enexpr(subpop))) { # caso que tiene subpop
 
-      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
+      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
-      #Identificar las variables ingresadas para la desagregación
+      #Identificar las variables ingresadas para la desagregacion
       agrupacion <- dominios %>%
         stringr::str_split(pattern = "\\+")
       agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
@@ -944,7 +959,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       final <- calcular_ic(final, tipo = "total_agregado",ajuste_ene = ajuste_ene)
     }
 
-    # ESTO CORRESPONDE AL CASO SIN DESAGRAGACIÓN
+    # ESTO CORRESPONDE AL CASO SIN DESAGRAGACIoN
   } else {
 
     n_cat = length(unique(disenio$variable[[var]]))
@@ -958,7 +973,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     agrup1 <- stringr::str_remove_all(string =  agrupacion, pattern = " ")
 
 
-    # Convertir variables a string. Esto se hace debido a que survey tiene distintos tratamientos para variables numéricas o de string
+    # Convertir variables a string. Esto se hace debido a que survey tiene distintos tratamientos para variables numericas o de string
     disenio <- survey::svydesign(ids = ~varunit, strata = ~varstrat,
                                  data = disenio$variables %>% dplyr::mutate_at(.vars = dplyr::vars(agrup1), list(as.character)),
                                  weights = ~fe)
@@ -967,15 +982,15 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     var_form <- paste0("~",var) %>%
       as.formula()
 
-    # Si el usuario ingresa subpoblación, se filtra la base de datos para la subpoblación de referencia
+    # Si el usuario ingresa subpoblacion, se filtra la base de datos para la subpoblacion de referencia
     if (!is.null(subpop)) {
 
-      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
-      # Aquí se filtra el diseño
+      # Aqui se filtra el disenio
       disenio <- disenio[disenio$variables[[subpop]] == 1]
 
     }
@@ -990,14 +1005,14 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       dplyr::rename(se = SE)
 
 
-    # Tamaño muestral
+    # Tamanio muestral
     n <- purrr::map(agrup1, calcular_n_total, datos = disenio$variables) %>%
       purrr::reduce(dplyr::bind_rows)
 
     # Grados de libertad
     gl <- calcular_gl_total(agrup1, disenio$variables)
 
-    #Extrear el coeficiente de variación
+    #Extrear el coeficiente de variacion
     cv <- cv(tabla, design = disenio) * 100
     cv <- as.data.frame(cv) %>%
       tibble::rownames_to_column(var = "variable") %>%
@@ -1048,7 +1063,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 #' @param replicas \code{integer} indicating the number of replicates to be used
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #' @import itertools
 #' @examples
@@ -1060,7 +1075,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
 create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F,standard_eval = F) {
 
-  # Ajustar nombre de variables del diseño muestral
+  # Ajustar nombre de variables del disenio muestral
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
 
@@ -1082,25 +1097,25 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
   }
 
 
-  # Generar el diseño replicado
+  # Generar el disenio replicado
   set.seed(1234)
   disenio <-  as.svrepdesign(disenio, type = "subbootstrap", replicates = replicas)
 
   # Chequear que la variable no sea character
-  if (is.character(disenio$variables[[var]]) == T) stop("¡Estás usando una variable character!")
+  if (is.character(disenio$variables[[var]]) == T) stop("¡Estas usando una variable character!")
 
   #Chequear que la variable sea continua. Si no lo es, aparece un warning
   es_prop <- disenio$variables %>%
     dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0, 1, 0))
 
-  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("¡Parece que tu variable es de proporción!")
+  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("¡Parece que tu variable es de proporcion!")
 
 
-  #Convertir los inputs en fórmulas para adecuarlos a survey
+  #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- paste0("~", var) %>%
     as.formula()
 
-  # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
+  # ESTO CORRESPONDE AL CASO CON DESAGREGACIoN
   if (!is.null(dominios)) {
 
     # Esto corre para el caso en el que NO hay subpop
@@ -1109,14 +1124,14 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       dominios_form <- paste0("~",dominios) %>%
         as.formula()
 
-      #Generar la tabla con los cálculos
+      #Generar la tabla con los calculos
 
       tabla <- calcular_medianas_internal(var_form, dominios_form, disenio)
 
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
 
-      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
+      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0 |
                                                         is.na(!!rlang::parse_expr(subpop)), 1, 0))
@@ -1128,7 +1143,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       dominios_form <- paste0("~", dominios_form) %>%
         as.formula()
 
-      #Generar la tabla con los cálculos
+      #Generar la tabla con los calculos
 
       tabla <- calcular_medianas_internal(var_form, dominios_form, disenio, sub = T)
 
@@ -1138,7 +1153,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     nombres <- names(tabla)
     agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
 
-    #Calcular el tamaño muestral de cada grupo
+    #Calcular el tamanio muestral de cada grupo
     n <- calcular_n(disenio$variables, agrupacion) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
@@ -1149,7 +1164,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
 
-    #Extrear el coeficiente de variación
+    #Extrear el coeficiente de variacion
     #cv <- cv(tabla, design = disenio) * 100
     cv <- tabla$se / tabla$V1
 
@@ -1158,7 +1173,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       dplyr::bind_cols(coef_var = cv) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
-    #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
+    #Unir toda la informacion. Se hace con join para asegurar que no existan problemas en la union
     final <- tabla %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
       dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
@@ -1176,14 +1191,14 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       final <- calcular_ic(final, tipo = "mediana_agregado",ajuste_ene = ajuste_ene)
     }
 
-    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
+    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIoN
   } else {
 
 
-    # Si el usuario ingresa subpoblación, se filtra la base de datos para la subpoblación de referencia
+    # Si el usuario ingresa subpoblacion, se filtra la base de datos para la subpoblacion de referencia
     if (!is.null(subpop)) {
 
-      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0 |
                                                         is.na(!!rlang::parse_expr(subpop)), 1, 0))
@@ -1194,10 +1209,10 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     }
 
     dominios_form = dominios
-    #Generar la tabla con los cálculos
+    #Generar la tabla con los calculos
     tabla <- calcular_tabla(var_form, dominios_form, disenio, media = F)
 
-    # Tamaño muestral
+    # Tamanio muestral
     n <- nrow(disenio$variables)
 
     # Calcular grados de libertad
@@ -1205,7 +1220,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     varunit <- length(unique(disenio$variables$varunit))
     gl <- varunit - varstrat
 
-    # Calcular coeficiente de variación
+    # Calcular coeficiente de variacion
     cv <- cv(tabla, design = disenio) * 100
 
     # Armar tabla final
@@ -1224,7 +1239,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
   }
 
-  # Filtrar filas que no son útiles
+  # Filtrar filas que no son utiles
   if(!is.null(dominios) && !is.null(subpop)){
     final <-  final %>%
       dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>%
@@ -1251,14 +1266,14 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = T) {
-# Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
-#  detiene la ejecución
+# Chequar que esten presentes las variables del disenio muestral. Si no se llaman varstrat y varunit, se
+#  detiene la ejecucion
 # chequear_var_disenio(disenio$variables)
 disenio$variables$varunit <- disenio$variables[[unificar_variables_upm(disenio)]]
 disenio$variables$varstrat <- disenio$variables[[unificar_variables_estrato(disenio)]]
 
 # if(standard_eval == F){
-#   #  # Encapsular inputs para usarlos más tarde
+#   #  # Encapsular inputs para usarlos mas tarde
 #   var <- rlang::enexpr(var)
 #   denominador <- rlang::enexpr(denominador)
 #
@@ -1298,20 +1313,20 @@ if(sum(es_prop$es_prop_var) == nrow(es_prop)){
 }
 
 # Chequear que la variable no sea character
-if (is.character(disenio$variables[[var]]) == T) stop("¡Estás usando una variable character!")
+if (is.character(disenio$variables[[var]]) == T) stop("¡Estas usando una variable character!")
 
 # Chequear que la variable no sea character
-if (is.character(disenio$variables[[denominador]]) == T) stop("¡Estás usando una variable para el denominador de character!")
+if (is.character(disenio$variables[[denominador]]) == T) stop("¡Estas usando una variable para el denominador de character!")
 
-#Convertir los inputs en fórmulas para adecuarlos a survey
+#Convertir los inputs en formulas para adecuarlos a survey
 var <- paste0("~", var) %>%
   as.formula()
 
-#Convertir los inputs en fórmulas para adecuarlos a survey
+#Convertir los inputs en formulas para adecuarlos a survey
 denominador <- paste0("~", denominador) %>%
   as.formula()
 
-# CON DESAGREGACIÓN
+# CON DESAGREGACIoN
 if (!is.null(dominios[[1]])) {
 
   # Sin subpop #
@@ -1327,7 +1342,7 @@ if (!is.null(dominios[[1]])) {
       as.formula()
   }
 
-  #Generar la tabla con los cálculos
+  #Generar la tabla con los calculos
   tabla <- calcular_tabla_ratio(var, denominador, dominios, disenio)
 
   #Extraer nombres
@@ -1369,24 +1384,24 @@ if (!is.null(dominios[[1]])) {
     final <- calcular_ic(final,tipo = "prop_agregado",  ajuste_ene = ajuste_ene)
   }
 
-  # SIN DESAGREGACIÓN #
+  # SIN DESAGREGACIoN #
 } else {
 
   # Con subpobp
   if (!is.null(subpop)) {
 
-    # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+    # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
     es_prop <- disenio$variables %>%
       dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
     if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
-    # Aquí se filtra el diseño
+    # Aqui se filtra el disenio
     #  subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
     disenio <- disenio[disenio$variables[[subpop]] == 1]
 
   }
 
-  #Generar la tabla con los cálculos
+  #Generar la tabla con los calculos
   tabla <- calcular_tabla_ratio(var, denominador, dominios, disenio)
 
   #+ Calcular N
@@ -1448,8 +1463,8 @@ return(final)
 
 create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = T){
 
-  # Chequar que estén presentes las variables del diseño muestral. Si no se llaman varstrat y varunit, se
-  #  detiene la ejecución
+  # Chequar que esten presentes las variables del disenio muestral. Si no se llaman varstrat y varunit, se
+  #  detiene la ejecucion
   # chequear_var_disenio(disenio$variables)
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -1457,7 +1472,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 
 
   if (standard_eval == F){
-    #  # Encapsular inputs para usarlos más tarde
+    #  # Encapsular inputs para usarlos mas tarde
     var <- rlang::enexpr(var)
     var <-  rlang::expr_name(var)
 
@@ -1473,19 +1488,19 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 
   }
 
-  if (is.character(disenio$variables[[var]]) == T) stop("¡Estás usando una variable character!")
+  if (is.character(disenio$variables[[var]]) == T) stop("¡Estas usando una variable character!")
 
-  #Chequear que la variable sea de proporción. Si no lo es, se interrumpe la ejecución
+  #Chequear que la variable sea de proporcion. Si no lo es, se interrumpe la ejecucion
   es_prop <- disenio$variables %>%
     dplyr::mutate(es_prop_var = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var)  == 0 | is.na(!!rlang::parse_expr(var)), 1, 0))
 
-  if (sum(es_prop$es_prop_var) != nrow(es_prop)) stop("¡La variable no es de proporción!")
+  if (sum(es_prop$es_prop_var) != nrow(es_prop)) stop("¡La variable no es de proporcion!")
 
-  #COnvertir los inputs en fórmulas para adecuarlos a survey
+  #COnvertir los inputs en formulas para adecuarlos a survey
   var <- paste0("~", var) %>%
     as.formula()
 
-  # ESTO CORRESPONDE AL CASO CON DESAGREGACIÓN
+  # ESTO CORRESPONDE AL CASO CON DESAGREGACIoN
   if (!is.null(dominios[[1]])) {
 
     # Esto corre para el caso en el que NO hay subpop
@@ -1496,7 +1511,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
 
-      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
 
@@ -1507,7 +1522,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
         as.formula()
     }
 
-    #Generar la tabla con los cálculos
+    #Generar la tabla con los calculos
     tabla <- calcular_tabla(var, dominios, disenio)
 
     #Extraer nombres
@@ -1515,7 +1530,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
     agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
     var_prop <- nombres[length(nombres) - 1]
 
-    #Calcular el tamaño muestral de cada grupo
+    #Calcular el tamanio muestral de cada grupo
     n <- calcular_n(disenio$variables, agrupacion) %>%
       dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
 
@@ -1528,7 +1543,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 
     tabla$cv <- cv(tabla)
 
-    #Unir toda la información. Se hace con join para asegurar que no existan problemas en la unión
+    #Unir toda la informacion. Se hace con join para asegurar que no existan problemas en la union
     final <- tabla %>%
       dplyr::mutate_at(dplyr::vars(agrupacion), as.character) %>%
       dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
@@ -1550,27 +1565,27 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
     }
 
 
-    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIÓN
+    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIoN
   } else {
 
-    # Si el usuario ingresa subpoblación, se filtra la base de datos para la subpoblación de referencia
+    # Si el usuario ingresa subpoblacion, se filtra la base de datos para la subpoblacion de referencia
     if (!is.null(subpop)) {
 
-      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecución
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("¡subpop debe ser dummy!")
 
-      # Aquí se filtra el diseño
+      # Aqui se filtra el disenio
       #  subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
       disenio <- disenio[disenio$variables[[subpop]] == 1]
 
     }
 
-    #Generar la tabla con los cálculos
+    #Generar la tabla con los calculos
     tabla <- calcular_tabla(var, dominios, disenio)
 
-    # Tamaño muestral
+    # Tamanio muestral
     n <- nrow(disenio$variables)
 
     # Calcular grados de libertad
@@ -1629,26 +1644,26 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
-#' epf_gastos = epf_gastos %>%
-#' dplyr::mutate(gasto_div1 = dplyr::if_else(d == "01", gasto, 0))
-#' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_gastos, weights = ~fe)
-#' create_prop(var = gasto_div1, denominador = gasto, disenio =  dc, dominios = zona)
+#' library(survey)
+#' library(dplyr)
+#' epf <- mutate(epf_personas, gasto_zona1 = if_else(zona == 1, gastot_hd, 0))
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
+#' create_prop(var = gasto_zona1, denominador = gastot_hd, disenio =  dc)
 #'
-#' enusc <-  enusc %>%
-#' dplyr::filter(enusc$Kish == 1) %>%
-#'  dplyr::mutate(muj_insg_taxi = dplyr::if_else(enusc$P9_4_1 %in% c(1,2) & enusc$rph_sexo == 2,1 ,0),
-#'                                                        hom_insg_taxi = dplyr::if_else(enusc$P9_4_1 %in% c(1,2) & enusc$rph_sexo == 1,1 ,0))
-#' dc <- survey::svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
+#' enusc <- filter(enusc, Kish == 1)
+#' enusc <- mutate(enusc, muj_insg_taxi = if_else(P9_4_1 %in% c(1,2) & rph_sexo == 2,1 ,0),
+#'                                        hom_insg_taxi = if_else(P9_4_1 %in% c(1,2) & rph_sexo == 1,1 ,0))
+#' dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
+#' options(survey.lonely.psu = "certainty")
 #' create_prop(var = muj_insg_taxi, denominador = hom_insg_taxi, disenio = dc)
 #'
-#' create_prop(var = VP_DC, denominador = NULL, disenio = dc, ci = T)
 #'
 #' @export
 #'
 
 create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F,standard_eval = F){
 
-  #  # Encapsular inputs para usarlos más tarde
+  #  # Encapsular inputs para usarlos mas tarde
   if(standard_eval == F){
 
     var <- rlang::enexpr(var)

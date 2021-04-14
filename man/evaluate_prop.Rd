@@ -29,6 +29,11 @@ receives as inputs. For estimations < 1 evaluates by standar error & for estimat
 Evaluates each estimation per row independently
 }
 \examples{
+library(survey)
+library(dplyr)
+epf <-   mutate(epf_personas, gasto_zona1 = dplyr::if_else(zona == 1, gastot_hd, 0)) \%>\%
+group_by(folio) \%>\%
+slice(1)
 dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
-evaluate_prop(create_ratio(var = gasto_div1, denominador = gasto, zona+sexo, dc))
+evaluate_prop(create_prop(var = gasto_zona1, denominador = gastot_hd, dominios = zona+sexo, disenio = dc))
 }

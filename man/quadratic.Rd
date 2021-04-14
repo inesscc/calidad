@@ -18,6 +18,3 @@ is evaluated at the value of the estimated proportion from a sample. If the outp
 function is  higher than the standard error, it is interpreted as a signal that the
 estimation is not reliable.
 }
-\examples{
-quadratic(c(0.1, 0.7, 0.5))
-}

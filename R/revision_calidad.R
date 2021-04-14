@@ -12,9 +12,6 @@
 #' @param p numeric vector with the values of the estimations for proportions
 #' @return  numeric vector
 #'
-#' @examples
-#' quadratic(c(0.1, 0.7, 0.5))
-
 quadratic <- function(p) {
   purrr::map_dbl(p, function(x) {
   if (x <= 0.5) {
@@ -42,8 +39,8 @@ quadratic <- function(p) {
 #'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
 #' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' evaluate_mean(create_mean(gastot_hd, zona+sexo, dc))
+#' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' evaluate_mean(create_mean(gastot_hd, dominios = zona+sexo, disenio = dc))
 #' @export
 
 
@@ -118,8 +115,9 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
 #' @examples
+#' library(survey)
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' evaluate_tot(crear_insumos_tot(ocupado_int, zona+sexo, dc))
+#' evaluate_tot(create_tot(ocupado, dominios = zona+sexo, disenio = dc))
 #' @export
 
 
@@ -194,16 +192,16 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #'
 #' @examples
 #'
-#' ```
+#'
 #' library(dplyr)
 #' hogar <- epf_personas %>%
 #'   group_by(folio) %>%
 #'   slice(1)
 #'
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
-#' evaluate_tot_con(crear_insumos_tot_con(gastot_hd, zona+sexo, disenio = dc))
+#' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
+#' evaluate_tot_con(create_tot_con(gastot_hd, dominios =  zona+sexo, disenio = dc))
 #'
-#' ```
+#'
 #' @export
 
 
@@ -282,8 +280,15 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
 #' @examples
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_gastos, weights = ~fe)
-#' evaluate_median(crear_insumos_mediana(gastot_hd, zona+sexo, disenio =  dc))
+#' library(survey)
+#' library(dplyr)
+#'
+#' hogar <- epf_personas %>%
+#'   group_by(folio) %>%
+#'   dplyr::slice(1)
+#'
+#' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
+#' evaluate_median(create_median(gastot_hd, dominios = zona+sexo, disenio = dc))
 #' @export
 
 evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
@@ -361,8 +366,13 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
 #' @examples
+#' library(survey)
+#' library(dplyr)
+#' epf <-   mutate(epf_personas, gasto_zona1 = dplyr::if_else(zona == 1, gastot_hd, 0)) %>%
+#' group_by(folio) %>%
+#' slice(1)
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
-#' evaluate_prop(create_ratio(var = gasto_div1, denominador = gasto, zona+sexo, dc))
+#' evaluate_prop(create_prop(var = gasto_zona1, denominador = gastot_hd, dominios = zona+sexo, disenio = dc))
 #' @export
 
 evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {

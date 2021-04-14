@@ -2,20 +2,22 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{calcular_tabla}
 \alias{calcular_tabla}
-\title{Calcula medias a partir de cierta agregación}
+\title{Calcula medias a partir de cierta agregacion}
 \usage{
 calcular_tabla(var, dominios, disenio, media = T)
 }
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~}
 
-\item{dominios}{dominios de estimación separados por signo +. Debe anteponerse ~}
+\item{dominios}{dominios de estimacion separados por signo +. Debe anteponerse ~}
 
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
+
+\item{media}{\code{boolean} indicating if the mean must be calculated}
 }
 \value{
-\code{dataframe} que contiene variables de agregación, variable objetivo y error estándar
+\code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 }
 \description{
-Genera una tabla con estimaciones para una agregación determinada
+Genera una tabla con estimaciones para una agregacion determinada
 }

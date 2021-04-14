@@ -9,7 +9,7 @@ calcular_gl_total(variables, datos)
 \arguments{
 \item{variables}{variables objetivo. vector de strings que contiene los nombres de las variables}
 
-\item{datos}{\code{dataframe} que contiene los datos que se están evaluando. Se obtiene a partir del diseño muestral}
+\item{datos}{\code{dataframe} que contiene los datos que se estan evaluando. Se obtiene a partir del disenio muestral}
 }
 \value{
 \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar

@@ -28,8 +28,9 @@ create_median(
 
 \item{replicas}{\code{integer} indicating the number of replicates to be used}
 
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
+
+\item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

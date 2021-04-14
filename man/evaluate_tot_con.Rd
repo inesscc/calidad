@@ -25,14 +25,14 @@ the coefficient of variation.
 }
 \examples{
 
-```
+
 library(dplyr)
 hogar <- epf_personas \%>\%
   group_by(folio) \%>\%
   slice(1)
 
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
-evaluate_tot_con(crear_insumos_tot_con(gastot_hd, zona+sexo, disenio = dc))
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
+evaluate_tot_con(create_tot_con(gastot_hd, dominios =  zona+sexo, disenio = dc))
 
-```
+
 }

@@ -2,12 +2,12 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{calcular_estrato}
 \alias{calcular_estrato}
-\title{Calcula el número de estratos}
+\title{Calcula el numero de estratos}
 \usage{
 calcular_estrato(data, dominios, var = NULL)
 }
 \arguments{
-\item{data}{\code{dataframe} que contiene los datos que se están evaluando}
+\item{data}{\code{dataframe} que contiene los datos que se estan evaluando}
 
 \item{dominios}{vector de caracteres que contiene los dominios a evaluar}
 
@@ -18,6 +18,6 @@ calcular_estrato(data, dominios, var = NULL)
 }
 \description{
 Genera una tabla con el conteo de estratos para cada uno de los dominios del tabulado.
-La columna que contiene la información de los estratos debe llamarse varstrat
-La función contempla un caso para proporción y un caso para promedio
+La columna que contiene la informacion de los estratos debe llamarse varstrat
+La funcion contempla un caso para proporcion y un caso para promedio
 }

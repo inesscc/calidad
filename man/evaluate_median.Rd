@@ -24,6 +24,13 @@ using the methodology created by INE Chile, which considers sample size, degrees
 the coefficient of variation.
 }
 \examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_gastos, weights = ~fe)
-evaluate_median(crear_insumos_mediana(gastot_hd, zona+sexo, disenio =  dc))
+library(survey)
+library(dplyr)
+
+hogar <- epf_personas \%>\%
+  group_by(folio) \%>\%
+  dplyr::slice(1)
+
+dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
+evaluate_median(create_median(gastot_hd, dominios = zona+sexo, disenio = dc))
 }

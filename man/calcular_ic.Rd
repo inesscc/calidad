@@ -7,15 +7,17 @@
 calcular_ic(data, env = parent.frame(), tipo = "resto", ajuste_ene)
 }
 \arguments{
-\item{data}{\code{dataframe} con todos los datos necesarios para calcular el estándar}
+\item{data}{\code{dataframe} con todos los datos necesarios para calcular el estandar}
 
-\item{env}{\code{environment} toma el ambiente de la función contenedora, para usar los elementos requeridos}
+\item{env}{\code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos}
 
-\item{tipo}{\code{string} que indica cuál es el tipo de estimación que se realiza.}
+\item{tipo}{\code{string} que indica cual es el tipo de estimacion que se realiza.}
+
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
 }
 \value{
-\code{dataframe} que contiene todos los elementos del estándar, junto a tres columnas nuevas que contienen el límite inferior, el límite superior y el valor t
+\code{dataframe} que contiene todos los elementos del estandar, junto a tres columnas nuevas que contienen el limite inferior, el limite superior y el valor t
 }
 \description{
-Usa la tabla creada para calcular el estándar y le agrega dos columnas con el límite inferior y superior del intervalo de confianza
+Usa la tabla creada para calcular el estandar y le agrega dos columnas con el limite inferior y superior del intervalo de confianza
 }
