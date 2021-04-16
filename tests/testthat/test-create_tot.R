@@ -20,6 +20,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 ######################
 
 
+
 test <-  create_tot(ocupado,  disenio = dc_ene)
 
 nombres_obtenidos <-  names(test)

@@ -474,6 +474,8 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
+  disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
+
 
   if(standard_eval == F){
 
@@ -670,6 +672,8 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
+  disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
+
 
   if(standard_eval == F){
 
@@ -1080,6 +1084,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
   # Ajustar nombre de variables del disenio muestral
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
+  disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
   if(standard_eval == F){
 
@@ -1099,9 +1104,29 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
   }
 
 
+  # Arreglar las variables de diseño para que tengan menos números.
+  # Esto solo se hace si la variable de conglomerados es muy larga
+  if (nchar(as.character(disenio$variables))[1] >= 5) {
+    keys <- disenio$variables %>%
+      dplyr::group_by(varunit) %>%
+      dplyr::slice(1) %>%
+      dplyr::ungroup() %>%
+      dplyr::mutate(varunit2 = dplyr::row_number()) %>%
+      dplyr::select(varunit2, varunit)
+
+    disenio$variables <- disenio$variables %>%
+      dplyr::left_join(keys, by = "varunit") %>%
+      dplyr::select(-varunit) %>%
+      dplyr::rename(varunit = varunit2)
+
+    # Volver a declarar el diseño normal
+    disenio <- survey::svydesign(ids = ~varunit, strata = ~varstrat, weights = ~fe, data = disenio$variables)
+
+  }
+
   # Generar el disenio replicado
   set.seed(1234)
-  disenio <-  as.svrepdesign(disenio, type = "subbootstrap", replicates = replicas)
+  disenio <-  survey::as.svrepdesign(disenio, type = "subbootstrap", replicates = replicas)
 
   # Chequear que la variable no sea character
   if (is.character(disenio$variables[[var]]) == T) stop("¡Estas usando una variable character!")
@@ -1273,6 +1298,8 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
 # chequear_var_disenio(disenio$variables)
 disenio$variables$varunit <- disenio$variables[[unificar_variables_upm(disenio)]]
 disenio$variables$varstrat <- disenio$variables[[unificar_variables_estrato(disenio)]]
+disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
+
 
 # if(standard_eval == F){
 #   #  # Encapsular inputs para usarlos mas tarde
@@ -1470,6 +1497,8 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
   # chequear_var_disenio(disenio$variables)
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
+  disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
+
 
 
 
