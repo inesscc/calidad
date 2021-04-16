@@ -12,7 +12,7 @@
 
 
 unificar_variables_upm = function(disenio){
-  stringr::str_replace(paste(disenio$call)[2],"~","")
+  as.character(disenio$call$ids)[2]
 }
 
 #-----------------------------------------------------------------------
@@ -28,7 +28,8 @@ unificar_variables_upm = function(disenio){
 
 ### funcion par homologar variables estratos ####
 unificar_variables_estrato = function(disenio){
-  stringr::str_replace(paste(disenio$call)[3],"~","")
+  #stringr::str_replace(paste(disenio$call)[3],"~","")
+  as.character(disenio$call$strata)[2]
 }
 
 #-----------------------------------------------------------------------
@@ -44,7 +45,8 @@ unificar_variables_estrato = function(disenio){
 
 ### funcion par homologar variables factor expansion ####
 unificar_variables_factExp = function(disenio){
-  stringr::str_replace(paste(disenio$call)[5],"~","")
+  #stringr::str_replace(paste(disenio$call)[5],"~","")
+  as.character(disenio$call$weights)[2]
 }
 
 #-----------------------------------------------------------------------

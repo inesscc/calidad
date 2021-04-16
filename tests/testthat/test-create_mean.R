@@ -4,14 +4,24 @@ context("test-create_mean")
 # Diseños muestrales
 options(survey.lonely.psu = "certainty")
 
-dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas %>% dplyr::group_by(folio) %>% dplyr::slice(1), weights = ~fe)
+dc <- survey::svydesign(ids = ~varunit,  data = epf_personas %>% dplyr::group_by(folio) %>% dplyr::slice(1), strata = ~varstrat, weights = ~fe)
 
-dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene %>% dplyr::mutate(hombre = dplyr::if_else(sexo == 1, 1, 0)), weights = ~fact_cal)
+
+# ene <- read_delim("C:/Users/klehm/OneDrive - Instituto Nacional de Estadisticas/capacitacion/paquete_calidad/data/ene-2020-12-nde.csv",
+#                   delim = ";")
+#
+# dc <- svydesign(ids     = ~conglomerado, # conglomerado
+#                 weights = ~fact_cal,     # fact_exp
+#                 strata  = ~estrato,      # estrato
+#                 data    = ene)        # data
+
+
 
 
 ##############################
 # MEDIA SIN DESAGREGACIÓN
 ##############################
+
 
 # Testear la media sin desagregación
 
@@ -23,7 +33,7 @@ test_that("Insumo media", {
 
 
 # Testear la media con desagregación
-test2 <-  create_mean(gastot_hd, zona, disenio = dc)
+test2 <-  create_mean(gastot_hd, dominios =  zona, disenio = dc)
 
 test_that("Insumo media zona", {
   expect_equal(round(test2$mean), c(1243155, 969048))
