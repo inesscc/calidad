@@ -554,7 +554,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
 
     #Extrear el coeficiente de variacion
-    cv <- cv(tabla, design = disenio) * 100
+    cv <- cv(tabla, design = disenio)
 
     cv <- tabla %>%
       dplyr::select(agrupacion) %>%
@@ -618,7 +618,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     gl <- varunit - varstrat
 
     # Calcular coeficiente de variacion
-    cv <- cv(tabla, design = disenio) * 100
+    cv <- cv(tabla, design = disenio)
 
     # Armar tabla final
     final <- data.frame(tabla)
@@ -751,7 +751,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       tidyr::separate(variable, agrupacion) %>%
       dplyr::rename(coef_var = ".") %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::mutate(coef_var = coef_var * 100)
+      dplyr::mutate(coef_var = coef_var)
 
     n <- calcular_n(disenio$variables, dominios = agrupacion) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
@@ -800,7 +800,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
                     gl =  upm - varstrat)
 
     # Coeficiente de variacion
-    cv <- cv(tabla, design = disenio) * 100
+    cv <- cv(tabla, design = disenio)
     cv <- as.data.frame(cv) %>%
       tibble::rownames_to_column(var = "variable") %>%
       dplyr::rename(coef_var = var)
@@ -942,7 +942,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       tidyr::separate(variable, agrupacion) %>%
       dplyr::rename(coef_var = ".") %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::mutate(coef_var = coef_var * 100)
+      dplyr::mutate(coef_var = coef_var)
 
 
     n <- calcular_n(disenio$variables, dominios = agrup1) %>%
@@ -1019,7 +1019,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     gl <- calcular_gl_total(agrup1, disenio$variables)
 
     #Extrear el coeficiente de variacion
-    cv <- cv(tabla, design = disenio) * 100
+    cv <- cv(tabla, design = disenio)
     cv <- as.data.frame(cv) %>%
       tibble::rownames_to_column(var = "variable") %>%
       dplyr::rename(coef_var = cv)
@@ -1192,7 +1192,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
 
     #Extrear el coeficiente de variacion
-    #cv <- cv(tabla, design = disenio) * 100
+    #cv <- cv(tabla, design = disenio)
     cv <- tabla$se / tabla$V1
 
     cv <- tabla %>%
@@ -1248,7 +1248,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     gl <- varunit - varstrat
 
     # Calcular coeficiente de variacion
-    cv <- cv(tabla, design = disenio) * 100
+    cv <- cv(tabla, design = disenio)
 
     # Armar tabla final
     final <- data.frame(tabla )
@@ -1442,7 +1442,7 @@ if (!is.null(dominios[[1]])) {
   gl <- varunit - varstrat
 
   #+ Calcular CV
-  cv <- cv(tabla, design = disenio) * 100
+  cv <- cv(tabla, design = disenio)
 
   #* * Armar tabla final
   final <- data.frame(tabla$ratio,survey::SE(tabla))
