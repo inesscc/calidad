@@ -12,8 +12,11 @@
 
 
 unificar_variables_upm = function(disenio){
-  as.character(disenio$call$ids)[2]
+  as.character(disenio$call[[names(disenio$call)[grepl("^i",names(disenio$call))]]])[2]
+
 }
+
+
 
 #-----------------------------------------------------------------------
 
@@ -28,8 +31,7 @@ unificar_variables_upm = function(disenio){
 
 ### funcion par homologar variables estratos ####
 unificar_variables_estrato = function(disenio){
-  #stringr::str_replace(paste(disenio$call)[3],"~","")
-  as.character(disenio$call$strata)[2]
+  as.character(disenio$call[[names(disenio$call)[grepl("^s",names(disenio$call))]]])[2]
 }
 
 #-----------------------------------------------------------------------
@@ -45,8 +47,7 @@ unificar_variables_estrato = function(disenio){
 
 ### funcion par homologar variables factor expansion ####
 unificar_variables_factExp = function(disenio){
-  #stringr::str_replace(paste(disenio$call)[5],"~","")
-  as.character(disenio$call$weights)[2]
+  as.character(disenio$call[[names(disenio$call)[grepl("^w",names(disenio$call))]]])[2]
 }
 
 #-----------------------------------------------------------------------
@@ -554,7 +555,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
 
     #Extrear el coeficiente de variacion
-    cv <- cv(tabla, design = disenio) * 100
+    cv <- cv(tabla, design = disenio)
 
     cv <- tabla %>%
       dplyr::select(agrupacion) %>%
@@ -618,7 +619,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     gl <- varunit - varstrat
 
     # Calcular coeficiente de variacion
-    cv <- cv(tabla, design = disenio) * 100
+    cv <- cv(tabla, design = disenio)
 
     # Armar tabla final
     final <- data.frame(tabla)
@@ -751,7 +752,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       tidyr::separate(variable, agrupacion) %>%
       dplyr::rename(coef_var = ".") %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::mutate(coef_var = coef_var * 100)
+      dplyr::mutate(coef_var = coef_var )
 
     n <- calcular_n(disenio$variables, dominios = agrupacion) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
@@ -764,6 +765,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
                        by = agrupacion) %>%
       dplyr::left_join(cv, by = agrupacion)
+
 
     names(final)[grep(var,names(final))] = "total"
 
@@ -800,7 +802,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
                     gl =  upm - varstrat)
 
     # Coeficiente de variacion
-    cv <- cv(tabla, design = disenio) * 100
+    cv <- cv(tabla, design = disenio)
     cv <- as.data.frame(cv) %>%
       tibble::rownames_to_column(var = "variable") %>%
       dplyr::rename(coef_var = var)
@@ -942,7 +944,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       tidyr::separate(variable, agrupacion) %>%
       dplyr::rename(coef_var = ".") %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::mutate(coef_var = coef_var * 100)
+      dplyr::mutate(coef_var = coef_var )
 
 
     n <- calcular_n(disenio$variables, dominios = agrup1) %>%
@@ -1001,7 +1003,6 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
     }
 
-
     # Tabla que se usa luego para calcular cv
     tabla <- survey::svytotal(x = var_form, design = disenio )
 
@@ -1009,7 +1010,6 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     totales <- as.data.frame(tabla) %>%
       tibble::rownames_to_column(var = "variable") %>%
       dplyr::rename(se = SE)
-
 
     # Tamanio muestral
     n <- purrr::map(agrup1, calcular_n_total, datos = disenio$variables) %>%
@@ -1019,7 +1019,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     gl <- calcular_gl_total(agrup1, disenio$variables)
 
     #Extrear el coeficiente de variacion
-    cv <- cv(tabla, design = disenio) * 100
+    cv <- cv(tabla, design = disenio)
     cv <- as.data.frame(cv) %>%
       tibble::rownames_to_column(var = "variable") %>%
       dplyr::rename(coef_var = cv)
@@ -1192,7 +1192,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
 
     #Extrear el coeficiente de variacion
-    #cv <- cv(tabla, design = disenio) * 100
+    #cv <- cv(tabla, design = disenio)
     cv <- tabla$se / tabla$V1
 
     cv <- tabla %>%
@@ -1248,7 +1248,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     gl <- varunit - varstrat
 
     # Calcular coeficiente de variacion
-    cv <- cv(tabla, design = disenio) * 100
+    cv <- cv(tabla, design = disenio)
 
     # Armar tabla final
     final <- data.frame(tabla )
@@ -1292,7 +1292,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 #' @param standard_eval \code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
-create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = T) {
+create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
 # Chequar que esten presentes las variables del disenio muestral. Si no se llaman varstrat y varunit, se
 #  detiene la ejecucion
 # chequear_var_disenio(disenio$variables)
@@ -1300,46 +1300,9 @@ disenio$variables$varunit <- disenio$variables[[unificar_variables_upm(disenio)]
 disenio$variables$varstrat <- disenio$variables[[unificar_variables_estrato(disenio)]]
 disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
-
-# if(standard_eval == F){
-#   #  # Encapsular inputs para usarlos mas tarde
-#   var <- rlang::enexpr(var)
-#   denominador <- rlang::enexpr(denominador)
-#
-#   var <-  rlang::expr_name(var)
-#   denominador <- rlang::expr_name(denominador)
-#   var_string = var
-#
-#   dominios <- rlang::enexpr(dominios)
-#   if(!is.null(dominios)){
-#     dominios <-  rlang::expr_name(dominios)
-#   }
-#
-#   subpop <- rlang::enexpr(subpop)
-#   if(!is.null(subpop)){
-#     subpop <-  rlang::expr_name(subpop)
-#   }
-#
-# }
-
-#### filtro para ratios que no son categorias complementarias
-es_prop <- disenio$variables %>%
-  dplyr::mutate(es_prop_var = dplyr::if_else(!!rlang::parse_expr(denominador) == 1 | !!rlang::parse_expr(denominador) == 0 | is.na(!!rlang::parse_expr(denominador)), 1, 0))
-
-if(sum(es_prop$es_prop_var) == nrow(es_prop)){
-  out = tryCatch({cor(disenio$variables[[var]][disenio$variables[[var]] == 1 | disenio$variables[[denominador]] == 1],
-                      disenio$variables[[denominador]][disenio$variables[[denominador]] == 1 | disenio$variables[[var]] == 1])},
-                 warning = function(cond){
-                   return("warning")
-                 })
-
-  if(out != -1){
-
-    disenio <- disenio[disenio$variables[[denominador]] == 1]
-
-  }
-
-}
+### filtramos base de diseño por los casos que tengan datos tanto del denominador como del numerador. para
+### calcular correctamente los GL y N
+disenio <- disenio[disenio$variables[[var]] != 0 | disenio$variables[[denominador]] != 0]
 
 # Chequear que la variable no sea character
 if (is.character(disenio$variables[[var]]) == T) stop("¡Estas usando una variable character!")
@@ -1442,7 +1405,7 @@ if (!is.null(dominios[[1]])) {
   gl <- varunit - varstrat
 
   #+ Calcular CV
-  cv <- cv(tabla, design = disenio) * 100
+  cv <- cv(tabla, design = disenio)
 
   #* * Armar tabla final
   final <- data.frame(tabla$ratio,survey::SE(tabla))
@@ -1498,9 +1461,6 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
-
-
-
 
   if (standard_eval == F){
     #  # Encapsular inputs para usarlos mas tarde
