@@ -9,8 +9,7 @@ ene <- ene %>%
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 options(survey.lonely.psu = "certainty")
 
-dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene,
-                            weights = ~fact_cal)
+dc_ene <- survey::svydesign(weights = ~fact_cal, ids = ~conglomerado, strata = ~estrato_unico, data = ene)
 
 
 

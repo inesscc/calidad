@@ -752,7 +752,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       tidyr::separate(variable, agrupacion) %>%
       dplyr::rename(coef_var = ".") %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::mutate(coef_var = coef_var )
+      dplyr::mutate(coef_var = coef_var)
 
     n <- calcular_n(disenio$variables, dominios = agrupacion) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
@@ -944,7 +944,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       tidyr::separate(variable, agrupacion) %>%
       dplyr::rename(coef_var = ".") %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::mutate(coef_var = coef_var )
+      dplyr::mutate(coef_var = coef_var)
 
 
     n <- calcular_n(disenio$variables, dominios = agrup1) %>%

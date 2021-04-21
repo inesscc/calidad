@@ -22,6 +22,8 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
                               weights = ~fact_cal)
 
 
+#create_prop(var = fdt, dominios = sexo, disenio = dc_ene)
+
 # enusc <- enusc %>%
 #   dplyr::rename(varunit = Conglomerado,
 #          varstrat = VarStrat) %>%
