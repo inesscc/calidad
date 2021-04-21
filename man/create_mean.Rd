@@ -11,7 +11,7 @@ create_mean(
   disenio,
   ci = F,
   ajuste_ene = F,
-  anidar = F
+  standard_eval = F
 )
 }
 \arguments{
@@ -27,7 +27,7 @@ create_mean(
 
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
 
-\item{anidar}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
+\item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated
@@ -38,6 +38,6 @@ degrees of freedom, sample size and coefficient of variation. The function allow
 grouping in several domains.
 }
 \examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 create_mean(gastot_hd, zona+sexo,  disenio = dc)
 }

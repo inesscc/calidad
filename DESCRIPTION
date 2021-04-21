@@ -23,6 +23,7 @@ LazyData: true
 RoxygenNote: 7.1.1
 Suggests: knitr, rmarkdown, testthat
 VignetteBuilder: knitr
+Depends: R (>= 3.5.0)
 Imports: 
     rlang,
     dplyr,
@@ -32,7 +33,10 @@ Imports:
     tibble,
     stringr,
     glue,
-    digest
+    digest,
+    itertools,
+    iterators,
+    tidyr
 
 
 

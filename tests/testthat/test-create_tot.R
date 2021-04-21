@@ -20,6 +20,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 ######################
 
 
+
 test <-  create_tot(ocupado,  disenio = dc_ene)
 
 nombres_obtenidos <-  names(test)
@@ -76,22 +77,22 @@ test_that("totales agregado", {
 #############################
 
 # Testear los nombres de la tabla
-test <-  create_tot(ocupado, zona+sexo, disenio = dc)
+test <-  create_tot(ocupado, dominios =  zona+sexo, disenio = dc)
 test_that("nombres desagregado", {
-  expect_equal(names(test), c("zona", "sexo", "ocupado", "se", "n", "gl", "coef_var"))
+  expect_equal(names(test), c("zona", "sexo", "total", "se", "n", "gl", "coef_var"))
 })
 
 # Testear totales con desagregación, utilizando la ENE
-test <-  create_tot(ocupado, sexo,  disenio = dc_ene) %>%
+test <-  create_tot(ocupado, dominios = sexo,  disenio = dc_ene) %>%
   dplyr::filter(sexo == 1)
 
 test_that("totales desagregado", {
-  expect_equal(round(test$ocupado[1] / 1000, 2),  5198.32 )
+  expect_equal(round(test$total[1] / 1000, 2),  5198.32 )
 })
 
 
 # Testear tamaño muestral con desagregación
-test <-  create_tot(ocupado, zona+sexo, disenio = dc) %>%
+test <-  create_tot(ocupado, dominios = zona+sexo, disenio = dc) %>%
   dplyr::filter(zona == 1 & sexo == 1) %>%
   dplyr::pull(n)
 
@@ -108,7 +109,7 @@ test_that("tamaño muestral desagregado", {
 
 
 # Testear gl con desagregación
-test <-  create_tot(ocupado, zona+sexo, disenio = dc) %>%
+test <-  create_tot(ocupado, dominios = zona+sexo, disenio = dc) %>%
   dplyr::filter(zona == 1 & sexo == 1) %>%
   dplyr::pull(gl)
 

@@ -2,7 +2,7 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{calcular_tabla_ratio}
 \alias{calcular_tabla_ratio}
-\title{Calcula ratio a partir de cierta agregación}
+\title{Calcula ratio a partir de cierta agregacion}
 \usage{
 calcular_tabla_ratio(var, denominador, dominios = NULL, disenio)
 }
@@ -11,17 +11,13 @@ calcular_tabla_ratio(var, denominador, dominios = NULL, disenio)
 
 \item{denominador}{variable denominador del ratio a calcular, dentro de un \code{dataframe}. Debe anteponerse ~}
 
-\item{dominios}{dominios de estimación separados por signo +. Debe anteponerse ~}
+\item{dominios}{dominios de estimacion separados por signo +. Debe anteponerse ~}
 
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 }
 \value{
-\code{dataframe} que contiene variables de agregación, variable objetivo y error estándar
+\code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 }
 \description{
-Genera una tabla con estimaciones para una agregación determinada
-}
-\examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
-calcular_tabla_ratio(var = ~gasto_div1, denominador = ~gasto, zona+sexo, dc)
+Genera una tabla con estimaciones para una agregacion determinada
 }

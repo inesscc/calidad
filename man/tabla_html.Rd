@@ -17,6 +17,13 @@ Contiene el resultado de aplicar el protocolo de calidad.}
 La función recibe como input la evaluación de las estimaciones
 }
 \examples{
-tabla <- evaluacion_calidad_prop(crear_insumos_prop(ocupado, zona+sexo, dc))
+library(survey)
+library(dplyr)
+
+hogar <- epf_personas \%>\%
+  group_by(folio) \%>\%
+  slice(1)
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
+tabla <- evaluate_prop(create_prop(ocupado, dominios = zona+sexo, disenio = dc))
 tabla_html(tabla)
 }

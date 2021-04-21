@@ -12,7 +12,7 @@ create_median(
   ci = F,
   replicas = 10,
   ajuste_ene = F,
-  anidar = F
+  standard_eval = F
 )
 }
 \arguments{
@@ -28,8 +28,9 @@ create_median(
 
 \item{replicas}{\code{integer} indicating the number of replicates to be used}
 
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param anidar \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
+
+\item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated
@@ -40,7 +41,7 @@ with the following elements: sum, degrees of freedom, sample size and coefficien
 of variation. The function allows grouping in several domains.
 }
 \examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-dc_rep <-  as.svrepdesign(dc , type = "subbootstrap", replicates=10)
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+dc_rep <-  survey::as.svrepdesign(dc , type = "subbootstrap", replicates=10)
 create_median(gastot_hd, zona+sexo, disenio = dc)
 }

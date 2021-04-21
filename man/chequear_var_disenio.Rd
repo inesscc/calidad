@@ -2,19 +2,16 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{chequear_var_disenio}
 \alias{chequear_var_disenio}
-\title{Chequea que las variables de diseño tengan el nombre correcto}
+\title{Chequea que las variables de disenio tengan el nombre correcto}
 \usage{
 chequear_var_disenio(data)
 }
 \arguments{
-\item{data}{\code{dataframe} que contiene la tabla con la cual se está trabajando}
+\item{data}{\code{dataframe} que contiene la tabla con la cual se esta trabajando}
 }
 \value{
 un mensaje de error
 }
 \description{
-Comprueba que las variables de diseño se llamen varstrat y varunit. En caso de que no se cumpla, la ejecución se detiene y se genera un error
-}
-\examples{
-chequear_var_disenio(data = var = dc$variables)
+Comprueba que las variables de disenio se llamen varstrat y varunit. En caso de que no se cumpla, la ejecucion se detiene y se genera un error
 }

@@ -24,6 +24,7 @@ methodology created by INE Chile, which considers sample size, degrees of freedo
 the coefficient of variation.
 }
 \examples{
+library(survey)
 dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-evaluate_tot(crear_insumos_tot(ocupado_int, zona+sexo, dc))
+evaluate_tot(create_tot(ocupado, dominios = zona+sexo, disenio = dc))
 }

@@ -24,6 +24,6 @@ methodology created by INE Chile, which considers sample size, degrees of freedo
 coeficient of variation.
 }
 \examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-evaluate_mean(create_mean(gastot_hd, zona+sexo, dc))
+dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+evaluate_mean(create_mean(gastot_hd, dominios = zona+sexo, disenio = dc))
 }

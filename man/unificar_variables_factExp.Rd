@@ -2,7 +2,7 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{unificar_variables_factExp}
 \alias{unificar_variables_factExp}
-\title{Homologa nombre de variable que hace referencia al factor de expansión utilizado por el usuario, con el objetivo de evitar posible errores.}
+\title{Homologa nombre de variable que hace referencia al factor de expansion utilizado por el usuario, con el objetivo de evitar posible errores.}
 \usage{
 unificar_variables_factExp(disenio)
 }
@@ -10,12 +10,8 @@ unificar_variables_factExp(disenio)
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 }
 \value{
-\code{vector} que contiene la variable con los datos del factor de expansión.
+\code{vector} que contiene la variable con los datos del factor de expansion.
 }
 \description{
-Identifica el nombre de la variable asignada para el factor de expansión en el diseño complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creación de insumos.
-}
-\examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-unificar_variables_estrato(dc)
+Identifica el nombre de la variable asignada para el factor de expansion en el disenio complejo, lo que permite reasignar variable con nombre estandar utilizado por las 4 funciones de creacion de insumos.
 }

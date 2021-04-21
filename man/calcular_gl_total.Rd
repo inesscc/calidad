@@ -9,15 +9,11 @@ calcular_gl_total(variables, datos)
 \arguments{
 \item{variables}{variables objetivo. vector de strings que contiene los nombres de las variables}
 
-\item{datos}{\code{dataframe} que contiene los datos que se están evaluando. Se obtiene a partir del diseño muestral}
+\item{datos}{\code{dataframe} que contiene los datos que se estan evaluando. Se obtiene a partir del disenio muestral}
 }
 \value{
 \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 }
 \description{
 Genera una tabla con el conteo de grados de libertad para cada uno de los dominios del tabulado. Es un wrapper que reune a las funciones calcular_upm y calcular_estrato
-}
-\examples{
-dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-calcular_gl_total(c("zona", "sexo"), dc$variables)
 }

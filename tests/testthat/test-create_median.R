@@ -11,6 +11,15 @@ dc_rep <- survey::as.svrepdesign(dc , type = "subbootstrap", replicates=n_rep)
 options(survey.lonely.psu = "certainty")
 
 
+# dc <- svydesign(ids     = ~conglomerado, # conglomerado
+#                 weights = ~fact_cal,     # fact_exp
+#                 strata  = ~estrato,      # estrato
+#                 data    = ene)        # data
+#
+# test <-  create_median(edad, dominios = sexo,  replicas = 10, disenio = dc)
+
+#dc_rep <- survey::as.svrepdesign(dc , type = "subbootstrap", replicates = 10)
+
 
 #########################################
 # MEDIANA SIN DESAGREGACIÓN Y SIN SUBPOP#
@@ -47,7 +56,7 @@ real <-  survey::svyby(~gastot_hd,
                    ci = T)
 
 test_that("mediana desagregada sin subpop", {
-  expect_equal(real$V1[1], test$gastot_hd[1])
+  expect_equal(real$V1[1], test$median[1])
 })
 
 
@@ -66,7 +75,7 @@ real <- survey::svyquantile(~gastot_hd,
 
 
 test_that("mediana agregada con subpop", {
-  expect_equal(real[1], test$quantiles[1])
+  expect_equal(real[1], test$median[1])
 })
 
 
@@ -87,7 +96,7 @@ real <-  survey::svyby(~gastot_hd,
                        ci = T)
 
 test_that("mediana desagregada con subpop", {
-  expect_equal(real$V1[1], test$gastot_hd[1])
+  expect_equal(real$V1[1], test$median[1])
 })
 
 
