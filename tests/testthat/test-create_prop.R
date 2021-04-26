@@ -171,21 +171,43 @@ test_that("gl proporción desagregado ene", {
 # PRUEBAS ENUSC#
 ################
 
-# Tamaño muestral  desagregado ENUSC
-# insumos_prop <- create_prop(VP_DC, enc_region16FIX+rph_sexo, disenio = dc_enusc) %>%
-#   evaluar_calidad_prop()
+### Tamaño muestral  desagregado ENUSC
+
+# dc_enusc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat,
+#                      data = enusc, weights = ~Fact_Pers)
 #
-# test <- insumos_prop %>%
-#   dplyr::filter(rph_sexo == 1 & enc_region16FIX  == "Arica y Parinacota") %>%
+# options(survey.lonely.psu = "certainty")
+#
+#   insumos_prop <- create_prop(VP_DC, dominios =  enc_region+rph_sexo, disenio = dc_enusc) %>%
+#     evaluate_prop()
+#
+#   test <- insumos_prop %>%
+#     dplyr::filter(rph_sexo == 1 & enc_region  == 1) %>%
+#     dplyr::pull(n)
+#
+#   n <- enusc %>%
+#     dplyr::filter(rph_sexo == 1 & enc_region  == 1) %>%
+#     nrow()
+#
+#   test_that("n proporción desagregado enusc", {
+#     expect_equal(test, n)
+#   })
+
+# #### testeo de create_ratio_internal #
+#
+# insumos_ratio <- create_prop(var = muj_insg_taxi, denominador = hom_insg_taxi, dominios =  enc_region+rph_sexo, disenio = dc_enusc) %>%
+#   evaluate_prop()
+#
+# test <- insumos_ratio %>%
+#   dplyr::filter(rph_sexo == 2 & enc_region  == 12) %>%
 #   dplyr::pull(n)
 #
 # n <- enusc %>%
-#   dplyr::filter(rph_sexo == 1 & enc_region16FIX  == "Arica y Parinacota") %>%
+#   dplyr::filter(rph_sexo == 2 & enc_region  == 12 & (muj_insg_taxi == 1 | hom_insg_taxi == 1)) %>%
 #   nrow()
 #
 # test_that("n proporción desagregado enusc", {
 #   expect_equal(test, n)
 # })
-#
 
 
