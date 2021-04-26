@@ -1300,55 +1300,10 @@ disenio$variables$varunit <- disenio$variables[[unificar_variables_upm(disenio)]
 disenio$variables$varstrat <- disenio$variables[[unificar_variables_estrato(disenio)]]
 disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
-<<<<<<< HEAD
 
-# if(standard_eval == F){
-#   #  # Encapsular inputs para usarlos mas tarde
-#   var <- rlang::enexpr(var)
-#   denominador <- rlang::enexpr(denominador)
-#
-#   var <-  rlang::expr_name(var)
-#   denominador <- rlang::expr_name(denominador)
-#   var_string = var
-#
-#   dominios <- rlang::enexpr(dominios)
-#   if(!is.null(dominios)){
-#     dominios <-  rlang::expr_name(dominios)
-#   }
-#
-#   subpop <- rlang::enexpr(subpop)
-#   if(!is.null(subpop)){
-#     subpop <-  rlang::expr_name(subpop)
-#   }
-#
-# }
-
-
-
-
-#### filtro para ratios que no son categorias complementarias
-es_prop <- disenio$variables %>%
-  dplyr::mutate(es_prop_var = dplyr::if_else(!!rlang::parse_expr(denominador) == 1 | !!rlang::parse_expr(denominador) == 0 | is.na(!!rlang::parse_expr(denominador)), 1, 0))
-
-if(sum(es_prop$es_prop_var) == nrow(es_prop)){
-  out = tryCatch({cor(disenio$variables[[var]][disenio$variables[[var]] == 1 | disenio$variables[[denominador]] == 1],
-                      disenio$variables[[denominador]][disenio$variables[[denominador]] == 1 | disenio$variables[[var]] == 1])},
-                 warning = function(cond){
-                   return("warning")
-                 })
-
-  if(out != -1){
-
-    disenio <- disenio[disenio$variables[[denominador]] == 1]
-
-  }
-
-}
-=======
 ### filtramos base de diseño por los casos que tengan datos tanto del denominador como del numerador. para
 ### calcular correctamente los GL y N
 disenio <- disenio[disenio$variables[[var]] != 0 | disenio$variables[[denominador]] != 0]
->>>>>>> c50ac229633f0e013d26b358d0b4c0188a122fbc
 
 # Chequear que la variable no sea character
 if (is.character(disenio$variables[[var]]) == T) stop("¡Estas usando una variable character!")
