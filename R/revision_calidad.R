@@ -87,7 +87,7 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
                     pasa = round(pasa, 2),
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0("pasa el ", pasa, "%")) %>%
+                    aprueba = paste0(pasa, "% de estimaciones fiables")) %>%
       dplyr::select(-pasa)
 
 
@@ -164,7 +164,7 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
                     pasa = round(pasa, 2),
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0("pasa el ", pasa, "%")) %>%
+                    aprueba = paste0(pasa, "% de estimaciones fiables")) %>%
       dplyr::select(-pasa)
   }
 
@@ -248,7 +248,7 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
                     pasa = round(pasa, 2),
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0("pasa el ", pasa, "%")) %>%
+                    aprueba = paste0(pasa, "% de estimaciones fiables")) %>%
       dplyr::select(-pasa)
 
 
@@ -334,7 +334,7 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
                     pasa = round(pasa, 2),
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0("pasa el ", pasa, "%")) %>%
+                    aprueba = paste0(pasa, "% de estimaciones fiables")) %>%
       dplyr::select(-pasa)
 
 
@@ -425,7 +425,7 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
       dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
                     pasa = round(pasa, 2),
                     publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0("pasa el ", pasa, "%"))%>%
+                    aprueba = paste0(pasa, "% de estimaciones fiables")) %>%
       dplyr::select(-pasa)
   }
 

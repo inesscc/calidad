@@ -1322,6 +1322,9 @@ disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 #
 # }
 
+
+
+
 #### filtro para ratios que no son categorias complementarias
 es_prop <- disenio$variables %>%
   dplyr::mutate(es_prop_var = dplyr::if_else(!!rlang::parse_expr(denominador) == 1 | !!rlang::parse_expr(denominador) == 0 | is.na(!!rlang::parse_expr(denominador)), 1, 0))
