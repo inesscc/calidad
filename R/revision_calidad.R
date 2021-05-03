@@ -1,4 +1,6 @@
 
+
+
 #---------------------------------------------------------------------
 #'
 #' Calcula el valor de una función cuadrática
@@ -53,9 +55,9 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
   }
   # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
   suma_na <- tabulado %>%
-    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(coef_var), 1, 0)) %>%
-    dplyr::summarise(suma = sum(contiene_na)) %>%
-    dplyr::pull(suma)
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(.data$n) | is.na(.data$gl) | is.na(.data$coef_var), 1, 0)) %>%
+    dplyr::summarise(suma = sum(.data$contiene_na)) %>%
+    dplyr::pull(.data$suma)
 
   # mandar un warning cuando se han exlcuido filas
   if (suma_na > 0) {
@@ -64,13 +66,13 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
 
   evaluacion <- tabulado %>%
-    dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
-    dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
+    dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
            eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
            eval_cv = dplyr::case_when(
-             coef_var <= 15                  ~ "cv <= 15",
-             coef_var > 15 & coef_var <= 30  ~ "cv entre 15 y 30",
-             coef_var > 30                   ~ "cv > 30"
+             .data$coef_var <= 15                  ~ "cv <= 15",
+             .data$coef_var > 15 & .data$coef_var <= 30  ~ "cv entre 15 y 30",
+             .data$coef_var > 30                   ~ "cv > 30"
            ),
            calidad = dplyr::case_when(
              eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
@@ -83,12 +85,12 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
   if (publicar == TRUE) {
     evaluacion <- evaluacion %>%
       dplyr::ungroup() %>%
-      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
-                    pasa = round(pasa, 2),
-                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0(pasa, "% de estimaciones fiables")) %>%
-      dplyr::select(-pasa)
+      dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
+      dplyr::mutate(pasa = sum(dplyr::if_else(.data$calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(.data$.data$pasa, 2),
+                    publicacion = dplyr::if_else(.data$.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0(.data$.data$pasa, "% de estimaciones fiables")) %>%
+      dplyr::select(-.data$.data$pasa)
 
 
   }
@@ -131,9 +133,9 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
   suma_na <- tabulado %>%
-    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(coef_var), 1, 0)) %>%
-    dplyr::summarise(suma = sum(contiene_na)) %>%
-    dplyr::pull(suma)
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(.data$n) | is.na(.data$gl) | is.na(.data$coef_var), 1, 0)) %>%
+    dplyr::summarise(suma = sum(.data$contiene_na)) %>%
+    dplyr::pull(.data$suma)
 
   # mandar un warning cuando se han exlcuido filas
   if (suma_na > 0) {
@@ -142,12 +144,12 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
 
   evaluacion <- tabulado %>%
-    dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(.data$gl >= 9, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    coef_var <= 15                  ~ "cv <= 15",
-                    coef_var > 15 & coef_var <= 30  ~ "cv entre 15 y 30",
-                    coef_var > 30                   ~ "cv > 30"
+                    .data$coef_var <= 15                  ~ "cv <= 15",
+                    .data$coef_var > 15 & .data$coef_var <= 30  ~ "cv entre 15 y 30",
+                    .data$coef_var > 30                   ~ "cv > 30"
                   ),
                   calidad = dplyr::case_when(
                     eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
@@ -160,12 +162,12 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
   if (publicar == TRUE) {
     evaluacion <- evaluacion %>%
       dplyr::ungroup() %>%
-      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
-                    pasa = round(pasa, 2),
-                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0(pasa, "% de estimaciones fiables")) %>%
-      dplyr::select(-pasa)
+      dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
+      dplyr::mutate(pasa = sum(dplyr::if_else(.data$calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(.data$pasa, 2),
+                    publicacion = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0(.data$pasa, "% de estimaciones fiables")) %>%
+      dplyr::select(-.data$pasa)
   }
 
 
@@ -215,9 +217,9 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
   suma_na <- tabulado %>%
-    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(coef_var), 1, 0)) %>%
-    dplyr::summarise(suma = sum(contiene_na)) %>%
-    dplyr::pull(suma)
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(.data$n) | is.na(.data$gl) | is.na(.data$coef_var), 1, 0)) %>%
+    dplyr::summarise(suma = sum(.data$contiene_na)) %>%
+    dplyr::pull(.data$suma)
 
   # mandar un warning cuando se han exlcuido filas
   if (suma_na > 0) {
@@ -226,12 +228,12 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
 
   evaluacion <- tabulado %>%
-    dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(.data$gl >= 9, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    coef_var <= 15                  ~ "cv <= 15",
-                    coef_var > 15 & coef_var <= 30  ~ "cv entre 15 y 30",
-                    coef_var > 30                   ~ "cv > 30"
+                    .data$coef_var <= 15                  ~ "cv <= 15",
+                    .data$coef_var > 15 & .data$coef_var <= 30  ~ "cv entre 15 y 30",
+                    .data$coef_var > 30                   ~ "cv > 30"
                   ),
                   calidad = dplyr::case_when(
                     eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
@@ -244,12 +246,12 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
   if (publicar == TRUE) {
     evaluacion <- evaluacion %>%
       dplyr::ungroup() %>%
-      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
-                    pasa = round(pasa, 2),
-                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0(pasa, "% de estimaciones fiables")) %>%
-      dplyr::select(-pasa)
+      dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
+      dplyr::mutate(pasa = sum(dplyr::if_else(.data$calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(.data$pasa, 2),
+                    publicacion = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0(.data$pasa, "% de estimaciones fiables")) %>%
+      dplyr::select(-.data$pasa)
 
 
 
@@ -300,9 +302,9 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
   }
   # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
   suma_na <- tabulado %>%
-    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(coef_var), 1, 0)) %>%
-    dplyr::summarise(suma = sum(contiene_na)) %>%
-    dplyr::pull(suma)
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(.data$n) | is.na(.data$gl) | is.na(.data$coef_var), 1, 0)) %>%
+    dplyr::summarise(suma = sum(.data$contiene_na)) %>%
+    dplyr::pull(.data$suma)
 
   # mandar un warning cuando se han exlcuido filas
   if (suma_na > 0) {
@@ -311,13 +313,13 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
 
   evaluacion <- tabulado %>%
-    dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
-    dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
+    dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(.data$gl >= 9, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    coef_var <= 15                  ~ "cv <= 15",
-                    coef_var > 15 & coef_var <= 30  ~ "cv entre 15 y 30",
-                    coef_var > 30                   ~ "cv > 30"
+                    .data$coef_var <= 15                  ~ "cv <= 15",
+                    .data$coef_var > 15 & .data$coef_var <= 30  ~ "cv entre 15 y 30",
+                    .data$coef_var > 30                   ~ "cv > 30"
                   ),
                   calidad = dplyr::case_when(
                     eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
@@ -330,12 +332,12 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
   if (publicar == TRUE) {
     evaluacion <- evaluacion %>%
       dplyr::ungroup() %>%
-      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(coef_var)) %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
-                    pasa = round(pasa, 2),
-                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0(pasa, "% de estimaciones fiables")) %>%
-      dplyr::select(-pasa)
+      dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
+      dplyr::mutate(pasa = sum(dplyr::if_else(.data$calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(.data$pasa, 2),
+                    publicacion = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0(.data$pasa, "% de estimaciones fiables")) %>%
+      dplyr::select(-.data$pasa)
 
 
   }
@@ -372,7 +374,8 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #' group_by(folio) %>%
 #' slice(1)
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
-#' evaluate_prop(create_prop(var = gasto_zona1, denominador = gastot_hd, dominios = zona+sexo, disenio = dc))
+#' evaluate_prop(create_prop(var = gasto_zona1, denominador = gastot_hd,
+#'               dominios = zona+sexo, disenio = dc))
 #' @export
 
 evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
@@ -385,9 +388,9 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
   # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
   suma_na <- tabulado %>%
-    dplyr::mutate(contiene_na = dplyr::if_else(is.na(n) | is.na(gl) | is.na(se), 1, 0)) %>%
-    dplyr::summarise(suma = sum(contiene_na)) %>%
-    dplyr::pull(suma)
+    dplyr::mutate(contiene_na = dplyr::if_else(is.na(.data$n) | is.na(.data$gl) | is.na(.data$se), 1, 0)) %>%
+    dplyr::summarise(suma = sum(.data$contiene_na)) %>%
+    dplyr::pull(.data$suma)
 
   # mandar un warning cuando se han exlcuido filas
   if (suma_na > 0) {
@@ -395,17 +398,20 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
   }
 
   evaluacion <- tabulado %>%
-    dplyr::mutate(eval_n = dplyr::if_else(n >= 60, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
-                  prop_est = case_when(objetivo <= 0.5 ~ "<= a 0.5",
-                                       objetivo < 1 & objetivo > 0.5 ~ "> a 0.5",
-                                       objetivo > 1 ~ ">= a 1"),
-                  tipo_eval = dplyr::if_else(objetivo < 1, "Eval SE", "Eval CV"),
-                  cuadratica = dplyr::if_else(objetivo < 1,quadratic(objetivo), NA_real_),
-                  eval_se = dplyr::if_else(objetivo < 1,dplyr::if_else(se <= cuadratica, "SE adecuado", "SE alto"), NA_character_),
-                  eval_cv = dplyr::if_else(objetivo < 1, NA_character_, dplyr::case_when(cv <= 15                  ~ "cv <= 15",
-                                                                                         cv > 15 & cv <= 30  ~ "cv entre 15 y 30",
-                                                                                         cv > 30                   ~ "cv > 30"
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(.data$gl >= 9, "gl suficiente", "gl insuficiente"),
+                  prop_est = dplyr::case_when(.data$objetivo <= 0.5 ~ "<= a 0.5",
+                                              .data$objetivo < 1 & .data$objetivo > 0.5 ~ "> a 0.5",
+                                              .data$objetivo > 1 ~ ">= a 1"),
+                  tipo_eval = dplyr::if_else(.data$objetivo < 1, "Eval SE", "Eval CV"),
+                  cuadratica = dplyr::if_else(.data$objetivo < 1, quadratic(.data$objetivo), NA_real_),
+                  eval_se = dplyr::if_else(.data$objetivo < 1,
+                                           dplyr::if_else(.data$se <= .data$cuadratica,
+                                                          "SE adecuado", "SE alto"), NA_character_),
+                  eval_cv = dplyr::if_else(.data$objetivo < 1, NA_character_,
+                                           dplyr::case_when(cv <= 15            ~ "cv <= 15",
+                                                            cv > 15 & cv <= 30  ~ "cv entre 15 y 30",
+                                                            cv > 30             ~ "cv > 30"
                   )),
                   calidad = dplyr::case_when(
                     objetivo <1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente"                                                  ~ "no fiable",
@@ -421,12 +427,12 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
   if (publicar == TRUE) {
     evaluacion <- evaluacion %>%
       dplyr::ungroup() %>%
-      dplyr::filter(!is.na(n) & !is.na(gl) & !is.na(se) & !is.na(cv)) %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(calidad == "fiable", 1, 0)) / nrow(.) * 100,
-                    pasa = round(pasa, 2),
-                    publicacion = dplyr::if_else(pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0(pasa, "% de estimaciones fiables")) %>%
-      dplyr::select(-pasa)
+      dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$se) & !is.na(.data$cv)) %>%
+      dplyr::mutate(pasa = sum(dplyr::if_else(.data$calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                    pasa = round(.data$pasa, 2),
+                    publicacion = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0(.data$pasa, "% de estimaciones fiables")) %>%
+      dplyr::select(-.data$pasa)
   }
 
   return(evaluacion)

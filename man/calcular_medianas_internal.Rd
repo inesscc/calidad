@@ -2,7 +2,7 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{calcular_medianas_internal}
 \alias{calcular_medianas_internal}
-\title{Calcula medianas con método replicado}
+\title{Calcula medianas con metodo replicado}
 \usage{
 calcular_medianas_internal(
   var,
@@ -27,5 +27,5 @@ calcular_medianas_internal(
 \code{vector} que contiene la variable con los conglomerados.
 }
 \description{
-Se usa para acortar un poco el código de la función mediana
+Se usa para acortar un poco el codigo de la funcion mediana
 }

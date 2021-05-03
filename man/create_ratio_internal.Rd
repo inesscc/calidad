@@ -11,8 +11,7 @@ create_ratio_internal(
   subpop = NULL,
   disenio,
   ci = F,
-  ajuste_ene = F,
-  standard_eval = T
+  ajuste_ene = F
 )
 }
 \arguments{
@@ -29,8 +28,6 @@ create_ratio_internal(
 \item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
 
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
-
-\item{standard_eval}{\code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

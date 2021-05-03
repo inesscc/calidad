@@ -27,7 +27,7 @@ Ambos datasets están dentro del paquete y pueden ser utilizados cuando calidad 
 ```{r, message=FALSE, warning=FALSE}
 library(survey)
 library(calidad)
-library(tidyverse)
+library(dplyr)
 
 # Generar algunas variables para la ENE
 ene <- ene %>% 

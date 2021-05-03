@@ -51,7 +51,7 @@ create_prop(var = gasto_zona1, denominador = gastot_hd, disenio =  dc)
 
 enusc <- filter(enusc, Kish == 1)
 enusc <- mutate(enusc, muj_insg_taxi = if_else(P9_4_1 \%in\% c(1,2) & rph_sexo == 2,1 ,0),
-                                       hom_insg_taxi = if_else(P9_4_1 \%in\% c(1,2) & rph_sexo == 1,1 ,0))
+             hom_insg_taxi = if_else(P9_4_1 \%in\% c(1,2) & rph_sexo == 1,1 ,0))
 dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 options(survey.lonely.psu = "certainty")
 create_prop(var = muj_insg_taxi, denominador = hom_insg_taxi, disenio = dc)

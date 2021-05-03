@@ -3,20 +3,32 @@
 \docType{data}
 \name{enusc}
 \alias{enusc}
-\title{Base interanual ENUSC}
+\title{Encuesta Nacional Urbana de Seguridad ciudadana 2019 - ENUSC 2019}
 \format{
-dataframe compuesto por 48.308 observaciones y 8 variables
+dataframe compuesto por 24.465 observaciones y 22 variables
 \describe{
  \item{rph_sexo}{sexo: 1 = hombre; 2 = mujer}
  \item{region}{16 regiones del país}
- \item{Kish}{informante kish}
- \item{Fact_Pers}{factor de expansión}
+ \item{Fact_Pers}{factor de expansión para personas}
+ \item{Fact_Hog}{factor de expansión para hogares}
  \item{Conglomerado}{unidad de primera etapa}
  \item{VarStrat}{estrato}
- \item{VP_DC}{victimización}
+ \item{VP_DC}{victimización Personas, utiliza Fact_Pers}
+ \item{VA_DC}{victimización Agregada Hogares, utiliza Fact_Hog}
  \item{rph_edad}{edad del entrevistado}
- \item{P9_4_1}{no sé qué indica}
-}
+ \item{P3_1_1}{Percepción aumento de la delincuencia en el país, utiliza Fact_Pers}
+ \item{P8_1_1}{Causa aumento delincuencia en el barrio, utiliza Fact_Pers}
+ \item{muj_insg_taxi}{Percepción inseguridad en taxis de mujeres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ \item{hom_insg_taxi}{Percepción inseguridad en taxis de hombres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ \item{muj_insg_micro}{Percepción inseguridad en microbuses de mujeres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ \item{hom_insg_micro}{Percepción inseguridad en microbuses de hombres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ \item{muj_insg_centr.com}{Percepción inseguridad en centros comerciales de mujeres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ \item{hom_insg_centr.com}{Percepción inseguridad en centros comerciales de hombres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ \item{muj_insg_loc.col}{Percepción inseguridad en locomoción colectiva de mujeres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ \item{hom_insg_loc.col}{Percepción inseguridad en locomoción colectiva de hombres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ \item{muj_insg_barrio}{Percepción inseguridad en el barrio de mujeres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ \item{hom_insg_barrio}{Percepción inseguridad en el barrio de hombres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ }
 }
 \source{
 \url{https://www.ine.cl/docs/default-source/seguridad-ciudadana/bbdd/2019/base-de-datos---xvi-enusc-2019-(csv).csv?sfvrsn=d3465758_2&download=true}
@@ -25,7 +37,7 @@ dataframe compuesto por 48.308 observaciones y 8 variables
 enusc
 }
 \description{
-Datos de la ENUSC para varios años. Contiene solo algunas variables.
+Datos de la ENUSC para el año 2019. Contiene solo algunas variables.
 }
 \examples{
 data(enusc)

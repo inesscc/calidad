@@ -35,5 +35,6 @@ epf <-   mutate(epf_personas, gasto_zona1 = dplyr::if_else(zona == 1, gastot_hd,
 group_by(folio) \%>\%
 slice(1)
 dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
-evaluate_prop(create_prop(var = gasto_zona1, denominador = gastot_hd, dominios = zona+sexo, disenio = dc))
+evaluate_prop(create_prop(var = gasto_zona1, denominador = gastot_hd,
+              dominios = zona+sexo, disenio = dc))
 }
