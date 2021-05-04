@@ -18,8 +18,12 @@ ene <- ene %>%
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas %>%
                           dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)), weights = ~fe)
 dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene %>%
-                              dplyr::mutate(desocupado2 = dplyr::if_else(desocupado == 1 & fdt == 1, 1, 0)),
+                              dplyr::mutate(desocupado2 = dplyr::if_else(desocupado == 1 & fdt == 1, 1, 0),
+                                            fdt_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, fdt ) ),
                               weights = ~fact_cal)
+
+
+
 
 
 #create_prop(var = fdt, dominios = sexo, disenio = dc_ene)
@@ -30,6 +34,16 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 #   dplyr::mutate_at(.vars =  dplyr::vars(rph_sexo), .funs =  as.numeric)
 
 #dc_enusc <- svydesign(ids = ~varunit, strata = ~varstrat, data = enusc, weights = ~Fact_Pers)
+
+
+#####################
+# PROBAR NA EN SUBPOP
+#####################
+
+
+expect_error(create_prop(desocupado, dominios =  sexo, subpop = fdt_na, disenio = dc_ene),
+             "subpop contains NAs!")
+
 
 ##############################
 # PROPORCIÓN SIN DESAGREGACIÓN

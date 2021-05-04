@@ -4,18 +4,23 @@ context("test-create_mean")
 # Diseños muestrales
 options(survey.lonely.psu = "certainty")
 
-dc <- survey::svydesign(ids = ~varunit,  data = epf_personas %>% dplyr::group_by(folio) %>% dplyr::slice(1), strata = ~varstrat, weights = ~fe)
+dc <- survey::svydesign(ids = ~varunit,
+                        data = epf_personas %>%
+                          dplyr::group_by(folio) %>%
+                          dplyr::slice(1) %>%
+                          dplyr::ungroup() %>%
+                          dplyr::mutate(
+                            metro = dplyr::if_else(zona == 1, 1, 0),
+                            metro_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, metro )),
+                        strata = ~varstrat,
+                        weights = ~fe)
 
+#####################
+# PROBAR NA EN SUBPOP
+#####################
 
-# ene <- read_delim("C:/Users/klehm/OneDrive - Instituto Nacional de Estadisticas/capacitacion/paquete_calidad/data/ene-2020-12-nde.csv",
-#                   delim = ";")
-#
-# dc <- svydesign(ids     = ~conglomerado, # conglomerado
-#                 weights = ~fact_cal,     # fact_exp
-#                 strata  = ~estrato,      # estrato
-#                 data    = ene)        # data
-
-
+expect_error(create_mean(gastot_hd, dominios =  sexo, subpop = metro_na, disenio = dc),
+             "subpop contains NAs!")
 
 
 ##############################

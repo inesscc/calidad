@@ -3,7 +3,8 @@ context("test-create_tot")
 ene <- ene %>%
   dplyr::mutate(fdt = dplyr::if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0),
                 ocupado = dplyr::if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0),
-                desocupado = dplyr::if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0))
+                desocupado = dplyr::if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0),
+                fdt_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, fdt ))
 
 
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
@@ -13,6 +14,12 @@ dc_ene <- survey::svydesign(weights = ~fact_cal, ids = ~conglomerado, strata = ~
 
 
 
+#####################
+# PROBAR NA EN SUBPOP
+#####################
+
+expect_error(create_tot(desocupado, dominios =  sexo, subpop = fdt_na, disenio = dc_ene),
+             "subpop contains NAs!")
 
 ######################
 # Nombres de la tabla #

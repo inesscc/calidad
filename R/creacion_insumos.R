@@ -518,6 +518,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIoN
   if (!is.null(dominios[[1]])) {
 
+
     # Esto corre para el caso en el que NO hay subpop
     if (is.null(subpop)) {
 
@@ -530,11 +531,16 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
 
+
+
       # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecucion
       es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0 |
-                                                        is.na(!!rlang::parse_expr(subpop)), 1, 0))
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
+
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
+
 
       dominios_form <-   paste(dominios, subpop, sep = "+")
       dominios_form <- paste0("~", dominios_form) %>%
@@ -599,8 +605,9 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
       # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
       es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0 |
-                                                        is.na(!!rlang::parse_expr(subpop)), 1, 0))
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
 
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
 
@@ -728,6 +735,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
 
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
 
@@ -913,6 +921,8 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
+
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
 
       #Identificar las variables ingresadas para la desagregacion
@@ -1000,6 +1010,9 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
+
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
 
       # Aqui se filtra el disenio
@@ -1164,8 +1177,9 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
       # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecucion
       es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0 |
-                                                        is.na(!!rlang::parse_expr(subpop)), 1, 0))
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
 
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
 
@@ -1231,9 +1245,9 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
       # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
       es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0 |
-                                                        is.na(!!rlang::parse_expr(subpop)), 1, 0))
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
 
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
 
       disenio <- disenio[disenio$variables[[subpop]] == 1]
@@ -1391,6 +1405,8 @@ if (!is.null(dominios[[1]])) {
     # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
     es_prop <- disenio$variables %>%
       dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+
+    if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
     if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
 
     # Aqui se filtra el disenio
@@ -1512,6 +1528,8 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
 
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
+
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
 
       dominios <- paste(dominios, subpop, sep = "+")
@@ -1571,6 +1589,8 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
       # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
       es_prop <- disenio$variables %>%
         dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
 
       # Aqui se filtra el disenio
