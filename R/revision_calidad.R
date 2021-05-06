@@ -397,6 +397,7 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
     warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o se"))
   }
 
+
   evaluacion <- tabulado %>%
     dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
                   eval_gl = dplyr::if_else(.data$gl >= 9, "gl suficiente", "gl insuficiente"),
@@ -422,6 +423,7 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
                     objetivo >= 1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
                     objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv <= 15"         ~ "fiable",
                     objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"))
+
 
   # Criterio general para la publicación del tabulado
   if (publicar == TRUE) {

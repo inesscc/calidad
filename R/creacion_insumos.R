@@ -1565,14 +1565,13 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
                        by = agrupacion) %>%
       dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
                        by = agrupacion)
-    var_string = var
 
+    var_string = var
 
     #Cambiar el nombre de la variable objetivo para que siempre sea igual.
     final <- final  %>%
-      dplyr::rename(objetivo = var_prop) %>%
-      dplyr::filter(.data$objetivo > 0) # se eliminan los ceros de la tabla
-
+      dplyr::rename(objetivo = var_prop) # %>%
+      #dplyr::filter(.data$objetivo > 0) # se eliminan los ceros de la tabla
 
     #Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
@@ -1621,6 +1620,8 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
     # Armar tabla completa con todos los insumos
     final <- dplyr::bind_cols(final, "gl" = gl, "n" = n)
     names(final)[2] <- "se"
+
+
 
     #Cambiar el nombre de la variable objetivo para que siempre sea igual
     # final <- final %>%
