@@ -429,7 +429,7 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
   if (publicar == TRUE) {
     evaluacion <- evaluacion %>%
       dplyr::ungroup() %>%
-      dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$se) & !is.na(.data$cv)) %>%
+      dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$se)) %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(.data$calidad == "fiable", 1, 0)) / nrow(.) * 100,
                     pasa = round(.data$pasa, 2),
                     publicacion = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
