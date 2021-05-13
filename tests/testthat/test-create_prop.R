@@ -12,7 +12,28 @@ ene <- ene %>%
          desocupado = dplyr::if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0),
          hombre = dplyr::if_else(sexo == 1, 1, 0),
          mujer = dplyr::if_else(sexo == 2, 1, 0),
-         metro = dplyr::if_else(region == 13, 1, 0))
+         metro = dplyr::if_else(region == 13, 1, 0),
+         sexo2 = factor(dplyr::if_else(sexo == 1, "hombre", "mújer")),
+         region2 = dplyr::case_when(
+           region == 1  ~ "Tarapacá",
+           region == 2 ~ "Antofagasta",
+           region == 3 ~ "Atacama",
+           region == 4 ~ "Coquimbo",
+           region == 5 ~ "Valparaíso",
+           region == 6 ~ "O'Higgins",
+           region == 7 ~ "Maule",
+           region == 8 ~ "Bíobío",
+           region == 9 ~ "Araucanía",
+           region == 10 ~ "Los Lagos",
+           region == 11 ~ "Aysén",
+           region == 12 ~ "Mgallanes",
+           region == 13 ~ "Metropolitana",
+           region == 14 ~ "Los Ríos",
+           region == 15 ~ "Arica",
+           region == 16 ~ "Ñuble",
+         ),
+         region2 = haven::labelled(region2))
+
 
 
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas %>%
@@ -26,7 +47,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 
 
 
-#create_prop(var = fdt, dominios = sexo, disenio = dc_ene)
+  #create_prop(var = fdt, dominios = sexo, disenio = dc_ene)
 
 # enusc <- enusc %>%
 #   dplyr::rename(varunit = Conglomerado,

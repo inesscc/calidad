@@ -2,7 +2,7 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{create_mean}
 \alias{create_mean}
-\title{Create the inputs to make quality evaluation of mean estimations}
+\title{Create the inputs to evaluate the quality of mean estimations}
 \usage{
 create_mean(
   var,

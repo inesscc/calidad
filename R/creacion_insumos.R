@@ -945,6 +945,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     # Generar la tabla de estimaciones
     tabla <- survey::svyby(formula = var_form, by = dominios_form, design = disenio, FUN = survey::svytotal)
 
+
     gl <- calcular_upm(disenio$variables, agrup1) %>%
       dplyr::left_join(calcular_estrato(disenio$variables, agrup1), by = agrup1) %>%
       dplyr::mutate(gl = .data$upm - .data$varstrat)  %>%
@@ -952,34 +953,35 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
 
-    cv <- survey::cv(tabla, design = disenio) %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "variable") %>%
-      tidyr::separate(.data$variable, agrupacion) %>%
-      dplyr::rename(coef_var = ".") %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::mutate(coef_var = .data$coef_var)
-
-
     n <- calcular_n(disenio$variables, dominios = agrup1) %>%
       dplyr::filter(!!rlang::parse_expr(var) == 1) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
-    # Unir todo y generar la tabla final
+
+    # # Coeficiente de variación
+    tabla$cv <- survey::cv(tabla)
+
+    # #Unir toda la informacion. Se hace con join para asegurar que no existan problemas en la union
     final <- tabla %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character) %>%
+      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
                        by = agrupacion) %>%
-      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
+      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
                        by = agrupacion) %>%
-      dplyr::left_join(cv, by = agrupacion)
+      dplyr::rename(coef_var = cv) %>%
+      dplyr::relocate(coef_var, .after = last_col()) %>%
+      dplyr::relocate(gl, .after = n)
+
 
     names(final)[grep(var,names(final))] = "total"
+
 
     #Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
       final <- calcular_ic(final, tipo = "total_agregado",ajuste_ene = ajuste_ene)
     }
+
+
 
     # ESTO CORRESPONDE AL CASO SIN DESAGRAGACIoN
   } else {
@@ -1555,8 +1557,9 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
       dplyr::mutate(gl = .data$upm - .data$varstrat) %>%
       dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
 
+    # Coeficiente de variación
+    tabla$cv <- survey::cv(tabla)
 
-    tabla$cv <- cv(tabla)
 
     #Unir toda la informacion. Se hace con join para asegurar que no existan problemas en la union
     final <- tabla %>%

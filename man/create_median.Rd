@@ -2,7 +2,7 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{create_median}
 \alias{create_median}
-\title{Create the inputs to make quality evaluation for median estimations}
+\title{Create the inputs to evaluate the quality of median estimations}
 \usage{
 create_median(
   var,

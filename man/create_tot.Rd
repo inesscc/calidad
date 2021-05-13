@@ -2,7 +2,7 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{create_tot}
 \alias{create_tot}
-\title{Create the inputs to make quality evaluation for total estimations}
+\title{Create the inputs to evaluate the quality of total estimations}
 \usage{
 create_tot(
   var,

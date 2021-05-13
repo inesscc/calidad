@@ -2,9 +2,7 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{create_prop}
 \alias{create_prop}
-\title{\code{create_prop} generates a \code{dataframe} with the following elements: sum,
-degrees of freedom, sample size, standard error and coefficient of variation. The function allows
-grouping in several domains.}
+\title{Create the inputs to evaluate the quality of proportion estimations}
 \usage{
 create_prop(
   var,

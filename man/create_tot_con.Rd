@@ -2,7 +2,7 @@
 % Please edit documentation in R/creacion_insumos.R
 \name{create_tot_con}
 \alias{create_tot_con}
-\title{Create the inputs to make quality evaluation for total estimations of continuous variables}
+\title{Create the inputs to evaluate the quality of the sum of continuous variables}
 \usage{
 create_tot_con(
   var,
