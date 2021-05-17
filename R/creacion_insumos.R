@@ -373,6 +373,7 @@ calcular_ic <-  function(data, env = parent.frame(), tipo = "resto", ajuste_ene)
 
 calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = parent.frame()) {
 
+
   #Si el usuario pone una subpoblacion, se hace un filtro en el disenio para agilizar el calculo
   if (sub == T) {
     filtro <-  rlang::parse_expr(get("subpop", env))
@@ -412,7 +413,6 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
     combinaciones <- length(categorias[[1]]) * length(categorias[[2]]) * length(categorias[[3]], length(categorias[[4]], length(categorias[[5]])))
 
   }
-
   # Crear una matriz para guardar resultados
   acumulado <- data.frame(matrix(9999, ncol = 3, nrow = combinaciones))
 
@@ -445,6 +445,8 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
 
   }
+
+
   final <- acumulado  %>%
     tidyr::separate(into = doms, col = .data$X3 , sep = "-") %>%
     dplyr::rename(se = .data$X2,
@@ -453,6 +455,28 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
   return(final)
 }
+
+#----------------------------------------------------------------------
+
+convert_to_integer <- function(dominios, disenio) {
+  # Evaluar si alguna de las variables de dominio es un factor
+  variables_dominio <- stringr::str_split(dominios, pattern = "\\+")[[1]] %>%
+    trimws(which = "both")
+  es_factor <- purrr::map(variables_dominio, ~is.factor(disenio$variables[[.x]]))
+
+  # Si existe una variable factor, se convierten todas a integer
+  if (sum(es_factor > 0)) {
+    disenio$variables <- disenio$variables %>%
+      dplyr::mutate_at(dplyr::vars(variables_dominio), as.integer)
+
+    warning("labels removed!")
+
+  }
+
+  return(disenio)
+}
+
+
 
 #--------------------------------------------------------------------
 
@@ -759,26 +783,26 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       dplyr::mutate(gl = .data$upm - .data$varstrat)  %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
-    cv <- survey::cv(tabla, design = disenio) %>%
-      as.data.frame() %>%
-      tibble::rownames_to_column(var = "variable") %>%
-      tidyr::separate(.data$variable, agrupacion) %>%
-      dplyr::rename(coef_var = ".") %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::mutate(coef_var = .data$coef_var)
 
     n <- calcular_n(disenio$variables, dominios = agrupacion) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
 
-    # Unir todo y generar la tabla final
-    final <- tabla %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
-                       by = agrupacion) %>%
-      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
-                       by = agrupacion) %>%
-      dplyr::left_join(cv, by = agrupacion)
 
+
+
+    # Coeficiente de variación
+    tabla$cv <- survey::cv(tabla)
+
+    # #Unir toda la informacion. Se hace con join para asegurar que no existan problemas en la union
+    final <- tabla %>%
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character) %>%
+      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
+                       by = agrupacion) %>%
+      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
+                       by = agrupacion) %>%
+      dplyr::rename(coef_var = cv) %>%
+      dplyr::relocate(coef_var, .after = last_col()) %>%
+      dplyr::relocate(gl, .after = n)
 
     names(final)[grep(var,names(final))] = "total"
 
@@ -1105,6 +1129,9 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
+
+
+
   if(standard_eval == F){
 
     var <- rlang::enexpr(var)
@@ -1121,6 +1148,13 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     }
 
   }
+
+  # Si las variables que están en dominios son factores, se hace la conversion a integer
+  if (!is.null(dominios)) {
+    disenio <- convert_to_integer(dominios, disenio)
+  }
+
+
 
 
   # Arreglar las variables de disenioo para que tengan menos numeros.
@@ -1139,7 +1173,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       dplyr::rename(varunit = .data$varunit2)
 
     # Volver a declarar el disenioo normal
-    disenio <- survey::svydesign(ids = ~varunit, strata = ~varstrat, weights = ~fe, data = disenio$variables)
+    disenio <- survey::svydesign(ids = ~varunit, strata = ~varstrat, weights = ~fe, data = disenio$variables )
 
   }
 
@@ -1154,7 +1188,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
   es_prop <- disenio$variables %>%
     dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0, 1, 0))
 
-  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("Parece que tu variable es de proporcion!")
+  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("It seems you are using a proportion variable!")
 
 
   #Convertir los inputs en formulas para adecuarlos a survey
@@ -1173,6 +1207,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       #Generar la tabla con los calculos
 
       tabla <- calcular_medianas_internal(var_form, dominios_form, disenio)
+
 
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
