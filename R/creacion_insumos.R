@@ -390,6 +390,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
   categorias <- purrr::map(doms, ~sort(unique(as.character(disenio$variables[[.x]]) )))
 
   # Generar el iterador, segun el numero de desagregaciones pedidas por el usuario. Ademas, se calcula el numero de combinaciones de celdas.
+  # Se permite hasta 5 desagregaciones. Sobre ese nivel la función se cae.
   if (length(categorias) == 1) {
     it <- itertools::ihasNext(itertools::product(categorias[[1]]))
     combinaciones <- length(categorias[[1]])
@@ -416,14 +417,19 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
   # Crear una matriz para guardar resultados
   acumulado <- data.frame(matrix(9999, ncol = 3, nrow = combinaciones))
 
+
   i <- 1
+  # Mientras exista un siguiente, el while sigue operando
   while (itertools::hasNext(it)) {
     x <- iterators::nextElem(it)
 
 
     exp <- rlang::parse_expr(paste(doms, "==",  x , collapse = " & "))
+
+    # Se usa un trycath porque en ciertos casos, la función no puede realizar el cálculo
     output <- tryCatch(
       {
+        # No se usa svyby, para evitar perder un tabulado completo cuando alguna de sus celdas no puede ser calculada.
         median <- svyquantile(var,
                               design = subset(disenio, rlang::eval_tidy(exp) ),
                               quantiles = 0.5,
