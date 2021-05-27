@@ -507,7 +507,7 @@ convert_to_integer <- function(dominios, disenio) {
 #' create_mean(gastot_hd, zona+sexo,  disenio = dc)
 #' @export
 
-create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F) {
+create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F, rm.na = F) {
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -531,12 +531,18 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
   }
 
+  # Sacar los NA si el usuario lo requiere
+  if (rm.na == T) {
+    disenio <- disenio[!is.na(disenio$variables[[var]])]
+  }
+
   # Chequear que la variable no sea character
   if (is.character(disenio$variables[[var]]) == T) stop("You are using a character vector!")
 
-  #Chequear que la variable sea continua. Si no lo es, aparece un warning
+  #Chequear que la variable sea dummy. Si es una dumy, aparece un warning
   es_prop <- disenio$variables %>%
-    dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0, 1, 0))
+    dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0 | is.na(!!rlang::parse_expr(var)),
+                                           1, 0))
 
   if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("Parece que tu variable es de proporcion!")
 
@@ -558,6 +564,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       #Generar la tabla con los calculos
       tabla <- calcular_tabla(var_form, dominios_form, disenio)
 
+      return(tabla)
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
 
@@ -709,7 +716,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 #' create_tot_con(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
 #' @export
 
-create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F) {
+create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F, rm.na = F) {
 
   # chequear_var_disenio(disenio$variables)
 
@@ -734,6 +741,12 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
     }
 
   }
+
+  # Sacar los NA si el usuario lo requiere
+  if (rm.na == T) {
+    disenio <- disenio[!is.na(disenio$variables[[var]])]
+  }
+
 
   # Verificar que la variable de estimacion sea numerica. Se interrumpe si no es numerica
   if (!is.numeric(disenio$variables[[var]]) ) stop("Debes usar una variable numerica")
@@ -894,7 +907,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 #' create_tot(ocupado, zona+sexo, disenio = dc)
 #' @export
 
-create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F) {
+create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F, rm.na = F) {
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -917,6 +930,10 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
   }
 
+  # Sacar los NA si el usuario lo requiere
+  if (rm.na == T) {
+    disenio <- disenio[!is.na(disenio$variables[[var]])]
+  }
 
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIoN
   if (!is.null(dominios)) {
@@ -1128,7 +1145,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 #' @export
 
 
-create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F,standard_eval = F) {
+create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F,standard_eval = F, rm.na = F) {
 
   # Ajustar nombre de variables del disenio muestral
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
@@ -1154,6 +1171,13 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     }
 
   }
+
+
+  # Sacar los NA si el usuario lo requiere
+  if (rm.na == T) {
+    disenio <- disenio[!is.na(disenio$variables[[var]])]
+  }
+
 
   # Si las variables que están en dominios son factores, se hace la conversion a integer
   if (!is.null(dominios)) {
