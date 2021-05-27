@@ -564,7 +564,6 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       #Generar la tabla con los calculos
       tabla <- calcular_tabla(var_form, dominios_form, disenio)
 
-      return(tabla)
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
 

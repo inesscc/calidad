@@ -55,19 +55,18 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
   }
 
 
+
+
   # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
   suma_na <- tabulado %>%
     dplyr::mutate(contiene_na = dplyr::if_else(is.na(.data$n) | is.na(.data$gl) | is.na(.data$coef_var), 1, 0)) %>%
     dplyr::summarise(suma = sum(.data$contiene_na)) %>%
     dplyr::pull(.data$suma)
 
-
   # mandar un warning cuando se han exlcuido filas
   if (suma_na > 0) {
     warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o cv"))
   }
-
-
   evaluacion <- tabulado %>%
     dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
     dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
@@ -83,6 +82,7 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
              eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"
            )
     )
+
 
   # Criterio general para la publicación del tabulado
   if (publicar == TRUE) {
