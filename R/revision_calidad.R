@@ -53,11 +53,14 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
     tabulado <- tabulado %>%
       dplyr::filter(!!rlang::parse_expr(condicion))
   }
+
+
   # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
   suma_na <- tabulado %>%
     dplyr::mutate(contiene_na = dplyr::if_else(is.na(.data$n) | is.na(.data$gl) | is.na(.data$coef_var), 1, 0)) %>%
     dplyr::summarise(suma = sum(.data$contiene_na)) %>%
     dplyr::pull(.data$suma)
+
 
   # mandar un warning cuando se han exlcuido filas
   if (suma_na > 0) {
@@ -87,10 +90,10 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
       dplyr::ungroup() %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(.data$calidad == "fiable", 1, 0)) / nrow(.) * 100,
-                    pasa = round(.data$.data$pasa, 2),
-                    publicacion = dplyr::if_else(.data$.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0(.data$.data$pasa, "% de estimaciones fiables")) %>%
-      dplyr::select(-.data$.data$pasa)
+                    pasa = round(.data$pasa, 2),
+                    publicacion = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    aprueba = paste0(.data$pasa, "% de estimaciones fiables")) %>%
+      dplyr::select(-.data$pasa)
 
 
   }
