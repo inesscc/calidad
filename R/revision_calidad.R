@@ -46,16 +46,13 @@ quadratic <- function(p) {
 #' @export
 
 
-evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
     tabulado <- tabulado %>%
       dplyr::filter(!!rlang::parse_expr(condicion))
   }
-
-
-
 
   # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
   suma_na <- tabulado %>%
@@ -69,17 +66,17 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
   }
   evaluacion <- tabulado %>%
     dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
-    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
-           eval_gl = dplyr::if_else(gl >= 9, "gl suficiente", "gl insuficiente"),
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
+           eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
            eval_cv = dplyr::case_when(
-             .data$coef_var <= 15                  ~ "cv <= 15",
-             .data$coef_var > 15 & .data$coef_var <= 30  ~ "cv entre 15 y 30",
-             .data$coef_var > 30                   ~ "cv > 30"
+             .data$coef_var <= threshold$cv_lower                                       ~ paste("cv <=", threshold$cv_lower) ,
+             .data$coef_var > threshold$cv_lower & .data$coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
+             .data$coef_var > threshold$cv_upper                                        ~ paste("cv >", threshold$cv_upper)
            ),
            calidad = dplyr::case_when(
-             eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
-             eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv <= 15"         ~ "fiable",
-             eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"
+             eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper)      ~ "no fiable",
+             eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)         ~ "fiable",
+             eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"
            )
     )
 
@@ -126,7 +123,7 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #' @export
 
 
-evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE, threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -147,19 +144,18 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
 
   evaluacion <- tabulado %>%
-    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(.data$gl >= 9, "gl suficiente", "gl insuficiente"),
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    .data$coef_var <= 15                  ~ "cv <= 15",
-                    .data$coef_var > 15 & .data$coef_var <= 30  ~ "cv entre 15 y 30",
-                    .data$coef_var > 30                   ~ "cv > 30"
+                    .data$coef_var <= threshold$cv_lower                                       ~ paste("cv <=", threshold$cv_lower) ,
+                    .data$coef_var > threshold$cv_lower & .data$coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
+                    .data$coef_var > threshold$cv_upper                                        ~ paste("cv >", threshold$cv_upper)
                   ),
                   calidad = dplyr::case_when(
-                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv <= 15"         ~ "fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"
-                  )
-    )
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper)      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"
+                  ))
 
   # Criterio general para la publicación del tabulado
   if (publicar == TRUE) {
@@ -210,7 +206,7 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #' @export
 
 
-evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -231,19 +227,18 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
 
   evaluacion <- tabulado %>%
-    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(.data$gl >= 9, "gl suficiente", "gl insuficiente"),
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    .data$coef_var <= 15                  ~ "cv <= 15",
-                    .data$coef_var > 15 & .data$coef_var <= 30  ~ "cv entre 15 y 30",
-                    .data$coef_var > 30                   ~ "cv > 30"
+                    .data$coef_var <= threshold$cv_lower                                       ~ paste("cv <=", threshold$cv_lower) ,
+                    .data$coef_var > threshold$cv_lower & .data$coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
+                    .data$coef_var > threshold$cv_upper                                        ~ paste("cv >", threshold$cv_upper)
                   ),
                   calidad = dplyr::case_when(
-                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv <= 15"         ~ "fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"
-                  )
-    )
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper)      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"
+                  ))
 
   # Criterio general para la publicación del tabulado
   if (publicar == TRUE) {
@@ -296,7 +291,7 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #' evaluate_median(create_median(gastot_hd, dominios = zona+sexo, disenio = dc))
 #' @export
 
-evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE, threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -314,22 +309,22 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
     warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o cv"))
   }
 
-
   evaluacion <- tabulado %>%
     dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
-    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(.data$gl >= 9, "gl suficiente", "gl insuficiente"),
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    .data$coef_var <= 15                  ~ "cv <= 15",
-                    .data$coef_var > 15 & .data$coef_var <= 30  ~ "cv entre 15 y 30",
-                    .data$coef_var > 30                   ~ "cv > 30"
+                    .data$coef_var <= threshold$cv_lower                                       ~ paste("cv <=", threshold$cv_lower) ,
+                    .data$coef_var > threshold$cv_lower & .data$coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
+                    .data$coef_var > threshold$cv_upper                                        ~ paste("cv >", threshold$cv_upper)
                   ),
                   calidad = dplyr::case_when(
-                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv <= 15"         ~ "fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"
-                  )
-    )
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper)      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"
+                  ))
+
+
 
   # Criterio general para la publicación del tabulado
   if (publicar == TRUE) {
@@ -381,7 +376,7 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE) {
 #'               dominios = zona+sexo, disenio = dc))
 #' @export
 
-evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
+evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -402,20 +397,20 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
 
 
   evaluacion <- tabulado %>%
-    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 60, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(.data$gl >= 9, "gl suficiente", "gl insuficiente"),
-                  prop_est = dplyr::case_when(.data$objetivo <= 0.5 ~ "<= a 0.5",
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(.data$gl >= threshold$df, "gl suficiente", "gl insuficiente"),
+                  prop_est = dplyr::case_when(.data$objetivo <= 0.5                     ~ "<= a 0.5",
                                               .data$objetivo < 1 & .data$objetivo > 0.5 ~ "> a 0.5",
-                                              .data$objetivo > 1 ~ ">= a 1"),
+                                              .data$objetivo >= 1                        ~ ">= a 1"),
                   tipo_eval = dplyr::if_else(.data$objetivo < 1, "Eval SE", "Eval CV"),
                   cuadratica = dplyr::if_else(.data$objetivo < 1, quadratic(.data$objetivo), NA_real_),
                   eval_se = dplyr::if_else(.data$objetivo < 1,
                                            dplyr::if_else(.data$se <= .data$cuadratica,
                                                           "SE adecuado", "SE alto"), NA_character_),
                   eval_cv = dplyr::if_else(.data$objetivo < 1, NA_character_,
-                                           dplyr::case_when(cv <= 15            ~ "cv <= 15",
-                                                            cv > 15 & cv <= 30  ~ "cv entre 15 y 30",
-                                                            cv > 30             ~ "cv > 30"
+                                           dplyr::case_when(cv <= threshold$cv_lower                           ~ paste("cv <=", threshold$cv_lower),
+                                                            cv > threshold$cv_lower & cv <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
+                                                            cv > 30                                            ~ paste("cv >", threshold$cv_upper)
                   )),
                   calidad = dplyr::case_when(
                     objetivo <1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente"                                                  ~ "no fiable",
@@ -423,9 +418,9 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE) {
                     objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "<= a 0.5" & eval_se == "SE alto"      ~ "poco fiable",
                     objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "SE adecuado"   ~ "fiable",
                     objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "SE alto"       ~ "poco fiable",
-                    objetivo >= 1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == "cv > 30"      ~ "no fiable",
-                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv <= 15"         ~ "fiable",
-                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == "cv entre 15 y 30" ~ "poco fiable"))
+                    objetivo >= 1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper) ~ "no fiable",
+                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)    ~ "fiable",
+                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"))
 
 
   # Criterio general para la publicación del tabulado
