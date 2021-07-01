@@ -5,7 +5,7 @@
 README.Rmd
 doc
 Meta
-inst/doc
-R/cargar_diseño_complejo.R
 .pdf
-
+data/
+administrativo/
+.xlsx

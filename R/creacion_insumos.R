@@ -75,7 +75,8 @@ calcular_tabla <-  function(var, dominios, disenio, media = T) {
       estimacion <- survey::svyby(var ,
                                   design = disenio,
                                   by = dominios,
-                                  FUN = svymean)
+                                  FUN = svymean,
+                                  deff = T)
     } else { # para calcular la mediana
 
       estimacion <- survey::svyby(var,
@@ -90,7 +91,8 @@ calcular_tabla <-  function(var, dominios, disenio, media = T) {
   # Esto corresponde al caso sin desagregacion
   } else {
     if (media == T) { # para calcular la media
-      estimacion <- survey::svymean(var, disenio)
+      estimacion <- survey::svymean(var, disenio,
+                                    deff = T)
     } else { # para calcular la mediana
 
       estimacion <-  svyquantile(var,
@@ -122,9 +124,9 @@ calcular_tabla <-  function(var, dominios, disenio, media = T) {
 
 calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio) {
   if (!is.null(dominios)) {
-    estimacion <- survey::svyby(var, denominator = denominador,design =  disenio, by = dominios , FUN = svyratio)
+    estimacion <- survey::svyby(var, denominator = denominador,design =  disenio, by = dominios , FUN = svyratio, deff = T)
   } else {
-    estimacion <- survey::svyratio(var, denominator = denominador, design = disenio)
+    estimacion <- survey::svyratio(var, denominator = denominador, design = disenio, deff = T)
   }
   return(estimacion)
 }
@@ -507,7 +509,7 @@ convert_to_integer <- function(dominios, disenio) {
 #' create_mean(gastot_hd, zona+sexo,  disenio = dc)
 #' @export
 
-create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F, rm.na = F) {
+create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F) {
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -539,7 +541,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
   # Chequear que la variable no sea character
   if (is.character(disenio$variables[[var]]) == T) stop("You are using a character vector!")
 
-  #Chequear que la variable sea dummy. Si es una dumy, aparece un warning
+  #Chequear que la variable sea dummy. Si es una dummy, aparece un warning
   es_prop <- disenio$variables %>%
     dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0 | is.na(!!rlang::parse_expr(var)),
                                            1, 0))
@@ -563,6 +565,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
       #Generar la tabla con los calculos
       tabla <- calcular_tabla(var_form, dominios_form, disenio)
+
 
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
@@ -589,11 +592,13 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 
     #Extraer nombres
     nombres <- names(tabla)
-    agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
+    agrupacion <-  nombres[ -c((length(nombres) - 2),  (length(nombres) - 1), length(nombres)) ]
+
 
     #Calcular el tamanio muestral de cada grupo
     n <- calcular_n(disenio$variables, agrupacion) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
+
 
     #Calcular los grados de libertad de todos los cruces
     gl <- calcular_upm(disenio$variables, agrupacion) %>%
@@ -621,15 +626,20 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
                        by = agrupacion)
 
 
-    # Se calculan los intervalos de confianza solo si el usuario lo requiere
+    # Ajustar nombres de la tabla, para que tengan un formato estándar. Se deja el deff al final
+    names(final) <- names(final) %>%
+      stringr::str_replace(pattern = paste0("DEff.", var), "deff") %>%
+      stringr::str_replace(pattern =  var, "mean")
 
-    names(final)[grep(var,names(final))] = "mean"
+    final <- final %>%
+      dplyr::relocate(deff, .after = dplyr::last_col())
+
+    # Se calculan los intervalos de confianza solo si el usuario lo requiere
 
     if (ci == T) {
       #var_string = var
       final <- calcular_ic(final, tipo = "media_agregado", ajuste_ene = ajuste_ene)
     }
-
 
 
     # ESTO CORRESPONDE AL CASO SIN DESAGREGACIoN
@@ -677,6 +687,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     final <- dplyr::bind_cols(final, "gl" = gl , "n" = n, "coef_var" = cv[1])
     names(final)[2] <- "se"
 
+
     # Se calcular el intervalo de confianza solo si el usuario lo pide
     if (ci == T) {
       ##   var_string = var
@@ -684,6 +695,12 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     }
 
 
+  }
+
+  # Se calcula el tamaño de muestra efectivo, si el usuario lo pide
+  if (ess == T) {
+    final <- final %>%
+      dplyr::mutate(ess = n / deff)
   }
 
   if(!is.null(dominios) && !is.null(subpop)){
@@ -715,7 +732,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
 #' create_tot_con(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
 #' @export
 
-create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F, rm.na = F) {
+create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F) {
 
   # chequear_var_disenio(disenio$variables)
 
@@ -794,7 +811,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
         stats::as.formula()
     }
 
-    tabla <- survey::svyby(formula = var_form, by = dominios_form, design = disenio, FUN = survey::svytotal)
+    tabla <- survey::svyby(formula = var_form, by = dominios_form, design = disenio, FUN = survey::svytotal, deff = T)
 
     gl <- calcular_upm(disenio$variables, agrupacion) %>%
       dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
@@ -804,9 +821,6 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 
     n <- calcular_n(disenio$variables, dominios = agrupacion) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
-
-
-
 
     # Coeficiente de variación
     tabla$cv <- survey::cv(tabla)
@@ -822,7 +836,16 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       dplyr::relocate(coef_var, .after = last_col()) %>%
       dplyr::relocate(gl, .after = n)
 
-    names(final)[grep(var,names(final))] = "total"
+
+    # Ajustar nombres de la tabla, para que tengan un formato estándar. Se deja el deff al final
+    names(final) <- names(final) %>%
+      stringr::str_replace(pattern = paste0("DEff.", var), "deff") %>%
+      stringr::str_replace(pattern =  var, "total")
+
+    final <- final %>%
+      dplyr::relocate(deff, .after = dplyr::last_col())
+
+
 
     #Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
@@ -833,7 +856,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
     # ESTE ES EL CASO NO AGREGADO
   } else {
 
-    tabla <- survey::svytotal(x = var_form, design = disenio )
+    tabla <- survey::svytotal(x = var_form, design = disenio, deff = T )
 
     # Tabla con los totales
     totales <- as.data.frame(tabla) %>%
@@ -875,9 +898,20 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
     }
 
   }
+
+  # Se calcula el tamaño de muestra efectivo, si el usuario lo pide
+  if (ess == T) {
+    final <- final %>%
+      dplyr::mutate(ess = n / deff)
+  }
+
+
+
   if(!is.null(dominios) && !is.null(subpop)){
     final = final %>% dplyr::filter(!!rlang::parse_expr(subpop) == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
   }
+
+
 
   return(final)
 }
@@ -906,7 +940,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 #' create_tot(ocupado, zona+sexo, disenio = dc)
 #' @export
 
-create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = F, rm.na = F) {
+create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F) {
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -989,8 +1023,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       stats::as.formula()
 
     # Generar la tabla de estimaciones
-    tabla <- survey::svyby(formula = var_form, by = dominios_form, design = disenio, FUN = survey::svytotal)
-
+    tabla <- survey::svyby(formula = var_form, by = dominios_form, design = disenio, FUN = survey::svytotal, deff = F)
 
     gl <- calcular_upm(disenio$variables, agrup1) %>%
       dplyr::left_join(calcular_estrato(disenio$variables, agrup1), by = agrup1) %>%
@@ -1007,6 +1040,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     # # Coeficiente de variación
     tabla$cv <- survey::cv(tabla)
 
+
     # #Unir toda la informacion. Se hace con join para asegurar que no existan problemas en la union
     final <- tabla %>%
       dplyr::mutate_at(dplyr::vars(agrupacion), as.character) %>%
@@ -1019,8 +1053,15 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
       dplyr::relocate(gl, .after = n)
 
 
-    names(final)[grep(var,names(final))] = "total"
+    # Ajustar nombres de la tabla, para que tengan un formato estándar. Se deja el deff al final
+    names(final) <- names(final) %>%
+      stringr::str_replace(pattern = paste0("DEff.", var), "deff") %>%
+      stringr::str_replace(pattern =  var, "total")
 
+    return(final)
+
+    final <- final %>%
+      dplyr::relocate(deff, .after = dplyr::last_col())
 
     #Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
@@ -1069,7 +1110,7 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
     }
 
     # Tabla que se usa luego para calcular cv
-    tabla <- survey::svytotal(x = var_form, design = disenio )
+    tabla <- survey::svytotal(x = var_form, design = disenio, deff = T )
 
     # Tabla con los totales
     totales <- as.data.frame(tabla) %>%
@@ -1109,10 +1150,18 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, aju
   final <- final %>%
     dplyr::filter(!is.nan(.data$coef_var))
 
+  # Se calcula el tamaño de muestra efectivo, si el usuario lo pide
+  if (ess == T) {
+    final <- final %>%
+      dplyr::mutate(ess = n / deff)
+  }
+
 
   if(!is.null(dominios) && !is.null(subpop)){
     final = final %>% dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
   }
+
+
 
   return(final)
 }
@@ -1377,7 +1426,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
-create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F) {
+create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F) {
 # Chequar que esten presentes las variables del disenio muestral. Si no se llaman varstrat y varunit, se
 #  detiene la ejecucion
 # chequear_var_disenio(disenio$variables)
@@ -1423,10 +1472,11 @@ if (!is.null(dominios[[1]])) {
   #Generar la tabla con los calculos
   tabla <- calcular_tabla_ratio(var, denominador, dominios, disenio)
 
+
   #Extraer nombres
   nombres <- names(tabla)
-  agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
-  var_ratio <- nombres[length(nombres) - 1]
+  agrupacion <-  nombres[-c(length(nombres) - 2, (length(nombres) - 1), length(nombres)) ]
+  var_ratio <- nombres[length(nombres) - 2]
 
   #+ Calcular N
   n <- calcular_n(disenio$variables, agrupacion) %>%
@@ -1450,12 +1500,16 @@ if (!is.null(dominios[[1]])) {
                      by = agrupacion)
 
 
+
   #Cambiar el nombre de la variable objetivo para que siempre sea igual.
   final <- final  %>%
     dplyr::rename(objetivo = var_ratio) %>%
     dplyr::filter(.data$objetivo > 0) # se eliminan los ceros de la tabla
 
-  names(final)[grep("objetivo",names(final)) +1] = "se"
+  # Se renombra el error estándar
+  names(final)[grep("objetivo", names(final)) +1] = "se"
+  names(final) <- tolower(names(final))
+
 
   #intervalos de confianza solo si el usuario lo requiere
   if (ci == T) {
@@ -1496,13 +1550,16 @@ if (!is.null(dominios[[1]])) {
   cv <- cv(tabla, design = disenio)
 
   #* * Armar tabla final
-  final <- data.frame(tabla$ratio,survey::SE(tabla))
+  final <- data.frame(tabla$ratio, survey::SE(tabla), deff = survey::deff(tabla))
   final$cv = cv[1]
-  names(final) = c("objetivo", "se","cv")
+
+
+  names(final) = c("objetivo", "se",  "deff", "cv")
 
   # Armar tabla completa con todos los insumos
   final <- dplyr::bind_cols(final, "gl" = gl, "n" = n)
   #names(final)[2] <- "se"
+
 
   ##Cambiar el nombre de la variable objetivo para que siempre sea igual
   #final <- final %>%
@@ -1512,6 +1569,13 @@ if (!is.null(dominios[[1]])) {
   if (ci == T) {
     final <- calcular_ic(data = final, tipo = "prop_agregado",  ajuste_ene = ajuste_ene)
 
+  }
+
+
+  # Se calcula el tamaño de muestra efectivo, si el usuario lo pide
+  if (ess == T) {
+    final <- final %>%
+      dplyr::mutate(ess = n / deff)
   }
 
 }
@@ -1541,7 +1605,7 @@ return(final)
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
-create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F, standard_eval = T){
+create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = T){
 
   # Chequar que esten presentes las variables del disenio muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecucion
@@ -1606,10 +1670,12 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
     #Generar la tabla con los calculos
     tabla <- calcular_tabla(var, dominios, disenio)
 
+
     #Extraer nombres
     nombres <- names(tabla)
-    agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
-    var_prop <- nombres[length(nombres) - 1]
+    agrupacion <-  nombres[-c((length(nombres) - 2), (length(nombres) - 1), length(nombres)) ]
+    var_prop <- nombres[length(nombres) - 2]
+
 
     #Calcular el tamanio muestral de cada grupo
     n <- calcular_n(disenio$variables, agrupacion) %>%
@@ -1639,6 +1705,15 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
     final <- final  %>%
       dplyr::rename(objetivo = var_prop) # %>%
       #dplyr::filter(.data$objetivo > 0) # se eliminan los ceros de la tabla
+
+    # Ajustar nombres de la tabla, para que tengan un formato estándar. Se deja el deff al final
+    names(final) <- names(final) %>%
+      stringr::str_replace(pattern = paste0("DEff.", var_prop), "deff")
+
+
+    final <- final %>%
+      dplyr::relocate(deff, .after = dplyr::last_col())
+
 
     #Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
@@ -1680,13 +1755,19 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
     cv <- cv(tabla)
 
     # Armar tabla final
-    final <- data.frame(tabla[1],survey::SE(tabla))
+    final <- data.frame(tabla %>%
+                          as.data.frame() %>%
+                          dplyr::select(mean, deff), se = survey::SE(tabla))
     final$cv = cv[1]
-    names(final) = c("objetivo", "se","cv")
+
+
+    names(final) = c("objetivo", "deff","se", "cv")
+
+
 
     # Armar tabla completa con todos los insumos
     final <- dplyr::bind_cols(final, "gl" = gl, "n" = n)
-    names(final)[2] <- "se"
+    #names(final)[2] <- "se"
 
 
 
@@ -1699,6 +1780,13 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
       final <- calcular_ic(data = final, tipo = "prop_agregado",  ajuste_ene = ajuste_ene)
 
     }
+
+    # Se calcula el tamaño de muestra efectivo, si el usuario lo pide
+    if (ess == T) {
+      final <- final %>%
+        dplyr::mutate(ess = n / deff)
+    }
+
 
   }
 
@@ -1746,7 +1834,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #' @export
 #'
 
-create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, ajuste_ene = F,standard_eval = F){
+create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F,standard_eval = F){
 
   #  # Encapsular inputs para usarlos mas tarde
   if(standard_eval == F){
@@ -1770,11 +1858,11 @@ create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, 
   }
 
   if(!is.null(denominador)){
-    final = create_ratio_internal(var,denominador, dominios, subpop, disenio, ci, ajuste_ene)
+    final = create_ratio_internal(var,denominador, dominios, subpop, disenio, ci, ess, ajuste_ene)
   }
 
   if(is.null(denominador)){
-    final = create_prop_internal(var, dominios, subpop, disenio, ci, ajuste_ene)
+    final = create_prop_internal(var, dominios, subpop, disenio, ci, ess, ajuste_ene)
   }
   return(final)
 }
