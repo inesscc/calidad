@@ -127,3 +127,10 @@ gl <- length(unique(insumo$varunit)) - length(unique(insumo$varstrat))
 test_that("gl desagregado", {
   expect_equal(test, gl)
 })
+
+
+##########################
+# PROBAR DEFF Y ESS
+##########################
+test <-  create_tot(ocupado, dominios = zona+sexo, disenio = dc, deff = F,
+                    ess = T)

@@ -43,8 +43,18 @@ test_that("Insumo media zona", {
 ###############
 
 
-test <-  create_prop(ocupado, dominios =  zona+sexo+ecivil, disenio = dc)
+test <-  create_prop(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, deff = F)
 eval <-  evaluate_prop(test, publicar = T, threshold = umbrales)
 eval <-  evaluate_prop(test, publicar = T)
+
+
+
+###############
+# evaluate_median
+###############
+
+test <-  create_median(gastot_hd, dominios =  zona+sexo, disenio = dc, replicas = 15, seed = 1234)
+eval <-  evaluate_median(test, publicar = T)
+
 
 

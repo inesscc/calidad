@@ -33,6 +33,18 @@ ene <- ene %>%
                 region_fact = as.factor(region_fact)
                 )
 
+dc <- survey::svydesign(ids = ~varunit,
+                        data = epf_personas %>%
+                          dplyr::group_by(folio) %>%
+                          dplyr::slice(1) %>%
+                          dplyr::ungroup() %>%
+                          dplyr::mutate(
+                            metro = dplyr::if_else(zona == 1, 1, 0),
+                            metro_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, metro )),
+                        strata = ~varstrat,
+                        weights = ~fe)
+
+
 
 # Diseño de la ENE
 dc_ene <- survey::svydesign(weights = ~fact_cal, ids = ~conglomerado, strata = ~estrato_unico, data = ene)
@@ -51,4 +63,10 @@ test_that("nombres tabla agregado", {
   expect_equal(round(test[1, 2]), 33900)
 })
 
+
+#####################
+# probar deff y ess #
+#####################
+
+test <- create_tot_con(gastot_hd, dominios =zona, disenio = dc, deff = T)
 

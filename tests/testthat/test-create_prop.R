@@ -200,6 +200,25 @@ test_that("gl proporción desagregado ene", {
   expect_equal(gl[1, 4] %>% dplyr::pull(), test[1, 5])
 })
 
+############################################
+# Probar deff y tamaño de muestra efectivo #
+############################################
+
+test2 <-  create_prop(desocupado, disenio = dc_ene)
+test2 <-  create_prop(desocupado, dominios =  region, disenio = dc_ene)
+test2 <-  create_prop(desocupado, dominios =  region, subpop = fdt, disenio = dc_ene)
+test2 <-  create_prop(desocupado, dominios =  region+sexo, disenio = dc_ene, ess = T)
+
+
+#########################
+# Probar cv logarítmico #
+#########################
+
+test2 <-  create_prop(desocupado, disenio = dc_ene, log_cv = T)
+test2 <-  create_prop(desocupado, dominios =  region, disenio = dc_ene, log_cv = T)
+test2 <-  create_prop(desocupado, dominios =  region, subpop = fdt, disenio = dc_ene, log_cv = T)
+test2 <-  create_prop(desocupado, dominios =  region+sexo, disenio = dc_ene, log_cv = T)
+
 
 
 ################

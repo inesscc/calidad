@@ -132,15 +132,34 @@ real <-  survey::svyby(~gastot_hd,
                        ci = T)
 
 test_that("mediana desagregada con subpop", {
-  expect_equal(real$V1[1], test$median[1])
+  expect_equal(real$se[1], test$se[1])
 })
+
+# Probar con otro método
+test <-  create_median(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc, interval_type = "probability")
+
+real <-  survey::svyby(~gastot_hd,
+                       ~sexo+zona,
+                       FUN =  survey::svyquantile,
+                       design = subset(dc_rep, ocupado == 1),
+                       quantile = 0.5,
+                       method="constant",
+                       interval.type = "probability",
+                       ties="discrete",
+                       ci = T)
+
+test_that("mediana desagregada con subpop", {
+  expect_equal(real$se[1], test$se[1])
+})
+
+
 
 
 ################################################
 # ERROR ESTÁNDAR CON DESAGREGACIÓN Y CON SUBPOP#
 ################################################
 
-test <-  create_median(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc)
+test <-  create_median(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc, seed = 12)
 
 real <-  survey::svyby(~gastot_hd,
                        ~sexo+zona,

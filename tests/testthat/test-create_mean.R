@@ -78,7 +78,13 @@ test_that("tamaño muestral media desagregada", {
 })
 
 
+############################################
+# Probar deff y tamaño de muestra efectivo #
+############################################
 
+test2 <-  create_mean(gastot_hd, disenio = dc)
+test2 <-  create_mean(gastot_hd, dominios =  zona, disenio = dc, deff = T)
+test2 <-  create_mean(gastot_hd, dominios =  zona+sexo, disenio = dc, ess = T)
 
 
 

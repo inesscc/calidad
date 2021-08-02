@@ -408,9 +408,9 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, threshol
                                            dplyr::if_else(.data$se <= .data$cuadratica,
                                                           "SE adecuado", "SE alto"), NA_character_),
                   eval_cv = dplyr::if_else(.data$objetivo < 1, NA_character_,
-                                           dplyr::case_when(cv <= threshold$cv_lower                           ~ paste("cv <=", threshold$cv_lower),
-                                                            cv > threshold$cv_lower & cv <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
-                                                            cv > 30                                            ~ paste("cv >", threshold$cv_upper)
+                                           dplyr::case_when(coef_var <= threshold$cv_lower                           ~ paste("cv <=", threshold$cv_lower),
+                                                            coef_var > threshold$cv_lower & coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
+                                                            coef_var > 30                                            ~ paste("cv >", threshold$cv_upper)
                   )),
                   calidad = dplyr::case_when(
                     objetivo <1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente"                                                  ~ "no fiable",
