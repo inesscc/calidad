@@ -159,7 +159,7 @@ test_that("mediana desagregada con subpop", {
 # ERROR ESTÁNDAR CON DESAGREGACIÓN Y CON SUBPOP#
 ################################################
 
-test <-  create_median(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc, seed = 12)
+test <-  create_median(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc, seed = 1234)
 
 real <-  survey::svyby(~gastot_hd,
                        ~sexo+zona,

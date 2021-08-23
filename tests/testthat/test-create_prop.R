@@ -32,7 +32,8 @@ ene <- ene %>%
            region == 15 ~ "Arica",
            region == 16 ~ "Ñuble",
          ),
-         region2 = haven::labelled(region2))
+         region2 = haven::labelled(region2)) %>%
+  dplyr::mutate(desocup = region)
 
 
 
@@ -219,49 +220,11 @@ test2 <-  create_prop(desocupado, dominios =  region, disenio = dc_ene, log_cv =
 test2 <-  create_prop(desocupado, dominios =  region, subpop = fdt, disenio = dc_ene, log_cv = T)
 test2 <-  create_prop(desocupado, dominios =  region+sexo, disenio = dc_ene, log_cv = T)
 
+##########################################
+# Probar alcance de nobres entre variables
+###########################################
 
+create_prop(var = desocupado, dominios = sexo+region, disenio = dc_ene)
 
-################
-# PRUEBAS ENUSC#
-################
-
-### Tamaño muestral  desagregado ENUSC
-
-# dc_enusc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat,
-#                      data = enusc, weights = ~Fact_Pers)
-#
-# options(survey.lonely.psu = "certainty")
-#
-#   insumos_prop <- create_prop(VP_DC, dominios =  enc_region+rph_sexo, disenio = dc_enusc) %>%
-#     evaluate_prop()
-#
-#   test <- insumos_prop %>%
-#     dplyr::filter(rph_sexo == 1 & enc_region  == 1) %>%
-#     dplyr::pull(n)
-#
-#   n <- enusc %>%
-#     dplyr::filter(rph_sexo == 1 & enc_region  == 1) %>%
-#     nrow()
-#
-#   test_that("n proporción desagregado enusc", {
-#     expect_equal(test, n)
-#   })
-
-# #### testeo de create_ratio_internal #
-#
-# insumos_ratio <- create_prop(var = muj_insg_taxi, denominador = hom_insg_taxi, dominios =  enc_region+rph_sexo, disenio = dc_enusc) %>%
-#   evaluate_prop()
-#
-# test <- insumos_ratio %>%
-#   dplyr::filter(rph_sexo == 2 & enc_region  == 12) %>%
-#   dplyr::pull(n)
-#
-# n <- enusc %>%
-#   dplyr::filter(rph_sexo == 2 & enc_region  == 12 & (muj_insg_taxi == 1 | hom_insg_taxi == 1)) %>%
-#   nrow()
-#
-# test_that("n proporción desagregado enusc", {
-#   expect_equal(test, n)
-# })
 
 

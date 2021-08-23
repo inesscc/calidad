@@ -46,54 +46,87 @@ quadratic <- function(p) {
 #' @export
 
 
-evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
+                          threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
 
-  #Aplicar la condición requerida por el usuario
-  if (!is.null(condicion) ) {
-    tabulado <- tabulado %>%
-      dplyr::filter(!!rlang::parse_expr(condicion))
-  }
+  # Default scheme is INE Chile
+  if (scheme == "chile") {
+    #Aplicar la condición requerida por el usuario
+    if (!is.null(condicion) ) {
+      tabulado <- tabulado %>%
+        dplyr::filter(!!rlang::parse_expr(condicion))
+    }
 
-  # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
-  suma_na <- tabulado %>%
-    dplyr::mutate(contiene_na = dplyr::if_else(is.na(.data$n) | is.na(.data$gl) | is.na(.data$coef_var), 1, 0)) %>%
-    dplyr::summarise(suma = sum(.data$contiene_na)) %>%
-    dplyr::pull(.data$suma)
+    # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
+    suma_na <- tabulado %>%
+      dplyr::mutate(contiene_na = dplyr::if_else(is.na(.data$n) | is.na(.data$gl) | is.na(.data$coef_var), 1, 0)) %>%
+      dplyr::summarise(suma = sum(.data$contiene_na)) %>%
+      dplyr::pull(.data$suma)
 
-  # mandar un warning cuando se han exlcuido filas
-  if (suma_na > 0) {
-    warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o cv"))
-  }
-  evaluacion <- tabulado %>%
-    dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
-    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
-           eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
-           eval_cv = dplyr::case_when(
-             .data$coef_var <= threshold$cv_lower                                       ~ paste("cv <=", threshold$cv_lower) ,
-             .data$coef_var > threshold$cv_lower & .data$coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
-             .data$coef_var > threshold$cv_upper                                        ~ paste("cv >", threshold$cv_upper)
-           ),
-           calidad = dplyr::case_when(
-             eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper)      ~ "no fiable",
-             eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)         ~ "fiable",
-             eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"
-           )
-    )
-
-
-  # Criterio general para la publicación del tabulado
-  if (publicar == TRUE) {
-    evaluacion <- evaluacion %>%
-      dplyr::ungroup() %>%
+    # mandar un warning cuando se han exlcuido filas
+    if (suma_na > 0) {
+      warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o cv"))
+    }
+    evaluacion <- tabulado %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(.data$calidad == "fiable", 1, 0)) / nrow(.) * 100,
-                    pasa = round(.data$pasa, 2),
-                    publicacion = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0(.data$pasa, "% de estimaciones fiables")) %>%
-      dplyr::select(-.data$pasa)
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
+                    eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
+                    eval_cv = dplyr::case_when(
+                      .data$coef_var <= threshold$cv_lower                                       ~ paste("cv <=", threshold$cv_lower) ,
+                      .data$coef_var > threshold$cv_lower & .data$coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
+                      .data$coef_var > threshold$cv_upper                                        ~ paste("cv >", threshold$cv_upper)
+                    ),
+                    calidad = dplyr::case_when(
+                      eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper)      ~ "no fiable",
+                      eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)         ~ "fiable",
+                      eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"
+                    )
+      )
 
+
+    # Criterio general para la publicación del tabulado
+    if (publicar == TRUE) {
+      evaluacion <- evaluacion %>%
+        dplyr::ungroup() %>%
+        dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
+        dplyr::mutate(pasa = sum(dplyr::if_else(.data$calidad == "fiable", 1, 0)) / nrow(.) * 100,
+                      pasa = round(.data$pasa, 2),
+                      publicacion = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                      aprueba = paste0(.data$pasa, "% de estimaciones fiables")) %>%
+        dplyr::select(-.data$pasa)
+
+
+    }
+
+  # ESTANDAR CEPAL
+  } else if (scheme == "cepal") {
+
+    # Check that all the inputs are available
+    check_ess <- names(tabulado) %>%  stringr::str_detect(pattern = "ess") %>% sum()
+    check_unweighted <- names(tabulado) %>%  stringr::str_detect(pattern = "unweighted") %>% sum()
+
+    if (check_ess != 1 | check_unweighted != 1) {
+      stop("unweighted and ess must be used!")
+    }
+
+       evaluacion <- tabulado %>%
+         dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
+                       eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
+                       eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
+                       eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
+                       eval_cv = dplyr::if_else(coef_var < 20, "adequate cv", "non adequate cv")) %>%
+         dplyr::mutate(tag = dplyr::case_when(
+           eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
+             eval_unweighted == "insufficient cases" ~ "supress",
+           eval_df == "insufficient df"  ~ "review",
+           eval_cv ==  "adequate cv"  ~ "publish"
+         ))
+  } else {
+
+    stop("scheme must be cepal or chile")
 
   }
+
 
 
   return(evaluacion)
@@ -123,7 +156,11 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, threshol
 #' @export
 
 
-evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE, threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme = "chile",
+                         threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+
+  # Default scheme is INE Chile
+  if (scheme == "chile") {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -169,6 +206,35 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE, threshold
       dplyr::select(-.data$pasa)
   }
 
+  # Cepal scheme
+
+  } else if (scheme == "cepal") {
+
+    # Check that all the inputs are available
+    check_ess <- names(tabulado) %>%  stringr::str_detect(pattern = "ess") %>% sum()
+    check_unweighted <- names(tabulado) %>%  stringr::str_detect(pattern = "unweighted") %>% sum()
+
+    if (check_ess != 1 | check_unweighted != 1) {
+      stop("unweighted and ess must be used!")
+    }
+
+    evaluacion <- tabulado %>%
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
+                    eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
+                    eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::if_else(coef_var < 20, "adequate cv", "non adequate cv")) %>%
+      dplyr::mutate(tag = dplyr::case_when(
+        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
+          eval_unweighted == "insufficient cases" ~ "supress",
+        eval_df == "insufficient df"  ~ "review",
+        eval_cv ==  "adequate cv"  ~ "publish"
+      ))
+
+  # If the user misspells  the scheme, a message is returned
+  } else {
+    stop("scheme must be cepal or chile")
+  }
 
 
   return(evaluacion)
@@ -206,7 +272,12 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE, threshold
 #' @export
 
 
-evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
+                             threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+
+  # Default scheme is INE Chile
+  if (scheme == "chile") {
+
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -255,7 +326,35 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, thres
 
   }
 
+  # Cepal scheme
 
+  } else if (scheme == "cepal") {
+
+    # Check that all the inputs are available
+    check_ess <- names(tabulado) %>%  stringr::str_detect(pattern = "ess") %>% sum()
+    check_unweighted <- names(tabulado) %>%  stringr::str_detect(pattern = "unweighted") %>% sum()
+
+    if (check_ess != 1 | check_unweighted != 1) {
+      stop("unweighted and ess must be used!")
+    }
+
+    evaluacion <- tabulado %>%
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
+                    eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
+                    eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::if_else(coef_var < 20, "adequate cv", "non adequate cv")) %>%
+      dplyr::mutate(tag = dplyr::case_when(
+        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
+          eval_unweighted == "insufficient cases" ~ "supress",
+        eval_df == "insufficient df"  ~ "review",
+        eval_cv ==  "adequate cv"  ~ "publish"
+      ))
+
+    # If the user misspells  the scheme, a message is returned
+  } else {
+    stop("scheme must be cepal or chile")
+  }
 
   return(evaluacion)
 }
@@ -376,7 +475,12 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE, thresh
 #'               dominios = zona+sexo, disenio = dc))
 #' @export
 
-evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
+                          threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+
+  # Default scheme is INE Chile
+  if (scheme == "chile") {
+
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -434,6 +538,39 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, threshol
                     aprueba = paste0(.data$pasa, "% de estimaciones fiables")) %>%
       dplyr::select(-.data$pasa)
   }
+
+
+  # Cepal scheme
+  } else if (scheme == "cepal") {
+
+    # Check that all the inputs are available
+    check_ess <- names(tabulado) %>%  stringr::str_detect(pattern = "ess") %>% sum()
+    check_unweighted <- names(tabulado) %>%  stringr::str_detect(pattern = "unweighted") %>% sum()
+    check_log_cv <- names(tabulado) %>%  stringr::str_detect(pattern = "log_cv") %>% sum()
+
+    if (check_ess != 1 | check_unweighted != 1 | check_log_cv != 1 ) {
+      stop("log_cv, unweighted and ess must be used!")
+    }
+
+    evaluacion <- tabulado %>%
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
+                    eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
+                    eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
+                    eval_log_cv = dplyr::if_else(log_cv <= 17.5, "adequate log cv", "non adequate log cv"),
+                    eval_cv = dplyr::if_else(coef_var < 20, "adequate cv", "non adequate cv")) %>%
+      dplyr::mutate(tag = dplyr::case_when(
+        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
+          eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "supress",
+        eval_df == "insufficient df"  ~ "review",
+        eval_cv ==  "adequate cv"  ~ "publish"
+      ))
+
+    # If the user misspells  the scheme, a message is returned
+  } else {
+    stop("scheme must be cepal or chile")
+  }
+
 
   return(evaluacion)
 

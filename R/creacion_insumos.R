@@ -168,6 +168,17 @@ calcular_n <- function(data, dominios, var = NULL) {
   }
 }
 
+# -----------------------------------------------------------------------
+
+unweighted_cases <- function(data, dominios, var) {
+  symbol_var <- rlang::parse_expr(var)
+
+  data %>%
+    dplyr::filter(!is.na(var)) %>%
+    dplyr::group_by(.dots = as.list(dominios)  ) %>%
+    dplyr::summarise(n = dplyr::n())
+}
+
 #-----------------------------------------------------------------------
 #' Calcula tamanio muestral para la funcion de totales poblacionales
 #'
@@ -555,8 +566,8 @@ return(final)
 #' create_mean(gastot_hd, zona+sexo,  disenio = dc)
 #' @export
 
-create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
-                       deff = F, rel_error = F) {
+create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F,
+                       rm.na = F, deff = F, rel_error = F, unweighted = F) {
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -648,7 +659,6 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
     #Calcular el tamanio muestral de cada grupo
     n <- calcular_n(disenio$variables, agrupacion) %>%
       dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
-
 
 
     #Calcular los grados de libertad de todos los cruces
@@ -761,6 +771,12 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   # add the ess if the user uses this parameter
   final <- get_ess(ess)
 
+  # add non weighted count if it is required
+  if (unweighted) {
+    final <- final %>%
+      dplyr::mutate(unweighted = n)
+  }
+
   if(!is.null(dominios) && !is.null(subpop)){
     final = final %>% dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
   }
@@ -791,7 +807,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 #' @export
 
 create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
-                           deff = F, rel_error = F) {
+                           deff = F, rel_error = F, unweighted = F) {
 
   # chequear_var_disenio(disenio$variables)
 
@@ -972,6 +988,12 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
       dplyr::mutate(relative_error = stats::qt(c(.975), df = gl) * coef_var)
   }
 
+  # add non weighted count if it is required
+  if (unweighted) {
+    final <- final %>%
+      dplyr::mutate(unweighted = n)
+  }
+
 
   if(!is.null(dominios) && !is.null(subpop)){
     final = final %>% dplyr::filter(!!rlang::parse_expr(subpop) == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
@@ -1007,7 +1029,7 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 #' @export
 
 create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
-                       deff = F, rel_error = F) {
+                       deff = F, rel_error = F,  unweighted = F) {
 
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -1206,6 +1228,9 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 
     }
 
+
+
+
   }
 
   ##################
@@ -1232,6 +1257,12 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   if (rel_error == T) {
     final <- final %>%
       dplyr::mutate(relative_error = stats::qt(c(.975), df = gl) * coef_var)
+  }
+
+  # add non weighted count if it is required
+  if (unweighted) {
+    final <- final %>%
+      dplyr::mutate(unweighted = n)
   }
 
 
@@ -1273,8 +1304,6 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 
 create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F,standard_eval = F,
                           rm.na = F, seed = 1234, rel_error = F, interval_type = "quantile") {
-
-
 
 
   # Ajustar nombre de variables del disenio muestral
@@ -1515,6 +1544,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
+
 create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F,
                                    ajuste_ene = F, rel_error = F ) {
 
@@ -1686,10 +1716,13 @@ if (deff == T) {
     dplyr::relocate(deff, .after = dplyr::last_col())
 }
 
+# rename column name for CV. It has to be coef_var cause the evaluation function
+final <- final %>%
+  dplyr::rename(coef_var = cv)
+
 # add relative error, if the user uses this parameter
 if (rel_error == T) {
   final <- final %>%
-    dplyr::rename(coef_var = cv) %>%
     dplyr::mutate(relative_error = stats::qt(c(.975), df = gl) * coef_var)
 }
 
@@ -1722,7 +1755,7 @@ return(final)
 #'
 
 create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
-                                 rel_error = F, log_cv = F, standard_eval = T){
+                                 rel_error = F, log_cv = F, unweighted = F, standard_eval = T){
 
 
   # Chequar que esten presentes las variables del disenio muestral. Si no se llaman varstrat y varunit, se
@@ -1811,6 +1844,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
     n <- calcular_n(disenio$variables, agrupacion) %>%
       dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
 
+
     #Calcular los grados de libertad de todos los cruces
     gl <- calcular_upm(disenio$variables, agrupacion) %>%
       dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
@@ -1828,6 +1862,19 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
                        by = agrupacion) %>%
       dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
                        by = agrupacion)
+
+    # Get unweighted counting if it is required by the user
+    if (unweighted) {
+      unweighted_cases <- calcular_n(disenio$variables, c(agrupacion, var_string) ) %>%
+        dplyr::mutate_at(dplyr::vars(agrupacion), as.character)  %>%
+        dplyr::filter(!!rlang::parse_expr(var_string) == 1 ) %>%
+        dplyr::rename(unweighted = n)
+
+      final <- final %>%
+        dplyr::left_join(unweighted_cases %>% dplyr::select(c(agrupacion, "unweighted" )),
+                         by = agrupacion)
+    }
+
 
     var_string = var
 
@@ -1881,6 +1928,11 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
     # Tamanio muestral
     n <- nrow(disenio$variables)
 
+    # get unweighted counting
+    unweighted_cases <- disenio$variables %>%
+      dplyr::filter(!!rlang::parse_expr(var_string) == 1 ) %>%
+      nrow()
+
     # Calcular grados de libertad
     varstrat <- length(unique(disenio$variables$varstrat))
     varunit <- length(unique(disenio$variables$varunit))
@@ -1897,7 +1949,10 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
     names(final)[2] <- "se"
 
 
+    if (unweighted) {
+      final <- dplyr::bind_cols(final, "unweighted" =  unweighted_cases)
 
+    }
 
     #Cambiar el nombre de la variable objetivo para que siempre sea igual
      final <- final %>%
@@ -1988,7 +2043,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #'
 
 create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
-                       rel_error = F, log_cv = F, standard_eval = F){
+                       rel_error = F, log_cv = F, unweighted = F, standard_eval = F){
 
   #  # Encapsular inputs para usarlos mas tarde
   if (standard_eval == F) {
@@ -2016,7 +2071,7 @@ create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, 
   }
 
   if(is.null(denominador)) {
-    final = create_prop_internal(var,  dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error, log_cv )
+    final = create_prop_internal(var,  dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted)
   }
   return(final)
 }
