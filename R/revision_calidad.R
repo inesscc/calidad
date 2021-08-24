@@ -47,7 +47,7 @@ quadratic <- function(p) {
 
 
 evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
-                          threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+                          threshold = list(df = 9, n = 60, cv_lower = 0.15, cv_upper = 0.3)) {
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
@@ -114,7 +114,7 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
                        eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
                        eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
                        eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
-                       eval_cv = dplyr::if_else(coef_var < 20, "adequate cv", "non adequate cv")) %>%
+                       eval_cv = dplyr::if_else(coef_var < 0.2, "adequate cv", "non adequate cv")) %>%
          dplyr::mutate(tag = dplyr::case_when(
            eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
              eval_unweighted == "insufficient cases" ~ "supress",
@@ -157,7 +157,7 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
 
 
 evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme = "chile",
-                         threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+                         threshold = list(df = 9, n = 60, cv_lower = 0.15, cv_upper = 0.3)) {
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
@@ -223,7 +223,7 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme =
                     eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
                     eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
                     eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
-                    eval_cv = dplyr::if_else(coef_var < 20, "adequate cv", "non adequate cv")) %>%
+                    eval_cv = dplyr::if_else(coef_var < 0.2, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
           eval_unweighted == "insufficient cases" ~ "supress",
@@ -273,7 +273,7 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme =
 
 
 evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
-                             threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+                             threshold = list(df = 9, n = 60, cv_lower = 0.15, cv_upper = 0.3)) {
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
@@ -343,7 +343,7 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, schem
                     eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
                     eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
                     eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
-                    eval_cv = dplyr::if_else(coef_var < 20, "adequate cv", "non adequate cv")) %>%
+                    eval_cv = dplyr::if_else(coef_var < 0.2, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
           eval_unweighted == "insufficient cases" ~ "supress",
@@ -390,7 +390,8 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, schem
 #' evaluate_median(create_median(gastot_hd, dominios = zona+sexo, disenio = dc))
 #' @export
 
-evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE, threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE,
+                            threshold = list(df = 9, n = 60, cv_lower = 0.15, cv_upper = 0.3)) {
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -476,7 +477,7 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE, thresh
 #' @export
 
 evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
-                          threshold = list(df = 9, n = 60, cv_lower = 15, cv_upper = 30)) {
+                          threshold = list(df = 9, n = 60, cv_lower = 0.15, cv_upper = 0.30)) {
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
@@ -558,7 +559,7 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
                     eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
                     eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
                     eval_log_cv = dplyr::if_else(log_cv <= 17.5, "adequate log cv", "non adequate log cv"),
-                    eval_cv = dplyr::if_else(coef_var < 20, "adequate cv", "non adequate cv")) %>%
+                    eval_cv = dplyr::if_else(coef_var < 0.20, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
           eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "supress",
