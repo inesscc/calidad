@@ -25,6 +25,19 @@ quadratic <- function(p) {
 }
 
 
+fooBar <- function(...) {
+  default_params <- list(a = 10, b = 20)
+  user_params <- list(...)
+  final_params <- default_params[!names(default_params) %in% names(user_params)  ]
+  params <- c(final_params, user_params)
+
+  return(params)
+}
+
+fooBar()
+
+
+
 
 #---------------------------------------------------------------------
 #' Evaluate the quality of mean estimations
@@ -47,7 +60,7 @@ quadratic <- function(p) {
 
 
 evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
-                          threshold = list(df = 9, n = 60, cv_lower = 0.15, cv_upper = 0.3)) {
+                          threshold = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3, ess = 140, cv_cepal = 0.2)) {
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
@@ -57,29 +70,33 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
         dplyr::filter(!!rlang::parse_expr(condicion))
     }
 
+
     # Chequear si existen valores NA en los insumos. Si hay NAs, se manda un warning al usuario
     suma_na <- tabulado %>%
       dplyr::mutate(contiene_na = dplyr::if_else(is.na(.data$n) | is.na(.data$gl) | is.na(.data$coef_var), 1, 0)) %>%
       dplyr::summarise(suma = sum(.data$contiene_na)) %>%
       dplyr::pull(.data$suma)
 
+
+
     # mandar un warning cuando se han exlcuido filas
     if (suma_na > 0) {
       warning(paste0("Se han excluido ", suma_na, " filas con NA en n, gl o cv"))
     }
+
     evaluacion <- tabulado %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
                     eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
                     eval_cv = dplyr::case_when(
-                      .data$coef_var <= threshold$cv_lower                                       ~ paste("cv <=", threshold$cv_lower) ,
-                      .data$coef_var > threshold$cv_lower & .data$coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
-                      .data$coef_var > threshold$cv_upper                                        ~ paste("cv >", threshold$cv_upper)
+                      .data$coef_var <= threshold$cv_lower_ine                                       ~ paste("cv <=", threshold$cv_lower_ine) ,
+                      .data$coef_var > threshold$cv_lower_ine & .data$coef_var <= threshold$cv_upper_ine ~ paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine),
+                      .data$coef_var > threshold$cv_upper_ine                                        ~ paste("cv >", threshold$cv_upper_ine)
                     ),
                     calidad = dplyr::case_when(
-                      eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper)      ~ "no fiable",
-                      eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)         ~ "fiable",
-                      eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"
+                      eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper_ine)      ~ "no fiable",
+                      eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower_ine)         ~ "fiable",
+                      eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine) ~ "poco fiable"
                     )
       )
 
@@ -111,10 +128,10 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
 
        evaluacion <- tabulado %>%
          dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
-                       eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
+                       eval_ess = dplyr::if_else(.data$ess >= threshold$ess, "sufficient ess", "insufficient ess"),
                        eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
-                       eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
-                       eval_cv = dplyr::if_else(coef_var < 0.2, "adequate cv", "non adequate cv")) %>%
+                       eval_df = dplyr::if_else(gl >= threshold$df, "sufficient df", "insufficient df"),
+                       eval_cv = dplyr::if_else(coef_var < threshold$cv_cepal, "adequate cv", "non adequate cv")) %>%
          dplyr::mutate(tag = dplyr::case_when(
            eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
              eval_unweighted == "insufficient cases" ~ "supress",
@@ -157,7 +174,7 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
 
 
 evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme = "chile",
-                         threshold = list(df = 9, n = 60, cv_lower = 0.15, cv_upper = 0.3)) {
+                         threshold = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3, ess = 140, cv_cepal = 0.2)) {
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
@@ -184,14 +201,14 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme =
     dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
                   eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    .data$coef_var <= threshold$cv_lower                                       ~ paste("cv <=", threshold$cv_lower) ,
-                    .data$coef_var > threshold$cv_lower & .data$coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
-                    .data$coef_var > threshold$cv_upper                                        ~ paste("cv >", threshold$cv_upper)
+                    .data$coef_var <= threshold$cv_lower_ine                                       ~ paste("cv <=", threshold$cv_lower_ine) ,
+                    .data$coef_var > threshold$cv_lower_ine & .data$coef_var <= threshold$cv_upper_ine ~ paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine),
+                    .data$coef_var > threshold$cv_upper_ine                                        ~ paste("cv >", threshold$cv_upper_ine)
                   ),
                   calidad = dplyr::case_when(
-                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper)      ~ "no fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)         ~ "fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper_ine)      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower_ine)         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine) ~ "poco fiable"
                   ))
 
   # Criterio general para la publicación del tabulado
@@ -219,11 +236,11 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme =
     }
 
     evaluacion <- tabulado %>%
-      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
-                    eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= threshold$ess, "sufficient ess", "insufficient ess"),
                     eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
-                    eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
-                    eval_cv = dplyr::if_else(coef_var < 0.2, "adequate cv", "non adequate cv")) %>%
+                    eval_df = dplyr::if_else(gl >= threshold$df, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::if_else(coef_var < threshold$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
           eval_unweighted == "insufficient cases" ~ "supress",
@@ -273,7 +290,7 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme =
 
 
 evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
-                             threshold = list(df = 9, n = 60, cv_lower = 0.15, cv_upper = 0.3)) {
+                             threshold = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3, ess = 140, cv_cepal = 0.2)) {
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
@@ -301,14 +318,14 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, schem
     dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
                   eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    .data$coef_var <= threshold$cv_lower                                       ~ paste("cv <=", threshold$cv_lower) ,
-                    .data$coef_var > threshold$cv_lower & .data$coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
-                    .data$coef_var > threshold$cv_upper                                        ~ paste("cv >", threshold$cv_upper)
+                    .data$coef_var <= threshold$cv_lower_ine                                       ~ paste("cv <=", threshold$cv_lower_ine) ,
+                    .data$coef_var > threshold$cv_lower_ine & .data$coef_var <= threshold$cv_upper_ine ~ paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine),
+                    .data$coef_var > threshold$cv_upper_ine                                        ~ paste("cv >", threshold$cv_upper_ine)
                   ),
                   calidad = dplyr::case_when(
-                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper)      ~ "no fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)         ~ "fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper_ine)      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower_ine)         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine) ~ "poco fiable"
                   ))
 
   # Criterio general para la publicación del tabulado
@@ -339,11 +356,11 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, schem
     }
 
     evaluacion <- tabulado %>%
-      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
-                    eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >=  threshold$n, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= threshold$ess, "sufficient ess", "insufficient ess"),
                     eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
-                    eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
-                    eval_cv = dplyr::if_else(coef_var < 0.2, "adequate cv", "non adequate cv")) %>%
+                    eval_df = dplyr::if_else(gl >= threshold$df, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::if_else(coef_var < threshold$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
           eval_unweighted == "insufficient cases" ~ "supress",
@@ -391,7 +408,13 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, schem
 #' @export
 
 evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE,
-                            threshold = list(df = 9, n = 60, cv_lower = 0.15, cv_upper = 0.3)) {
+                            threshold = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3, ess = 140, cv_cepal = 0.2)) {
+
+
+  # Default scheme is INE Chile
+  if (scheme == "chile") {
+
+
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -414,14 +437,14 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE,
     dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
                   eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    .data$coef_var <= threshold$cv_lower                                       ~ paste("cv <=", threshold$cv_lower) ,
-                    .data$coef_var > threshold$cv_lower & .data$coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
-                    .data$coef_var > threshold$cv_upper                                        ~ paste("cv >", threshold$cv_upper)
+                    .data$coef_var <= threshold$cv_lower_ine                                       ~ paste("cv <=", threshold$cv_lower_ine) ,
+                    .data$coef_var > threshold$cv_lower_ine & .data$coef_var <= threshold$cv_upper_ine ~ paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine),
+                    .data$coef_var > threshold$cv_upper_ine                                        ~ paste("cv >", threshold$cv_upper_ine)
                   ),
                   calidad = dplyr::case_when(
-                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper)      ~ "no fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)         ~ "fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper_ine)      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower_ine)         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine) ~ "poco fiable"
                   ))
 
 
@@ -440,6 +463,35 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE,
 
   }
 
+
+    # ESTANDAR CEPAL
+  } else if (scheme == "cepal") {
+
+    # Check that all the inputs are available
+    check_ess <- names(tabulado) %>%  stringr::str_detect(pattern = "ess") %>% sum()
+    check_unweighted <- names(tabulado) %>%  stringr::str_detect(pattern = "unweighted") %>% sum()
+
+    if (check_ess != 1 | check_unweighted != 1) {
+      stop("unweighted and ess must be used!")
+    }
+
+    evaluacion <- tabulado %>%
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= threshold$ess, "sufficient ess", "insufficient ess"),
+                    eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
+                    eval_df = dplyr::if_else(gl >= threshold$df, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::if_else(coef_var < threshold$cv_cepal, "adequate cv", "non adequate cv")) %>%
+      dplyr::mutate(tag = dplyr::case_when(
+        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
+          eval_unweighted == "insufficient cases" ~ "supress",
+        eval_df == "insufficient df"  ~ "review",
+        eval_cv ==  "adequate cv"  ~ "publish"
+      ))
+  } else {
+
+    stop("scheme must be cepal or chile")
+
+  }
 
   return(evaluacion)
 }
@@ -477,7 +529,7 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE,
 #' @export
 
 evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
-                          threshold = list(df = 9, n = 60, cv_lower = 0.15, cv_upper = 0.30)) {
+                          threshold = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3, ess = 140, cv_cepal = 0.2, log_cv = 17.5)) {
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
@@ -513,9 +565,9 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
                                            dplyr::if_else(.data$se <= .data$cuadratica,
                                                           "SE adecuado", "SE alto"), NA_character_),
                   eval_cv = dplyr::if_else(.data$objetivo < 1, NA_character_,
-                                           dplyr::case_when(coef_var <= threshold$cv_lower                           ~ paste("cv <=", threshold$cv_lower),
-                                                            coef_var > threshold$cv_lower & coef_var <= threshold$cv_upper ~ paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper),
-                                                            coef_var > 30                                            ~ paste("cv >", threshold$cv_upper)
+                                           dplyr::case_when(coef_var <= threshold$cv_lower_ine                           ~ paste("cv <=", threshold$cv_lower_ine),
+                                                            coef_var > threshold$cv_lower_ine & coef_var <= threshold$cv_upper_ine ~ paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine),
+                                                            coef_var > 30                                            ~ paste("cv >", threshold$cv_upper_ine)
                   )),
                   calidad = dplyr::case_when(
                     objetivo <1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente"                                                  ~ "no fiable",
@@ -523,9 +575,9 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
                     objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "<= a 0.5" & eval_se == "SE alto"      ~ "poco fiable",
                     objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "SE adecuado"   ~ "fiable",
                     objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "SE alto"       ~ "poco fiable",
-                    objetivo >= 1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper) ~ "no fiable",
-                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower)    ~ "fiable",
-                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower, "y", threshold$cv_upper) ~ "poco fiable"))
+                    objetivo >= 1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper_ine) ~ "no fiable",
+                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower_ine)    ~ "fiable",
+                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine) ~ "poco fiable"))
 
 
   # Criterio general para la publicación del tabulado
@@ -554,12 +606,12 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
     }
 
     evaluacion <- tabulado %>%
-      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
-                    eval_ess = dplyr::if_else(.data$ess >= 140, "sufficient ess", "insufficient ess"),
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= threshold$ess, "sufficient ess", "insufficient ess"),
                     eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
-                    eval_df = dplyr::if_else(gl >= 8, "sufficient df", "insufficient df"),
-                    eval_log_cv = dplyr::if_else(log_cv <= 17.5, "adequate log cv", "non adequate log cv"),
-                    eval_cv = dplyr::if_else(coef_var < 0.20, "adequate cv", "non adequate cv")) %>%
+                    eval_df = dplyr::if_else(gl >= threshold$df, "sufficient df", "insufficient df"),
+                    eval_log_cv = dplyr::if_else(log_cv <= threshold$log_cv, "adequate log cv", "non adequate log cv"),
+                    eval_cv = dplyr::if_else(coef_var < threshold$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
           eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "supress",

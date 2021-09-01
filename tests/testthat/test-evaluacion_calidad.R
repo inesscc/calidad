@@ -13,7 +13,8 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
                             weights = ~fact_cal)
 
 
-umbrales <- list(df = 9, n = 60, cv_lower = 5, cv_upper = 15)
+umbrales <- list( n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
+
 ###############
 # evaluate_mean
 ###############
