@@ -460,6 +460,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
   type <- get("interval_type", env)
 
+
   i <- 1
   # Mientras exista un siguiente, el while sigue operando
   while (itertools::hasNext(it)) {
@@ -487,7 +488,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
     acumulado[i, ] <- output %>%
       as.data.frame() %>%
-      dplyr::mutate(v = paste(x, collapse = "-"))
+      dplyr::mutate(v = paste(x, collapse = "."))
 
     i <- i + 1
 
@@ -496,7 +497,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
 
   final <- acumulado  %>%
-    tidyr::separate(into = doms, col = .data$X3 , sep = "-") %>%
+    tidyr::separate(into = doms, col = .data$X3 , sep = "\\.") %>%
     dplyr::rename(se = .data$X2,
                   V1 = .data$X1) %>%
     dplyr::relocate(.data$V1, .data$se, .after = dplyr::last_col())
@@ -1394,8 +1395,6 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
         stats::as.formula()
 
       #Generar la tabla con los calculos
-
-
       tabla <- calcular_medianas_internal(var_form, dominios_form, disenio)
 
       # Esto corre para subpop
@@ -1454,6 +1453,8 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
                        by = agrupacion) %>%
       dplyr::rename(!!rlang::parse_expr(var) := .data$V1)
+
+
 
     names(final)[grep(var,names(final))] = "median"
 

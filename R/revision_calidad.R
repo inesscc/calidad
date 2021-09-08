@@ -25,16 +25,6 @@ quadratic <- function(p) {
 }
 
 
-fooBar <- function(...) {
-  default_params <- list(a = 10, b = 20)
-  user_params <- list(...)
-  final_params <- default_params[!names(default_params) %in% names(user_params)  ]
-  params <- c(final_params, user_params)
-
-  return(params)
-}
-
-fooBar()
 
 
 
@@ -59,11 +49,24 @@ fooBar()
 #' @export
 
 
-evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
-                          threshold = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3, ess = 140, cv_cepal = 0.2)) {
+evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile", ...) {
+
+  # Defaults params for cepal and INE Chile
+  default_params_ine = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
+  default_params_cepal = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140)
+
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
+
+
+    # Combine defaults params with user inputs
+    user_params <- list(...)
+    final_params <- default_params_ine[!names(default_params_ine) %in% names(user_params)  ]
+    params <- c(final_params, user_params)
+
+
+
     #Aplicar la condición requerida por el usuario
     if (!is.null(condicion) ) {
       tabulado <- tabulado %>%
@@ -86,17 +89,17 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
 
     evaluacion <- tabulado %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
-      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
-                    eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "n suficiente", "n insuficiente"),
+                    eval_gl = dplyr::if_else(gl >= params$df, "gl suficiente", "gl insuficiente"),
                     eval_cv = dplyr::case_when(
-                      .data$coef_var <= threshold$cv_lower_ine                                       ~ paste("cv <=", threshold$cv_lower_ine) ,
-                      .data$coef_var > threshold$cv_lower_ine & .data$coef_var <= threshold$cv_upper_ine ~ paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine),
-                      .data$coef_var > threshold$cv_upper_ine                                        ~ paste("cv >", threshold$cv_upper_ine)
+                      .data$coef_var <= params$cv_lower_ine  &  .data$coef_var > 0                ~ paste("cv <=", params$cv_lower_ine) ,
+                      .data$coef_var > params$cv_lower_ine & .data$coef_var <= params$cv_upper_ine ~ paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine),
+                      .data$coef_var > params$cv_upper_ine                                        ~ paste("cv >", params$cv_upper_ine)
                     ),
                     calidad = dplyr::case_when(
-                      eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper_ine)      ~ "no fiable",
-                      eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower_ine)         ~ "fiable",
-                      eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine) ~ "poco fiable"
+                      eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", params$cv_upper_ine)      ~ "no fiable",
+                      eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", params$cv_lower_ine)         ~ "fiable",
+                      eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine) ~ "poco fiable"
                     )
       )
 
@@ -118,23 +121,27 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
   # ESTANDAR CEPAL
   } else if (scheme == "cepal") {
 
+    # Combine defaults params with user inputs
+    user_params <- list(...)
+    final_params <- default_params_cepal[!names(default_params_cepal) %in% names(user_params)  ]
+    params <- c(final_params, user_params)
+
+
+
     # Check that all the inputs are available
     check_ess <- names(tabulado) %>%  stringr::str_detect(pattern = "ess") %>% sum()
-    check_unweighted <- names(tabulado) %>%  stringr::str_detect(pattern = "unweighted") %>% sum()
 
-    if (check_ess != 1 | check_unweighted != 1) {
-      stop("unweighted and ess must be used!")
+    if (check_ess != 1) {
+      stop("ess must be used!")
     }
 
        evaluacion <- tabulado %>%
-         dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
-                       eval_ess = dplyr::if_else(.data$ess >= threshold$ess, "sufficient ess", "insufficient ess"),
-                       eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
-                       eval_df = dplyr::if_else(gl >= threshold$df, "sufficient df", "insufficient df"),
-                       eval_cv = dplyr::if_else(coef_var < threshold$cv_cepal, "adequate cv", "non adequate cv")) %>%
+         dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
+                       eval_ess = dplyr::if_else(.data$ess >= params$ess, "sufficient ess", "insufficient ess"),
+                       eval_df = dplyr::if_else(gl >= params$df, "sufficient df", "insufficient df"),
+                       eval_cv = dplyr::if_else(coef_var < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
          dplyr::mutate(tag = dplyr::case_when(
-           eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
-             eval_unweighted == "insufficient cases" ~ "supress",
+           eval_n == "insufficient sample size" | eval_ess == "insufficient ess"  ~ "supress",
            eval_df == "insufficient df"  ~ "review",
            eval_cv ==  "adequate cv"  ~ "publish"
          ))
@@ -173,11 +180,23 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
 #' @export
 
 
-evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme = "chile",
-                         threshold = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3, ess = 140, cv_cepal = 0.2)) {
+evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme = "chile", ...) {
+
+
+  # Defaults params for cepal and INE Chile
+  default_params_ine = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
+  default_params_cepal = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140)
+
+
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
+
+    # Combine defaults params with user inputs
+    user_params <- list(...)
+    final_params <- default_params_ine[!names(default_params_ine) %in% names(user_params)  ]
+    params <- c(final_params, user_params)
+
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -198,17 +217,17 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme =
 
 
   evaluacion <- tabulado %>%
-    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(gl >= params$df, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    .data$coef_var <= threshold$cv_lower_ine                                       ~ paste("cv <=", threshold$cv_lower_ine) ,
-                    .data$coef_var > threshold$cv_lower_ine & .data$coef_var <= threshold$cv_upper_ine ~ paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine),
-                    .data$coef_var > threshold$cv_upper_ine                                        ~ paste("cv >", threshold$cv_upper_ine)
+                    .data$coef_var <= params$cv_lower_ine     &  .data$coef_var > 0              ~ paste("cv <=", params$cv_lower_ine) ,
+                    .data$coef_var > params$cv_lower_ine & .data$coef_var <= params$cv_upper_ine ~ paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine),
+                    .data$coef_var > params$cv_upper_ine                                        ~ paste("cv >", params$cv_upper_ine)
                   ),
                   calidad = dplyr::case_when(
-                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper_ine)      ~ "no fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower_ine)         ~ "fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine) ~ "poco fiable"
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", params$cv_upper_ine)      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", params$cv_lower_ine)         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine) ~ "poco fiable"
                   ))
 
   # Criterio general para la publicación del tabulado
@@ -227,23 +246,27 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme =
 
   } else if (scheme == "cepal") {
 
+    # Combine defaults params with user inputs
+    user_params <- list(...)
+    final_params <- default_params_cepal[!names(default_params_cepal) %in% names(user_params)  ]
+    params <- c(final_params, user_params)
+
+
+
     # Check that all the inputs are available
     check_ess <- names(tabulado) %>%  stringr::str_detect(pattern = "ess") %>% sum()
-    check_unweighted <- names(tabulado) %>%  stringr::str_detect(pattern = "unweighted") %>% sum()
 
-    if (check_ess != 1 | check_unweighted != 1) {
-      stop("unweighted and ess must be used!")
+    if (check_ess != 1) {
+      stop("ess must be used!")
     }
 
     evaluacion <- tabulado %>%
-      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "sufficient sample size", "insufficient sample size"),
-                    eval_ess = dplyr::if_else(.data$ess >= threshold$ess, "sufficient ess", "insufficient ess"),
-                    eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
-                    eval_df = dplyr::if_else(gl >= threshold$df, "sufficient df", "insufficient df"),
-                    eval_cv = dplyr::if_else(coef_var < threshold$cv_cepal, "adequate cv", "non adequate cv")) %>%
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= params$ess, "sufficient ess", "insufficient ess"),
+                    eval_df = dplyr::if_else(gl >= params$df, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::if_else(coef_var < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
-        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
-          eval_unweighted == "insufficient cases" ~ "supress",
+        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" ~ "supress",
         eval_df == "insufficient df"  ~ "review",
         eval_cv ==  "adequate cv"  ~ "publish"
       ))
@@ -289,11 +312,22 @@ evaluate_tot <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme =
 #' @export
 
 
-evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
-                             threshold = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3, ess = 140, cv_cepal = 0.2)) {
+evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile", ...) {
+
+  # Defaults params for cepal and INE Chile
+  default_params_ine = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
+  default_params_cepal = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140)
+
+
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
+
+
+   # Combine defaults params with user inputs
+   user_params <- list(...)
+   final_params <- default_params_ine[!names(default_params_ine) %in% names(user_params)  ]
+   params <- c(final_params, user_params)
 
 
   #Aplicar la condición requerida por el usuario
@@ -315,17 +349,17 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, schem
 
 
   evaluacion <- tabulado %>%
-    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(gl >= params$df, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    .data$coef_var <= threshold$cv_lower_ine                                       ~ paste("cv <=", threshold$cv_lower_ine) ,
-                    .data$coef_var > threshold$cv_lower_ine & .data$coef_var <= threshold$cv_upper_ine ~ paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine),
-                    .data$coef_var > threshold$cv_upper_ine                                        ~ paste("cv >", threshold$cv_upper_ine)
+                    .data$coef_var <= params$cv_lower_ine   &  .data$coef_var > 0               ~ paste("cv <=", params$cv_lower_ine) ,
+                    .data$coef_var > params$cv_lower_ine & .data$coef_var <= params$cv_upper_ine ~ paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine),
+                    .data$coef_var > params$cv_upper_ine                                        ~ paste("cv >", params$cv_upper_ine)
                   ),
                   calidad = dplyr::case_when(
-                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper_ine)      ~ "no fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower_ine)         ~ "fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine) ~ "poco fiable"
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", params$cv_upper_ine)      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", params$cv_lower_ine)         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv ==  paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine) ~ "poco fiable"
                   ))
 
   # Criterio general para la publicación del tabulado
@@ -347,23 +381,27 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, schem
 
   } else if (scheme == "cepal") {
 
+    # Combine defaults params with user inputs
+    user_params <- list(...)
+    final_params <- default_params_cepal[!names(default_params_cepal) %in% names(user_params)  ]
+    params <- c(final_params, user_params)
+
+
     # Check that all the inputs are available
     check_ess <- names(tabulado) %>%  stringr::str_detect(pattern = "ess") %>% sum()
-    check_unweighted <- names(tabulado) %>%  stringr::str_detect(pattern = "unweighted") %>% sum()
 
-    if (check_ess != 1 | check_unweighted != 1) {
-      stop("unweighted and ess must be used!")
+    if (check_ess != 1) {
+      stop("ess must be used!")
     }
 
+
     evaluacion <- tabulado %>%
-      dplyr::mutate(eval_n = dplyr::if_else(.data$n >=  threshold$n, "sufficient sample size", "insufficient sample size"),
-                    eval_ess = dplyr::if_else(.data$ess >= threshold$ess, "sufficient ess", "insufficient ess"),
-                    eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
-                    eval_df = dplyr::if_else(gl >= threshold$df, "sufficient df", "insufficient df"),
-                    eval_cv = dplyr::if_else(coef_var < threshold$cv_cepal, "adequate cv", "non adequate cv")) %>%
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >=  params$n, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= params$ess, "sufficient ess", "insufficient ess"),
+                    eval_df = dplyr::if_else(gl >= params$df, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::if_else(coef_var < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
-        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
-          eval_unweighted == "insufficient cases" ~ "supress",
+        eval_n == "insufficient sample size" | eval_ess == "insufficient ess"  ~ "supress",
         eval_df == "insufficient df"  ~ "review",
         eval_cv ==  "adequate cv"  ~ "publish"
       ))
@@ -407,13 +445,21 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, schem
 #' evaluate_median(create_median(gastot_hd, dominios = zona+sexo, disenio = dc))
 #' @export
 
-evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE,
-                            threshold = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3, ess = 140, cv_cepal = 0.2)) {
+evaluate_median <- function(tabulado, condicion = NULL, scheme = "chile", publicar = FALSE, ...) {
+
+
+  # Defaults params for cepal and INE Chile
+  default_params_ine = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
+  default_params_cepal = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140)
 
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
 
+    # Combine defaults params with user inputs
+    user_params <- list(...)
+    final_params <- default_params_ine[!names(default_params_ine) %in% names(user_params)  ]
+    params <- c(final_params, user_params)
 
 
   #Aplicar la condición requerida por el usuario
@@ -434,17 +480,17 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE,
 
   evaluacion <- tabulado %>%
     dplyr::filter(!is.na(.data$n) & !is.na(.data$gl) & !is.na(.data$coef_var)) %>%
-    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(gl >= threshold$df, "gl suficiente", "gl insuficiente"),
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(gl >= params$df, "gl suficiente", "gl insuficiente"),
                   eval_cv = dplyr::case_when(
-                    .data$coef_var <= threshold$cv_lower_ine                                       ~ paste("cv <=", threshold$cv_lower_ine) ,
-                    .data$coef_var > threshold$cv_lower_ine & .data$coef_var <= threshold$cv_upper_ine ~ paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine),
-                    .data$coef_var > threshold$cv_upper_ine                                        ~ paste("cv >", threshold$cv_upper_ine)
+                    .data$coef_var <= params$cv_lower_ine   &  .data$coef_var > 0               ~ paste("cv <=", params$cv_lower_ine) ,
+                    .data$coef_var > params$cv_lower_ine & .data$coef_var <= params$cv_upper_ine ~ paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine),
+                    .data$coef_var > params$cv_upper_ine                                        ~ paste("cv >", params$cv_upper_ine)
                   ),
                   calidad = dplyr::case_when(
-                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper_ine)      ~ "no fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower_ine)         ~ "fiable",
-                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine) ~ "poco fiable"
+                    eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", params$cv_upper_ine)      ~ "no fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", params$cv_lower_ine)         ~ "fiable",
+                    eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine) ~ "poco fiable"
                   ))
 
 
@@ -467,6 +513,13 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE,
     # ESTANDAR CEPAL
   } else if (scheme == "cepal") {
 
+
+    # Combine defaults params with user inputs
+    user_params <- list(...)
+    final_params <- default_params_cepal[!names(default_params_cepal) %in% names(user_params)  ]
+    params <- c(final_params, user_params)
+
+
     # Check that all the inputs are available
     check_ess <- names(tabulado) %>%  stringr::str_detect(pattern = "ess") %>% sum()
     check_unweighted <- names(tabulado) %>%  stringr::str_detect(pattern = "unweighted") %>% sum()
@@ -476,14 +529,12 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE,
     }
 
     evaluacion <- tabulado %>%
-      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= 100, "sufficient sample size", "insufficient sample size"),
-                    eval_ess = dplyr::if_else(.data$ess >= threshold$ess, "sufficient ess", "insufficient ess"),
-                    eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
-                    eval_df = dplyr::if_else(gl >= threshold$df, "sufficient df", "insufficient df"),
-                    eval_cv = dplyr::if_else(coef_var < threshold$cv_cepal, "adequate cv", "non adequate cv")) %>%
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= params$ess, "sufficient ess", "insufficient ess"),
+                    eval_df = dplyr::if_else(gl >= params$df, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::if_else(coef_var < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
-        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
-          eval_unweighted == "insufficient cases" ~ "supress",
+        eval_n == "insufficient sample size" | eval_ess == "insufficient ess"  ~ "supress",
         eval_df == "insufficient df"  ~ "review",
         eval_cv ==  "adequate cv"  ~ "publish"
       ))
@@ -528,12 +579,21 @@ evaluate_median <- function(tabulado, condicion = NULL, publicar = FALSE,
 #'               dominios = zona+sexo, disenio = dc))
 #' @export
 
-evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile",
-                          threshold = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3, ess = 140, cv_cepal = 0.2, log_cv = 17.5)) {
+evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme = "chile", ...) {
+
+  # Defaults params for cepal and INE Chile
+  default_params_ine = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
+  default_params_cepal = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50, log_cv = 0.175)
+
 
   # Default scheme is INE Chile
   if (scheme == "chile") {
 
+
+    # Combine defaults params with user inputs
+    user_params <- list(...)
+    final_params <- default_params_ine[!names(default_params_ine) %in% names(user_params)  ]
+    params <- c(final_params, user_params)
 
   #Aplicar la condición requerida por el usuario
   if (!is.null(condicion) ) {
@@ -554,8 +614,8 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
 
 
   evaluacion <- tabulado %>%
-    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "n suficiente", "n insuficiente"),
-                  eval_gl = dplyr::if_else(.data$gl >= threshold$df, "gl suficiente", "gl insuficiente"),
+    dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "n suficiente", "n insuficiente"),
+                  eval_gl = dplyr::if_else(.data$gl >= params$df, "gl suficiente", "gl insuficiente"),
                   prop_est = dplyr::case_when(.data$objetivo <= 0.5                     ~ "<= a 0.5",
                                               .data$objetivo < 1 & .data$objetivo > 0.5 ~ "> a 0.5",
                                               .data$objetivo >= 1                        ~ ">= a 1"),
@@ -565,9 +625,9 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
                                            dplyr::if_else(.data$se <= .data$cuadratica,
                                                           "SE adecuado", "SE alto"), NA_character_),
                   eval_cv = dplyr::if_else(.data$objetivo < 1, NA_character_,
-                                           dplyr::case_when(coef_var <= threshold$cv_lower_ine                           ~ paste("cv <=", threshold$cv_lower_ine),
-                                                            coef_var > threshold$cv_lower_ine & coef_var <= threshold$cv_upper_ine ~ paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine),
-                                                            coef_var > 30                                            ~ paste("cv >", threshold$cv_upper_ine)
+                                           dplyr::case_when(coef_var <= params$cv_lower_ine                           ~ paste("cv <=", params$cv_lower_ine),
+                                                            coef_var > params$cv_lower_ine & coef_var <= params$cv_upper_ine ~ paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine),
+                                                            coef_var > 30                                            ~ paste("cv >", params$cv_upper_ine)
                   )),
                   calidad = dplyr::case_when(
                     objetivo <1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente"                                                  ~ "no fiable",
@@ -575,9 +635,9 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
                     objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "<= a 0.5" & eval_se == "SE alto"      ~ "poco fiable",
                     objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "SE adecuado"   ~ "fiable",
                     objetivo <1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & prop_est == "> a 0.5" & eval_se == "SE alto"       ~ "poco fiable",
-                    objetivo >= 1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", threshold$cv_upper_ine) ~ "no fiable",
-                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", threshold$cv_lower_ine)    ~ "fiable",
-                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", threshold$cv_lower_ine, "y", threshold$cv_upper_ine) ~ "poco fiable"))
+                    objetivo >= 1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente" | eval_cv == paste("cv >", params$cv_upper_ine) ~ "no fiable",
+                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv <=", params$cv_lower_ine)    ~ "fiable",
+                    objetivo >= 1 & eval_n == "n suficiente" & eval_gl == "gl suficiente" & eval_cv == paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine) ~ "poco fiable"))
 
 
   # Criterio general para la publicación del tabulado
@@ -596,6 +656,13 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
   # Cepal scheme
   } else if (scheme == "cepal") {
 
+    # Combine defaults params with user inputs
+    user_params <- list(...)
+    final_params <- default_params_cepal[!names(default_params_cepal) %in% names(user_params)  ]
+    params <- c(final_params, user_params)
+
+
+
     # Check that all the inputs are available
     check_ess <- names(tabulado) %>%  stringr::str_detect(pattern = "ess") %>% sum()
     check_unweighted <- names(tabulado) %>%  stringr::str_detect(pattern = "unweighted") %>% sum()
@@ -606,12 +673,12 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
     }
 
     evaluacion <- tabulado %>%
-      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= threshold$n, "sufficient sample size", "insufficient sample size"),
-                    eval_ess = dplyr::if_else(.data$ess >= threshold$ess, "sufficient ess", "insufficient ess"),
-                    eval_unweighted = dplyr::if_else(.data$unweighted >= 50, "sufficient cases", "insufficient cases"),
-                    eval_df = dplyr::if_else(gl >= threshold$df, "sufficient df", "insufficient df"),
-                    eval_log_cv = dplyr::if_else(log_cv <= threshold$log_cv, "adequate log cv", "non adequate log cv"),
-                    eval_cv = dplyr::if_else(coef_var < threshold$cv_cepal, "adequate cv", "non adequate cv")) %>%
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
+                    eval_ess = dplyr::if_else(.data$ess >= params$ess, "sufficient ess", "insufficient ess"),
+                    eval_unweighted = dplyr::if_else(.data$unweighted >= params$unweighted , "sufficient cases", "insufficient cases"),
+                    eval_df = dplyr::if_else(gl >= params$df, "sufficient df", "insufficient df"),
+                    eval_log_cv = dplyr::if_else(log_cv <= params$log_cv, "adequate log cv", "non adequate log cv"),
+                    eval_cv = dplyr::if_else(coef_var < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
           eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "supress",

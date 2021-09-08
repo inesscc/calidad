@@ -13,23 +13,23 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
                             weights = ~fact_cal)
 
 
-umbrales <- list( n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
 
 ###############
 # evaluate_mean
 ###############
 
 
-test <-  create_mean(gastot_hd, dominios =  zona+sexo+ecivil, disenio = dc)
-eval <-  evaluate_mean(test, publicar = T, threshold = umbrales)
+test <-  create_mean(gastot_hd, dominios =  zona+sexo+ecivil, disenio = dc, deff = T, ess = T)
+eval <-  evaluate_mean(test, publicar = T, scheme = "chile", df = 10)
+#eval <-  evaluate_mean(test, publicar = T, scheme = "cepal", df = 2)
 
 test_that("tramo porcentaje correcto", {
-  expect_equal(eval$eval_cv[1], "cv <= 5")
+  expect_equal(eval$eval_cv[2], "cv <= 0.15")
 })
 
 # Probar parámetro de cepal
 test <-  create_mean(gastot_hd, dominios =  zona+sexo+ecivil, disenio = dc, ess = T, deff = T, unweighted = T)
-eval <-  evaluate_mean(test, publicar = T, threshold = umbrales, scheme = "cepal")
+eval <-  evaluate_mean(test, publicar = T,  scheme = "cepal")
 
 test <-  create_mean(gastot_hd, disenio = dc, ess = T, deff = T, unweighted = T)
 eval <-  evaluate_mean(test, scheme = "cepal")
@@ -39,7 +39,7 @@ eval <-  evaluate_mean(test, scheme = "cepal")
 ###############
 
 test <-  create_tot(ocupado, dominios =  zona+sexo+ecivil, disenio = dc)
-eval <-  evaluate_tot(test, publicar = T, threshold = umbrales)
+eval <-  evaluate_tot(test, publicar = T)
 
 test_that("Insumo media zona", {
   expect_equal(eval$eval_n[1], "n insuficiente")
@@ -47,14 +47,14 @@ test_that("Insumo media zona", {
 
 
 # Probar parámetro de cepal
-test <-  create_tot(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, ess = T, deff = T)
-expect_error(evaluate_tot(test, publicar = T, threshold = umbrales, scheme = "cepal"), "unweighted and ess must be used!")
+test <-  create_tot(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, deff = T)
+expect_error(evaluate_tot(test, publicar = T, scheme = "cepal"), "ess must be used!")
 
 ##################
 # evaluate_tot_con
 ##################
-test <- create_tot_con(gastot_hd, dominios =zona, disenio = dc, deff = T, ess = T, unweighted = T)
-eval <- evaluate_tot_con(test, scheme = "cepal")
+test <- create_tot_con(gastot_hd, dominios =zona, disenio = dc, deff = T, ess = T)
+eval <- evaluate_tot_con(test, scheme = "cepal", n = 200, ess = 200)
 
 
 
@@ -66,22 +66,21 @@ eval <- evaluate_tot_con(test, scheme = "cepal")
 test <-  create_prop(mujer, denominador = hombre, disenio = dc_ene, rel_error = T)
 eval <- evaluate_prop(test)
 
-
-
-test <-  create_prop(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, deff = F)
-eval <-  evaluate_prop(test, publicar = T, threshold = umbrales)
-eval <-  evaluate_prop(test, publicar = T)
+test <-  create_prop(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, deff = T,  log_cv = T, unweighted = T, ess = T )
+eval <-  evaluate_prop(test, publicar = T, scheme = "cepal", n = 100)
 
 # Probar parámetro de cepal
 test <-  create_prop(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, deff = T, ess = T, log_cv = T, unweighted = T )
-eval <-  evaluate_prop(test, publicar = T, threshold = umbrales, scheme = "cepal")
-
+eval <-  evaluate_prop(test, publicar = T, scheme = "cepal")
+View(eval)
 
 
 ###############
 # evaluate_median
 ###############
 
-test <-  create_median(gastot_hd, dominios =  zona+sexo, disenio = dc, replicas = 15, seed = 1234)
-eval <-  evaluate_median(test, publicar = T)
+test <-  create_median(gastot_hd, dominios =  zona+sexo+ecivil, disenio = dc, replicas = 15, seed = 1234)
+
+
+
 
