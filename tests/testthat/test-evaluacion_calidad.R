@@ -50,6 +50,16 @@ test_that("Insumo media zona", {
 test <-  create_tot(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, deff = T)
 expect_error(evaluate_tot(test, publicar = T, scheme = "cepal"), "ess must be used!")
 
+###############
+# evaluate_size
+###############
+
+test <-  create_size(ocupado, dominios =  zona+sexo, disenio = dc, unweighted = T, deff = T, ess = T)
+eval <-  evaluate_size(test, scheme = "cepal", df = 122, ess = 31)
+
+
+
+
 ##################
 # evaluate_tot_con
 ##################
@@ -80,6 +90,18 @@ View(eval)
 ###############
 
 test <-  create_median(gastot_hd, dominios =  zona+sexo+ecivil, disenio = dc, replicas = 15, seed = 1234)
+
+
+
+test <-  create_prop(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, deff = T, ess = T, log_cv = T, unweighted = T )
+eval <-  evaluate_prop(test, publicar = T, scheme = "cepal", df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50, log_cv = 0.175)
+
+test <-  create_mean(gastot_hd, dominios =  zona+sexo+ecivil, disenio = dc, deff = T, ess = T, unweighted = T )
+eval <-  evaluate_mean(test, publicar = T, scheme = "cepal", df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50)
+
+test <-  create_tot(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, deff = T, ess = T, unweighted = T )
+eval <-  evaluate_tot(test, publicar = T, scheme = "cepal", df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50, log_cv = 0.175)
+
 
 
 

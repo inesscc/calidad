@@ -11,7 +11,12 @@ create_prop(
   subpop = NULL,
   disenio,
   ci = F,
+  deff = F,
+  ess = F,
   ajuste_ene = F,
+  rel_error = F,
+  log_cv = F,
+  unweighted = F,
   standard_eval = F
 )
 }

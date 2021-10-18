@@ -10,8 +10,13 @@ create_mean(
   subpop = NULL,
   disenio,
   ci = F,
+  ess = F,
   ajuste_ene = F,
-  standard_eval = F
+  standard_eval = F,
+  rm.na = F,
+  deff = F,
+  rel_error = F,
+  unweighted = F
 )
 }
 \arguments{

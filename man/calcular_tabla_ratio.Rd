@@ -4,7 +4,13 @@
 \alias{calcular_tabla_ratio}
 \title{Calcula ratio a partir de cierta agregacion}
 \usage{
-calcular_tabla_ratio(var, denominador, dominios = NULL, disenio)
+calcular_tabla_ratio(
+  var,
+  denominador,
+  dominios = NULL,
+  disenio,
+  env = parent.frame()
+)
 }
 \arguments{
 \item{var}{variable objetivo o numerador del ratio a calcular, dentro de un \code{dataframe}. Debe anteponerse ~}

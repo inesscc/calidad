@@ -11,7 +11,10 @@ create_ratio_internal(
   subpop = NULL,
   disenio,
   ci = F,
-  ajuste_ene = F
+  deff = F,
+  ess = F,
+  ajuste_ene = F,
+  rel_error = F
 )
 }
 \arguments{

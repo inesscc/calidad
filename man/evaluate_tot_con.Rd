@@ -4,7 +4,13 @@
 \alias{evaluate_tot_con}
 \title{Evaluate the quality of sum estimations for continuous variables}
 \usage{
-evaluate_tot_con(tabulado, condicion = NULL, publicar = FALSE)
+evaluate_tot_con(
+  tabulado,
+  condicion = NULL,
+  publicar = FALSE,
+  scheme = "chile",
+  ...
+)
 }
 \arguments{
 \item{tabulado}{\code{dataframe} created by \code{crear_insumos_tot_con}}

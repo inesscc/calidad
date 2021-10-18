@@ -4,7 +4,13 @@
 \alias{evaluate_prop}
 \title{Evaluate the quality of ratio estimations}
 \usage{
-evaluate_prop(tabulado, condicion = NULL, publicar = FALSE)
+evaluate_prop(
+  tabulado,
+  condicion = NULL,
+  publicar = FALSE,
+  scheme = "chile",
+  ...
+)
 }
 \arguments{
 \item{tabulado}{\code{dataframe} created by \code{create_ratio}}

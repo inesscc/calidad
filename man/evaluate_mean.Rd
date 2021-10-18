@@ -4,7 +4,13 @@
 \alias{evaluate_mean}
 \title{Evaluate the quality of mean estimations}
 \usage{
-evaluate_mean(tabulado, condicion = NULL, publicar = FALSE)
+evaluate_mean(
+  tabulado,
+  condicion = NULL,
+  publicar = FALSE,
+  scheme = "chile",
+  ...
+)
 }
 \arguments{
 \item{tabulado}{\code{dataframe} created by \code{crear_insumos_media}}
@@ -19,7 +25,7 @@ must be added. If it is TRUE, the function adds a new column to the \code{datafr
 containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 }
 \description{
-\code{evaluar_calidad_media} evauates the quality of mean estimation using the
+\code{evaluate_mean} evauates the quality of mean estimation using the
 methodology created by INE Chile, which considers sample size, degrees of freedom and
 coeficient of variation.
 }

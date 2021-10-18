@@ -4,7 +4,13 @@
 \alias{evaluate_median}
 \title{Evaluate the quality of median estimations}
 \usage{
-evaluate_median(tabulado, condicion = NULL, publicar = FALSE)
+evaluate_median(
+  tabulado,
+  condicion = NULL,
+  scheme = "chile",
+  publicar = FALSE,
+  ...
+)
 }
 \arguments{
 \item{tabulado}{\code{dataframe} created by \code{create_median}}
