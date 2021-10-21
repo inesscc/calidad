@@ -22,6 +22,7 @@
 #' tabla_html(tabla)
 #' @export
 
+
 tabla_html <- function(tabla) {
 
   tabla %>%
@@ -53,8 +54,6 @@ tabla_html <- function(tabla) {
     kableExtra::kable_paper("hover") %>%
     kableExtra::row_spec(0, bold = TRUE, color = "black")
 }
-
-
 
 
 

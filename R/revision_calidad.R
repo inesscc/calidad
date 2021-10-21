@@ -799,7 +799,7 @@ evaluate_prop <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
                   eval_cv = dplyr::if_else(.data$objetivo < 1, NA_character_,
                                            dplyr::case_when(coef_var <= params$cv_lower_ine                           ~ paste("cv <=", params$cv_lower_ine),
                                                             coef_var > params$cv_lower_ine & coef_var <= params$cv_upper_ine ~ paste("cv entre", params$cv_lower_ine, "y", params$cv_upper_ine),
-                                                            coef_var > 30                                            ~ paste("cv >", params$cv_upper_ine)
+                                                            coef_var > 0.3                                            ~ paste("cv >", params$cv_upper_ine)
                   )),
                   calidad = dplyr::case_when(
                     objetivo <1 & eval_n == "n insuficiente" | eval_gl == "gl insuficiente"                                                  ~ "no fiable",
