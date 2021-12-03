@@ -91,3 +91,32 @@
 #'
 "enusc"
 
+
+#' Encuesta de Caracterización Socioeconómica Nacional 2020 - CASEN en Pandemia 2020
+#'
+#' Datos de CASEN para el año 2020 Contiene solo algunas variables.
+#'
+#' @docType data
+#'
+#' @format dataframe compuesto por 185.437 observaciones y 6 variables
+#' \describe{
+#'  \item{folio}{identificador del hogar}
+#'  \item{sexo}{sexo: 1 = hombre; 2 = mujer}
+#'  \item{edad}{edad}
+#'  \item{activ}{Condición de actividad económica}
+#'  \item{ing_aut_hog}{Ingreso autónomo del hogar}
+#'  \item{pobreza}{pobreza por ingresos: 1 = pobres extremos, 2 = pobres no extremos, 3 = no pobres}
+#'  \item{expr}{factor de expansión regional}
+#'  \item{estrato}{estrato de muestro}
+#'  \item{cod_upm}{unidad primaria de muestreo}
+#'  }
+#' @source \url{http://observatorio.ministeriodesarrollosocial.gob.cl/encuesta-casen-en-pandemia-2020}
+#'
+#' @examples
+#' data(casen)
+#'
+"casen"
+
+
+
+
