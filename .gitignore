@@ -6,6 +6,6 @@ README.Rmd
 doc
 Meta
 .pdf
-data/
+#data/
 administrativo/
 .xlsx
