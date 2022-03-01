@@ -40,6 +40,29 @@ quadratic <- function(p) {
 #' @param publicar \code{boolean} indicating if the evaluation of the complete table
 #' must be added. If it is TRUE, the function adds a new column to the \code{dataframe}
 #' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @param scheme string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "cepal" to use the CEPAL protocol
+#' @param ... the list of cepal parameters. The complete list of parameters is
+#'
+#' 1. General Parameters
+#'
+#' \itemize{
+#'   \item \code{df} degrees of freedom. default: 9
+#'   \item \code{n} sample size. default ine scheme is 60. default cepal scheme: 100
+#' }
+#'
+#' 2. INE parameters
+#' \itemize{
+#'   \item \code{cv_lower_ine} lower limit for cv. default: 0.15
+#'   \item \code{cv_upper_ine} upper limit for cv. default: 0.3
+#' }
+#'
+#' 3. CEPAL parameters
+#' \itemize{
+#'   \item \code{cv_cepal} limit for cv. default: 0.2
+#'   \item \code{ess} efective sample size. default: 140
+#'   \item \code{unweighted} unweighted count. default: 50
+#' }
+#'
 #' @return \code{dataframe} with all the columns included in the input table, plus a new column
 #'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
@@ -170,6 +193,30 @@ evaluate_mean <- function(tabulado, condicion = NULL, publicar = FALSE, scheme =
 #' @param publicar \code{boolean} indicating if the evaluation of the complete table
 #' must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}
 #' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @param scheme string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "cepal" to use the CEPAL protocol
+#'
+#' @param ... the list of cepal parameters. The complete list of parameters is
+#'
+#' 1. General Parameters
+#'
+#' \itemize{
+#'   \item \code{df} degrees of freedom. default: 9
+#'   \item \code{n} sample size. default ine scheme is 60. default cepal scheme: 100
+#' }
+#'
+#' 2. INE parameters
+#' \itemize{
+#'   \item \code{cv_lower_ine} lower limit for cv. default: 0.15
+#'   \item \code{cv_upper_ine} upper limit for cv. default: 0.3
+#' }
+#'
+#' 3. CEPAL parameters
+#' \itemize{
+#'   \item \code{cv_cepal} limit for cv. default: 0.2
+#'   \item \code{ess} efective sample size. default: 140
+#'   \item \code{unweighted} unweighted count. default: 50
+#' }
+#'
 #' @return \code{dataframe} with all the columns included in the input table, plus a new column
 #'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
@@ -430,6 +477,7 @@ evaluate_tot_con <- function(tabulado, condicion = NULL, publicar = FALSE, schem
 #' @param publicar \code{boolean} indicating if the evaluation of the complete table
 #' must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}
 #' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @param scheme string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "cepal" to use the CEPAL protocol
 #' @param ... the list of cepal parameters. The complete list of parameters is
 #'
 #' 1. General Parameters
@@ -602,6 +650,28 @@ evaluate_size <- function(tabulado, condicion = NULL, publicar = FALSE,  scheme 
 #' @param publicar \code{boolean} indicating if the evaluation of the complete table
 #' must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}
 #' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @param scheme string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "cepal" to use the CEPAL protocol
+#' @param ... the list of cepal parameters. The complete list of parameters is
+#'
+#' 1. General Parameters
+#'
+#' \itemize{
+#'   \item \code{df} degrees of freedom. default: 9
+#'   \item \code{n} sample size. default ine scheme is 60. default cepal scheme: 100
+#' }
+#'
+#' 2. INE parameters
+#' \itemize{
+#'   \item \code{cv_lower_ine} lower limit for cv. default: 0.15
+#'   \item \code{cv_upper_ine} upper limit for cv. default: 0.3
+#' }
+#'
+#' 3. CEPAL parameters
+#' \itemize{
+#'   \item \code{cv_cepal} limit for cv. default: 0.2
+#'   \item \code{ess} efective sample size. default: 140
+#'   \item \code{unweighted} unweighted count. default: 50
+#' }
 #' @return \code{dataframe} with all the columns included in the input table, plus a new column
 #'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'
@@ -737,6 +807,28 @@ evaluate_median <- function(tabulado, condicion = NULL, scheme = "chile", public
 #' @param publicar \code{boolean} indicating if the evaluation of the complete table
 #' must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}
 #' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
+#' @param scheme string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "cepal" to use the CEPAL protocol
+#' @param ... the list of cepal parameters. The complete list of parameters is
+#'
+#' 1. General Parameters
+#'
+#' \itemize{
+#'   \item \code{df} degrees of freedom. default: 9
+#'   \item \code{n} sample size. default ine scheme is 60. default cepal scheme: 100
+#' }
+#'
+#' 2. INE parameters
+#' \itemize{
+#'   \item \code{cv_lower_ine} lower limit for cv. default: 0.15
+#'   \item \code{cv_upper_ine} upper limit for cv. default: 0.3
+#' }
+#'
+#' 3. CEPAL parameters
+#' \itemize{
+#'   \item \code{cv_cepal} limit for cv. default: 0.2
+#'   \item \code{ess} efective sample size. default: 140
+#'   \item \code{unweighted} unweighted count. default: 50
+#' }
 #' @return \code{dataframe} with all the columns included in the input table, plus a new column
 #'containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
 #'

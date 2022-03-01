@@ -33,7 +33,17 @@ create_prop(
 
 \item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
 
+\item{deff}{\code{boolean} Design effect}
+
+\item{ess}{\code{boolean} Effective sample size}
+
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
+
+\item{rel_error}{\code{boolean} Relative error}
+
+\item{log_cv}{\code{boolean} logarithmic coefficient of variation}
+
+\item{unweighted}{\code{boolean} Add non weighted count if it is required}
 
 \item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
 }
@@ -50,14 +60,14 @@ library(survey)
 library(dplyr)
 epf <- mutate(epf_personas, gasto_zona1 = if_else(zona == 1, gastot_hd, 0))
 dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
+options(survey.lonely.psu = "certainty")
+
 create_prop(var = gasto_zona1, denominador = gastot_hd, disenio =  dc)
 
 enusc <- filter(enusc, Kish == 1)
-enusc <- mutate(enusc, muj_insg_taxi = if_else(P9_4_1 \%in\% c(1,2) & rph_sexo == 2,1 ,0),
-             hom_insg_taxi = if_else(P9_4_1 \%in\% c(1,2) & rph_sexo == 1,1 ,0))
+
 dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 options(survey.lonely.psu = "certainty")
-create_prop(var = muj_insg_taxi, denominador = hom_insg_taxi, disenio = dc)
-
+create_prop(var = VP_DC, denominador = hom_insg_taxi, disenio = dc)
 
 }

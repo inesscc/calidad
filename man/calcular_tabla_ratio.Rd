@@ -20,6 +20,8 @@ calcular_tabla_ratio(
 \item{dominios}{dominios de estimacion separados por signo +. Debe anteponerse ~}
 
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
+
+\item{env}{\code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos}
 }
 \value{
 \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar

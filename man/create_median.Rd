@@ -35,6 +35,14 @@ create_median(
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
 
 \item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
+
+\item{rm.na}{\code{boolean} Remove NA if it is required}
+
+\item{seed}{numeric variable to get similar results, by default is set at 1234}
+
+\item{rel_error}{\code{boolean} Relative error}
+
+\item{interval_type}{string variable "quantile"}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

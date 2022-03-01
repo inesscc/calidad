@@ -14,6 +14,8 @@ calcular_tabla(var, dominios, disenio, media = T, env = parent.frame())
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 
 \item{media}{\code{boolean} indicating if the mean must be calculated}
+
+\item{env}{\code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos}
 }
 \value{
 \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar

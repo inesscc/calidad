@@ -36,7 +36,8 @@ Imports:
     digest,
     itertools,
     iterators,
-    tidyr
+    tidyr,
+    haven
 
 
 
