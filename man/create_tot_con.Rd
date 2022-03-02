@@ -30,9 +30,19 @@ create_tot_con(
 
 \item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
 
+\item{ess}{\code{boolean} Effective sample size}
+
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
 
 \item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
+
+\item{rm.na}{\code{boolean} Remove NA if it is required}
+
+\item{deff}{\code{boolean} Design effect}
+
+\item{rel_error}{\code{boolean} Relative error}
+
+\item{unweighted}{\code{boolean} Add non weighted count if it is required}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

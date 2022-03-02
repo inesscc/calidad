@@ -30,7 +30,17 @@ create_ratio_internal(
 
 \item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
 
+\item{deff}{\code{boolean} Design effect}
+
+\item{ess}{\code{boolean} Effective sample size}
+
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
+
+\item{rel_error}{\code{boolean} Relative error}
+
+\item{log_cv}{\code{boolean} logarithmic coefficient of variation}
+
+\item{unweighted}{\code{boolean} Add non weighted count if it is required}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

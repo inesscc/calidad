@@ -64,6 +64,7 @@ unificar_variables_factExp = function(disenio){
 #' @param dominios dominios de estimacion separados por signo +. Debe anteponerse ~
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @param media \code{boolean} indicating if the mean must be calculated
+#' @param env \code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos
 #' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
@@ -124,7 +125,7 @@ calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.fram
 #' @param denominador variable denominador del ratio a calcular, dentro de un \code{dataframe}. Debe anteponerse ~
 #' @param dominios dominios de estimacion separados por signo +. Debe anteponerse ~
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
-#'
+#' @param env \code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos
 #' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
@@ -559,6 +560,11 @@ return(final)
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' @param ess \code{boolean} Effective sample size
+#' @param rm.na \code{boolean} Remove NA if it is required
+#' @param deff \code{boolean} Design effect
+#' @param rel_error \code{boolean} Relative error
+#' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @import survey
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
@@ -800,6 +806,13 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#'
+#' @param deff \code{boolean} Design effect
+#' @param ess \code{boolean} Effective sample size
+#' @param rm.na \code{boolean} Remove NA if it is required
+#' @param rel_error \code{boolean} Relative error
+#'
+#' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
@@ -1021,6 +1034,13 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#'
+#' @param deff \code{boolean} Design effect
+#' @param ess \code{boolean} Effective sample size
+#' @param rm.na \code{boolean} Remove NA if it is required
+#' @param rel_error \code{boolean} Relative error
+#'
+#' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
@@ -1244,6 +1264,13 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#'
+#' @param deff \code{boolean} Design effect
+#' @param ess \code{boolean} Effective sample size
+#' @param rm.na \code{boolean} Remove NA if it is required
+#' @param rel_error \code{boolean} Relative error
+#'
+#' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #' @import tidyr
 #' @examples
@@ -1514,6 +1541,13 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#'
+#' @param deff \code{boolean} Design effect
+#' @param ess \code{boolean} Effective sample size
+#' @param rm.na \code{boolean} Remove NA if it is required
+#' @param rel_error \code{boolean} Relative error
+#'
+#' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #' @import tidyr
 #' @examples
@@ -1810,6 +1844,10 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' @param rm.na \code{boolean} Remove NA if it is required
+#' @param seed numeric variable to get similar results, by default is set at 1234
+#' @param rel_error \code{boolean} Relative error
+#' @param interval_type string variable "quantile"
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #' @import itertools
 #' @examples
@@ -1818,10 +1856,8 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
 #' create_median(gastot_hd, zona+sexo, disenio = dc)
 #' @export
 
-
 create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F,standard_eval = F,
                           rm.na = F, seed = 1234, rel_error = F, interval_type = "quantile") {
-
 
   # Ajustar nombre de variables del disenio muestral
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
@@ -2059,6 +2095,13 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 #' @param subpop integer dummy variable to filter the dataframe
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
+#' @param deff \code{boolean} Design effect
+#' @param ess \code{boolean} Effective sample size
+#' @param rel_error \code{boolean} Relative error
+#'
+#' @param log_cv \code{boolean} logarithmic coefficient of variation
+#'
+#' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
@@ -2268,6 +2311,13 @@ return(final)
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.
+#' @param deff \code{boolean} Design effect
+#' @param ess \code{boolean} Effective sample size
+#' @param rel_error \code{boolean} Relative error
+#'
+#' @param log_cv \code{boolean} logarithmic coefficient of variation
+#'
+#' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
@@ -2539,6 +2589,13 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' @param deff \code{boolean} Design effect
+#' @param ess \code{boolean} Effective sample size
+#' @param rel_error \code{boolean} Relative error
+#'
+#' @param log_cv \code{boolean} logarithmic coefficient of variation
+#'
+#' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
@@ -2546,15 +2603,15 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 #' library(dplyr)
 #' epf <- mutate(epf_personas, gasto_zona1 = if_else(zona == 1, gastot_hd, 0))
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
+#' options(survey.lonely.psu = "certainty")
+#'
 #' create_prop(var = gasto_zona1, denominador = gastot_hd, disenio =  dc)
 #'
 #' enusc <- filter(enusc, Kish == 1)
-#' enusc <- mutate(enusc, muj_insg_taxi = if_else(P9_4_1 %in% c(1,2) & rph_sexo == 2,1 ,0),
-#'              hom_insg_taxi = if_else(P9_4_1 %in% c(1,2) & rph_sexo == 1,1 ,0))
+#'
 #' dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 #' options(survey.lonely.psu = "certainty")
-#' create_prop(var = muj_insg_taxi, denominador = hom_insg_taxi, disenio = dc)
-#'
+#' create_prop(var = VP_DC, denominador = hom_insg_taxi, disenio = dc)
 #'
 #' @export
 #'

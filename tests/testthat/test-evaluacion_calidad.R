@@ -82,7 +82,7 @@ eval <-  evaluate_prop(test, publicar = T, scheme = "cepal", n = 100)
 # Probar parámetro de cepal
 test <-  create_prop(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, deff = T, ess = T, log_cv = T, unweighted = T )
 eval <-  evaluate_prop(test, publicar = T, scheme = "cepal")
-View(eval)
+#View(eval)
 
 
 ###############
@@ -90,8 +90,6 @@ View(eval)
 ###############
 
 test <-  create_median(gastot_hd, dominios =  zona+sexo+ecivil, disenio = dc, replicas = 15, seed = 1234)
-
-
 
 test <-  create_prop(ocupado, dominios =  zona+sexo+ecivil, disenio = dc, deff = T, ess = T, log_cv = T, unweighted = T )
 eval <-  evaluate_prop(test, publicar = T, scheme = "cepal", df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50, log_cv = 0.175)

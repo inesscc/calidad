@@ -20,6 +20,8 @@ evaluate_size(
 \item{publicar}{\code{boolean} indicating if the evaluation of the complete table
 must be added to the output. If it is TRUE, the function adds a new column to the \code{dataframe}}
 
+\item{scheme}{string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "cepal" to use the CEPAL protocol}
+
 \item{...}{the list of cepal parameters. The complete list of parameters is
 
 1. General Parameters
