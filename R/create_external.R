@@ -1313,7 +1313,19 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
 #' create_median(gastot_hd, zona+sexo, disenio = dc)
 #' @export
 
-create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F,standard_eval = F,
+# var <- "gastot_hd"
+# replicas = 10
+# disenio = dc
+# standard_eval <- F
+# seed = 1234
+# dominios <- "zona+sexo+ecivil"
+# standard_eval <- T
+# subpop <- NULL
+# rm.na = T
+# interval_type = "quantile"
+
+create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F
+                          ,standard_eval = F,
                           rm.na = F, seed = 1234, rel_error = F, interval_type = "quantile") {
 
   # Ajustar nombre de variables del disenio muestral
@@ -1321,10 +1333,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
-
-
-
-  if(standard_eval == F){
+  if (standard_eval == F) {
 
     var <- rlang::enexpr(var)
     var <- rlang::expr_name(var)
@@ -1428,9 +1437,9 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
     }
 
-    #Extraer nombres
+    #Extraer nombres. Se extrae todo lo que es distinto de median y se
     nombres <- names(tabla)
-    agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
+    agrupacion <- nombres[!nombres %in% c("median", "se")]
 
     #Calcular el tamanio muestral de cada grupo
     n <- calcular_n(disenio$variables, agrupacion) %>%
@@ -1445,7 +1454,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
     #Extrear el coeficiente de variacion
     #cv <- cv(tabla, design = disenio)
-    cv <- tabla$se / tabla$V1
+    cv <- tabla$se / tabla$median
 
     cv <- tabla %>%
       dplyr::select(agrupacion) %>%
@@ -1461,7 +1470,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
                        by = agrupacion) %>%
       dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
                        by = agrupacion) %>%
-      dplyr::rename(!!rlang::parse_expr(var) := .data$V1)
+      dplyr::rename(!!rlang::parse_expr(var) := .data$median)
 
 
 
@@ -1505,11 +1514,11 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     cv <- cv(tabla, design = disenio)
 
     # Armar tabla final
-    final <- data.frame(tabla )
+    final <- data.frame(tabla[[1]] )
 
     # Armar tabla completa con todos los insumos
     final <- dplyr::bind_cols(final, "gl" = gl , "n" = n, "coef_var" = cv[1])
-    names(final)[2] <- "se"
+    names(final)[stringr::str_detect(names(final), "se") ] <- "se"
 
     names(final)[grep("quantiles",names(final))] = "median"
 

@@ -409,7 +409,10 @@ get_deff <- function(var, design, survey_est) {
 #' @return \code{vector} que contiene la variable con los conglomerados.
 #' @import iterators
 
-
+# dominios <- dominios_form
+# type <- "quantile"
+# var <- var_form
+# sub = F
 
 calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = parent.frame()) {
 
@@ -454,9 +457,10 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
     combinaciones <- length(categorias[[1]]) * length(categorias[[2]]) * length(categorias[[3]], length(categorias[[4]], length(categorias[[5]])))
 
   }
-  # Crear una matriz para guardar resultados
-  acumulado <- data.frame(matrix(9999, ncol = 3, nrow = combinaciones))
 
+  # Crear una matriz para guardar resultados
+  acumulado <- data.frame(matrix(9999, ncol = 5, nrow = combinaciones))
+  names(acumulado) <- c("quantile",   "ci.2.5",  "ci.97.5",  "se.97.5", "category")
   type <- get("interval_type", env)
 
 
@@ -485,9 +489,9 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
     )
 
-    acumulado[i, ] <- output %>%
+    acumulado[i, ] <- output[[1]] %>%
       as.data.frame() %>%
-      dplyr::mutate(v = paste(x, collapse = "."))
+      dplyr::mutate(category = paste(x, collapse = "."))
 
     i <- i + 1
 
@@ -496,10 +500,17 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
 
   final <- acumulado  %>%
-    tidyr::separate(into = doms, col = .data$X3 , sep = "\\.") %>%
-    dplyr::rename(se = .data$X2,
-                  V1 = .data$X1) %>%
-    dplyr::relocate(.data$V1, .data$se, .after = dplyr::last_col())
+    dplyr::filter(!is.na(quantile) ) %>%
+    tidyr::separate(into = doms, col = .data$category , sep = "\\.") %>%
+    dplyr::rename(median = quantile) %>%
+    dplyr::select(-starts_with("ci."))
+
+  names(final) <- stringr::str_remove_all(names(final), "[[:digit:]]|\\.")
+
+  final <- final %>%
+    dplyr::relocate(median, se, .after = zona) %>%
+    dplyr::mutate_at(dplyr::vars(median, se), as.numeric)
+
 
   return(final)
 }

@@ -63,7 +63,7 @@ real <- survey::svyquantile(~gastot_hd,
             ties="discrete")
 
 test_that("mediana agregada sin subpop", {
-  expect_equal(real[[1]], test[[1]])
+  expect_equal(real[[1]][1], test[[1]])
 })
 
 
@@ -84,7 +84,7 @@ real <-  survey::svyby(~gastot_hd,
                    ci = T)
 
 test_that("mediana desagregada sin subpop", {
-  expect_equal(real$V1[1], test$median[1])
+  expect_equal(real$gastot_hd[1], test$median[1])
 })
 
 
@@ -111,7 +111,7 @@ real <- survey::svyquantile(~gastot_hd,
 
 
 test_that("mediana agregada con subpop", {
-  expect_equal(real[1], test$median[1])
+  expect_equal(real[[1]][1], test$quantile[1])
 })
 
 
@@ -132,11 +132,12 @@ real <-  survey::svyby(~gastot_hd,
                        ci = T)
 
 test_that("mediana desagregada con subpop", {
-  expect_equal(real$se[1], test$se[1])
+  expect_equal(real$se.gastot_hd[1], test$se[1])
 })
 
-# Probar con otro método
-test <-  create_median(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc, interval_type = "probability")
+# Probar con otro método para el coeficiente de variación
+test <-  create_median(gastot_hd, dominios = sexo+zona, subpop = ocupado,  replicas = 10, disenio = dc,
+                       interval_type = "mean")
 
 real <-  survey::svyby(~gastot_hd,
                        ~sexo+zona,
@@ -144,12 +145,12 @@ real <-  survey::svyby(~gastot_hd,
                        design = subset(dc_rep, ocupado == 1),
                        quantile = 0.5,
                        method="constant",
-                       interval.type = "probability",
+                       interval.type = "mean",
                        ties="discrete",
                        ci = T)
 
 test_that("mediana desagregada con subpop", {
-  expect_equal(real$se[1], test$se[1])
+  expect_equal(real$se.gastot_hd[1], test$se[1] )
 })
 
 
@@ -172,7 +173,7 @@ real <-  survey::svyby(~gastot_hd,
                        ci = T)
 
 test_that("se desagregado con subpop", {
-  expect_equal(real$se[1], test$se[1])
+  expect_equal(real$se.gastot_hd[1], test$se[1])
 })
 
 
