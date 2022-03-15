@@ -568,7 +568,7 @@ get_ess <- function(ess, env = parent.frame() ) {
 #'
 
 create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F,
-                                  ajuste_ene = F, rel_error = F ) {
+                                  ajuste_ene = F, rel_error = F, rm.na = F) {
 
   # Chequar que esten presentes las variables del disenio muestral. Si no se llaman varstrat y varunit, se
   #  detiene la ejecucion
@@ -576,6 +576,12 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
   disenio$variables$varunit <- disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat <- disenio$variables[[unificar_variables_estrato(disenio)]]
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
+
+
+  # Sacar los NA si el usuario lo requiere
+  if (rm.na == T) {
+    disenio <- disenio[!is.na(disenio$variables[[var]])]
+  }
 
 
   ### filtramos base de disenioo por los casos que tengan datos tanto del denominador como del numerador. para
@@ -784,7 +790,7 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
 #'
 
 create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
-                                 rel_error = F, log_cv = F, unweighted = F, standard_eval = T){
+                                 rel_error = F, log_cv = F, unweighted = F, rm.na = F){
 
 
   # Chequar que esten presentes las variables del disenio muestral. Si no se llaman varstrat y varunit, se
@@ -794,20 +800,25 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
-  if (standard_eval == F) {
-    #  # Encapsular inputs para usarlos mas tarde
-    var <- rlang::enexpr(var)
-    var <-  rlang::expr_name(var)
-    dominios <- rlang::enexpr(dominios)
-    if(!is.null(dominios)){
-      dominios <-  rlang::expr_name(dominios)
-    }
+  # if (standard_eval == F) {
+  #   #  # Encapsular inputs para usarlos mas tarde
+  #   var <- rlang::enexpr(var)
+  #   var <-  rlang::expr_name(var)
+  #   dominios <- rlang::enexpr(dominios)
+  #   if(!is.null(dominios)){
+  #     dominios <-  rlang::expr_name(dominios)
+  #   }
+  #
+  #   subpop <- rlang::enexpr(subpop)
+  #   if(!is.null(subpop)){
+  #     subpop <-  rlang::expr_name(subpop)
+  #   }
+  #
+  # }
 
-    subpop <- rlang::enexpr(subpop)
-    if(!is.null(subpop)){
-      subpop <-  rlang::expr_name(subpop)
-    }
-
+  # # Sacar los NA si el usuario lo requiere
+  if (rm.na == T) {
+    disenio <- disenio[!is.na(disenio$variables[[var]])]
   }
 
   #Convertir los inputs en formulas para adecuarlos a survey

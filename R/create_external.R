@@ -1582,7 +1582,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 #'
 
 create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
-                       rel_error = F, log_cv = F, unweighted = F, standard_eval = F){
+                       rel_error = F, log_cv = F, unweighted = F, standard_eval = F, rm.na = F){
 
   #  # Encapsular inputs para usarlos mas tarde
   if (standard_eval == F) {
@@ -1606,11 +1606,11 @@ create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, 
   }
 
   if(!is.null(denominador)){
-    final = create_ratio_internal(var,denominador, dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error )
+    final = create_ratio_internal(var,denominador, dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error, rm.na )
   }
 
   if(is.null(denominador)) {
-    final = create_prop_internal(var,  dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted)
+    final = create_prop_internal(var,  dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted, rm.na)
   }
   return(final)
 }
