@@ -1,5 +1,104 @@
 
+#-----------------------------------------------------------------------
+#' Une información de indicadores y genera tabla final
+#'
+#' Recibe los indicadores de calidad calculados previamente y los une en una tabla
+#' @param table objeto creado con survey
+#' @param domains listado de variables para desagregar
+#' @return dataframe con toda la información para estándar INE
 
+create_output <- function(table, domains, gl, n, cv) {
+  final <- table %>%
+    dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character) %>%
+    dplyr::left_join(gl %>% dplyr::select(c(domains, "df")),
+                     by = domains) %>%
+    dplyr::left_join(n %>% dplyr::select(c(domains, "n")),
+                     by = domains) %>%
+    dplyr::left_join(cv %>% dplyr::select(c(domains, "cv")),
+                     by = domains)
+
+  return(final)
+}
+
+
+
+#-----------------------------------------------------------------------
+#' Calcula el coeficiente de variación
+#'
+#' Recibe una tabla creada con survey y devuelve el coeficiente de variación para cada celda
+#' @param table objeto creado con survey
+#' @param design diseño complejo creado con survey
+#' @param domains listado de variables para desagregar
+#' @return dataframe con la información de cv
+
+get_cv <- function(table, design, domains) {
+
+  cv <- cv(table, design = design)
+
+  cv <- table %>%
+    dplyr::select(domains) %>%
+    dplyr::bind_cols(cv = cv) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
+
+  return(cv)
+}
+
+
+#-----------------------------------------------------------------------
+
+#' Cálcula los grados de libertad para cada estimación
+#'
+#' Recibe datos y los dominios. Devuelve un data frame con las upm, varstrat y gl para cada celda
+#' @param data dataframe
+#' @param domains dominios en formato string
+#' @return dataframe con grados de libertad
+
+
+get_df <- function(data, domains) {
+  gl <- calcular_upm(data, domains) %>%
+    dplyr::left_join(calcular_estrato(data, domains), by = domains) %>%
+    dplyr::mutate(df = .data$upm - varstrat) %>%
+    dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
+
+  return(gl)
+}
+
+
+
+#-----------------------------------------------------------------------
+
+#' Concatena los dominios y la subpoblación con signo +
+#'
+#' Recibe strings con dominios y subpoblación y devuelve un string concatenado con caracter +
+#'
+#' @param domains dominios en formato string
+#'
+#' @return listado de variables en formato string
+
+
+create_groupby_vars <- function(domains) {
+  #nombres <- names(tabla)
+  agrupacion <-  strsplit(domains, split = "\\+")[[1]] %>%
+    trimws(which = "both")
+  return(agrupacion)
+}
+
+
+#-----------------------------------------------------------------------
+
+#' Concatena los dominios y la subpoblación con signo +
+#'
+#' Recibe strings con dominios y subpoblación y devuelve un string concatenado con caracter +
+#'
+#' @param domains dominios en formato string
+#' @param subpop subpoblación ingresada por el usuario en formato string
+#'
+#' @return string concatenado de dominios y subpoblación
+
+concat_domains <- function(domains, subpop) {
+  dominios_form <-  paste(domains, subpop, sep = "+")
+  return(dominios_form)
+}
 
 
 
@@ -138,7 +237,7 @@ unificar_variables_factExp = function(disenio){
 #' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
-calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.frame()) {
+calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.frame(), subpop = NULL) {
 
 
   # El primer if es para dominios
@@ -179,6 +278,13 @@ calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.fram
                                  interval.type = "quantile",
                                  ties="discrete")
     }
+
+  }
+
+  # Sacar las filas con subpoblación 0. Esto se usa para los casos en los que se usa parámetro subpop
+  if (!is.null(subpop)) {
+    estimacion <- estimacion %>%
+      dplyr::filter(!!rlang::parse_expr(get("subpop", env)) == 1)
 
   }
 
@@ -226,17 +332,22 @@ calcular_n <- function(data, dominios, var = NULL) {
 
   # Esto es para el caso de proporcion
   if (is.null(var)) {
-    data %>%
+    sample_n <- data %>%
       dplyr::group_by(.dots = as.list(dominios)  ) %>%
       dplyr::summarise(n = dplyr::n())
     # Este es el caso de nivel
   } else {
     symbol_var <- rlang::parse_expr(var)
-    data %>%
+    sample_n <-  data %>%
       dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
       dplyr::group_by(.dots = as.list(dominios)) %>%
       dplyr::summarise(n = sum(!!symbol_var))
   }
+  sample_n <- sample_n  %>%
+    dplyr::mutate_at(.vars = dplyr::vars(dominios), .funs = as.character)
+
+  return(sample_n)
+
 }
 
 # -----------------------------------------------------------------------

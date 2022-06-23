@@ -39,6 +39,24 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
 
+  # if(standard_eval == F){
+  #
+  #   var <- rlang::enexpr(var)
+  #   var <- rlang::expr_name(var)
+  #
+  #   dominios <- rlang::enexpr(dominios)
+  #   if(!is.null(dominios)){
+  #     dominios <- rlang::expr_name(dominios)
+  #   }
+  #
+  #   subpop <- rlang::enexpr(subpop)
+  #   if(!is.null(subpop)){
+  #     subpop <- rlang::expr_name(subpop)
+  #   }
+  #
+  # }
+
+
   # Sacar los NA si el usuario lo requiere
   if (rm.na == T) {
     disenio <- disenio[!is.na(disenio$variables[[var]])]
@@ -68,63 +86,56 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
       # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
       check_subpop_var(subpop, disenio)
 
+      # Concatenar dominios y subpoblación
+      dominios_subpop <- concat_domains(dominios, subpop)
 
-      return(es_prop)
-
-      dominios_form <-   paste(dominios, subpop, sep = "+")
-      dominios_form <- paste0("~", dominios_form) %>%
-        stats::as.formula()
+      # Dominios y subpoblación en formato
+      dominios_form <- convert_to_formula(dominios_subpop)
 
       #Generar la tabla con los calculos
-      tabla <- calcular_tabla(var_form, dominios_form, disenio) %>%
-        dplyr::filter(!!rlang::parse_expr(subpop) == 1)
+      tabla <- calcular_tabla(var_form, dominios_form, disenio, subpop = subpop)
+
+
     }
 
-    #Extraer nombres
-    nombres <- names(tabla)
-    #agrupacion <-  nombres[ -c((length(nombres) - 2),  (length(nombres) - 1), length(nombres)) ]
-
-    agrupacion <-  strsplit(dominios, split = "\\+")[[1]] %>%
-      trimws(which = "both")
-
-
+    # Crear listado de variables que se usan para el cálculo
+    agrupacion <- create_groupby_vars(dominios)
 
     #Calcular el tamanio muestral de cada grupo
-    n <- calcular_n(disenio$variables, agrupacion) %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
-
+    n <- calcular_n(disenio$variables, agrupacion)
 
     #Calcular los grados de libertad de todos los cruces
-    gl <- calcular_upm(disenio$variables, agrupacion) %>%
-      dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
-      dplyr::mutate(gl = .data$upm - varstrat) %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
+    gl <- get_df(disenio$variables, agrupacion)
 
 
     #Extrear el coeficiente de variacion
-    cv <- cv(tabla, design = disenio)
+    cv <- get_cv(tabla, disenio, agrupacion)
 
-    cv <- tabla %>%
-      dplyr::select(agrupacion) %>%
-      dplyr::bind_cols(coef_var = cv) %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
-
-    #Unir toda la informacion. Se hace con join para asegurar que no existan problemas en la union
-    final <- tabla %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character) %>%
-      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl")),
-                       by = agrupacion) %>%
-      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n")),
-                       by = agrupacion) %>%
-      dplyr::left_join(cv %>% dplyr::select(c(agrupacion, "coef_var")),
-                       by = agrupacion)
-
+    #Unir toda la informacion en una tabla final
+    final <- create_output(tabla, agrupacion,  gl, n, cv)
 
     # Ajustar nombres de la tabla, para que tengan un formato estándar. Se deja el deff al final
-    names(final) <- names(final) %>%
-      stringr::str_replace(pattern = paste0("DEff.", var), "deff") %>%
-      stringr::str_replace(pattern =  var, "mean")
+    # names(final) <- names(final) %>%
+    #   tolower() %>%
+    #   stringr::str_replace(pattern =  var, "stat") %>%
+    #   stringr::str_remove(pattern =  "\\.stat"  )
+    #
+    # final <- final %>%
+    #   dplyr::relocate(deff, .after = last_col())
 
+    standarize_columns <- function(data, var) {
+      names(data) <- names(data) %>%
+        tolower() %>%
+        stringr::str_replace(pattern =  var, "stat") %>%
+        stringr::str_remove(pattern =  "\\.stat"  )
+
+      data <- data %>%
+        dplyr::relocate(deff, .after = last_col())
+
+      return(data)
+    }
+
+    return(standarize_columns(final, var ))
 
 
     # Se calculan los intervalos de confianza solo si el usuario lo requiere
@@ -149,10 +160,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 
       if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
 
-      # Aqui se filtra el disenio
-      # subpop <- rlang::expr_text(rlang::enexpr(subpop))
-      # filtro <-  paste(subpop, "== 1")
-      # disenio <- subset(disenio, !!rlang::parse_expr(filtro))
+
 
       disenio <- disenio[disenio$variables[[subpop]] == 1]
     }
