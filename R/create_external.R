@@ -33,57 +33,31 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F,
                        rm.na = F, deff = F, rel_error = F, unweighted = F) {
 
+  # Homologar nombres de variables  del diseño
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
-
-  if(standard_eval == F){
-
-    var <- rlang::enexpr(var)
-    var <- rlang::expr_name(var)
-
-    dominios <- rlang::enexpr(dominios)
-    if(!is.null(dominios)){
-      dominios <- rlang::expr_name(dominios)
-    }
-
-    subpop <- rlang::enexpr(subpop)
-    if(!is.null(subpop)){
-      subpop <- rlang::expr_name(subpop)
-    }
-
-  }
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == T) {
     disenio <- disenio[!is.na(disenio$variables[[var]])]
   }
 
-  # Chequear que la variable no sea character
-  if (is.character(disenio$variables[[var]]) == T) stop("You are using a character vector!")
-
-  #Chequear que la variable sea dummy. Si es una dummy, aparece un warning
-  es_prop <- disenio$variables %>%
-    dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0 | is.na(!!rlang::parse_expr(var)),
-                                           1, 0))
-
-  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("Parece que tu variable es de proporcion!")
-
+  # Chequear que la variable objetivo cumpla con ciertas condiciones
+  check_input_var(var, disenio)
 
   #Convertir los inputs en formulas para adecuarlos a survey
-  var_form <- paste0("~",var) %>%
-    stats::as.formula()
+  var_form <- convert_to_formula(var)
+
 
   # ESTO CORRESPONDE AL CASO CON DESAGREGACIoN
   if (!is.null(dominios[[1]])) {
 
-
     # Esto corre para el caso en el que NO hay subpop
     if (is.null(subpop)) {
 
-      dominios_form <- paste0("~", dominios) %>%
-        stats::as.formula()
+      dominios_form <- convert_to_formula(dominios)
 
       #Generar la tabla con los calculos
       tabla <- calcular_tabla(var_form, dominios_form, disenio)
@@ -91,16 +65,11 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
 
+      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
+      check_subpop_var(subpop, disenio)
 
 
-      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecucion
-      es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
-
-      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
-
-      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
-
+      return(es_prop)
 
       dominios_form <-   paste(dominios, subpop, sep = "+")
       dominios_form <- paste0("~", dominios_form) %>%

@@ -1,6 +1,78 @@
 
 
 
+
+
+#-----------------------------------------------------------------------
+
+#' Convierte un string en una fórmula
+#'
+#' Recibe un string y lo convierte en un formato de fórmula
+#'
+#' @param var sting con el nombre de la variable
+#'
+#' @return variable en formato fórmula
+
+
+convert_to_formula <- function(var) {
+  var_form <- paste0("~",var) %>%
+    stats::as.formula()
+  return(var_form)
+
+}
+
+
+#-----------------------------------------------------------------------
+
+#' Evalúa algunos requisitos básicos de la variable de subpop
+#'
+#' Evalúa si la variable es dummy
+#'
+#' @param var sting con el nombre de la variable
+#' @param var disenio complejo
+#'
+#' @return warning or stop
+
+
+check_subpop_var <- function(subpop, disenio) {
+  es_prop <- disenio$variables %>%
+    dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+
+  if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
+
+  if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
+}
+
+
+#-----------------------------------------------------------------------
+
+#' Evalúa algunos requisitos básicos de la variable objetivo
+#'
+#' Evalúa si la variable es caracter y si es una variable de proporción en caso de que la estimación sea de media
+#'
+#' @param var sting con el nombre de la variable
+#' @param var disenio complejo
+#'
+#' @return warning or stop
+
+
+
+check_input_var <- function(var, disenio) {
+
+  # Chequear que la variable no sea character
+  if (is.character(disenio$variables[[var]]) == T) stop("You are using a character vector!")
+
+  #Chequear que la variable sea dummy. Si es una dummy, aparece un warning
+  es_prop <- disenio$variables %>%
+    dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0 | is.na(!!rlang::parse_expr(var)),
+                                           1, 0))
+
+  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("It seems yor are using a proportion variable!")
+
+}
+
+
+
 #-----------------------------------------------------------------------
 
 #' Homologa nombre de variable que hace referencia a los conglomerados, con el objetivo de evitar posible errores.
