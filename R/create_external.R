@@ -47,108 +47,70 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   check_input_var(var, disenio)
   check_subpop_var(subpop, disenio)
 
+  # Filtrar diseño, si el usuario agrega el parámetro subpop
+  disenio <- filter_design(disenio, subpop)
+
   #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- convert_to_formula(var)
 
-
-  # ESTO CORRESPONDE AL CASO CON DESAGREGACIoN
+  # ESTO CORRESPONDE AL CASO CON DESAGREGACION
   if (!is.null(dominios[[1]])) {
 
-    # Esto corre para el caso en el que NO hay subpop
-    if (is.null(subpop)) {
-
+      # Convertir en formula para survey
       dominios_form <- convert_to_formula(dominios)
 
       #Generar la tabla con los calculos
       tabla <- calcular_tabla(var_form, dominios_form, disenio)
 
-      # Esto corre para subpop
-    } else if (!is.null(subpop)) { # caso que tiene subpop
+      # Crear listado de variables que se usan para el cálculo
+      agrupacion <- create_groupby_vars(dominios)
 
-      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecución
-      check_subpop_var(subpop, disenio)
+      #Calcular el tamanio muestral de cada grupo
+      n <- calcular_n(disenio$variables, agrupacion)
 
-      # Concatenar dominios y subpoblación
-      dominios_subpop <- concat_domains(dominios, subpop)
-
-      # Dominios y subpoblación en formato
-      dominios_form <- convert_to_formula(dominios_subpop)
-
-      #Generar la tabla con los calculos
-      tabla <- calcular_tabla(var_form, dominios_form, disenio, subpop = subpop)
+      #Calcular los grados de libertad de todos los cruces
+      gl <- get_df(disenio$variables, agrupacion)
 
 
-    }
+      #Extrear el coeficiente de variacion
+      cv <- get_cv(tabla, disenio, agrupacion)
 
-    # Crear listado de variables que se usan para el cálculo
-    agrupacion <- create_groupby_vars(dominios)
-
-    #Calcular el tamanio muestral de cada grupo
-    n <- calcular_n(disenio$variables, agrupacion)
-
-    #Calcular los grados de libertad de todos los cruces
-    gl <- get_df(disenio$variables, agrupacion)
-
-
-    #Extrear el coeficiente de variacion
-    cv <- get_cv(tabla, disenio, agrupacion)
-
-    #Unir toda la informacion en una tabla final
-    final <- create_output(tabla, agrupacion,  gl, n, cv)
-
-    # Ordenar las columnas y estandarizar los nombres de las variables
-    final <- standardize_columns(final, var )
-
-
-    # Se calculan los intervalos de confianza solo si el usuario lo requiere
-    if (ci == T) {
-      #var_string = var
-      final <- calcular_ic(final, tipo = "media_agregado", ajuste_ene = ajuste_ene)
-    }
+      #Unir toda la informacion en una tabla final
+      final <- create_output(tabla, agrupacion,  gl, n, cv)
 
     # ESTO CORRESPONDE AL CASO SIN DESAGREGACIoN
   } else {
 
-    # Si el usuario ingresa subpoblacion, se filtra la base de datos para la subpoblacion de referencia
-    if (!is.null(subpop)) {
-
-      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
-      check_subpop_var(subpop, disenio)
-      disenio <- disenio[disenio$variables[[subpop]] == 1]
-    }
-
-
-    dominios_form = dominios
-
     #Generar la tabla con los calculos
+    dominios_form <- convert_to_formula(dominios)
     tabla <- calcular_tabla(var_form, dominios_form, disenio)
-    return(tabla)
+
+    # Crear listado de variables que se usan para el cálculo
+    agrupacion <- create_groupby_vars(dominios)
 
     # Tamanio muestral
-    n <- nrow(disenio$variables)
+    n <- calcular_n(disenio$variables, agrupacion)
 
     # Calcular grados de libertad
-    varstrat <- length(unique(disenio$variables$varstrat))
-    varunit <- length(unique(disenio$variables$varunit))
-    gl <- varunit - varstrat
+    gl <- get_df(disenio$variables, agrupacion)
 
     # Calcular coeficiente de variacion
-    cv <- cv(tabla, design = disenio)
+    cv <- get_cv(tabla, design = disenio, agrupacion)
 
-    # Armar tabla final
-    final <- data.frame(tabla)
+    final <- create_output(tabla, agrupacion,  gl, n, cv)
 
-    # Armar tabla completa con todos los insumos
-    final <- dplyr::bind_cols(final, "gl" = gl , "n" = n, "coef_var" = cv[1])
-    names(final)[2] <- "se"
-
-    # Se calcular el intervalo de confianza solo si el usuario lo pide
-    if (ci == T) {
-      ##   var_string = var
-      final <- calcular_ic(data = final, tipo = "media_agregado",  ajuste_ene = ajuste_ene)
-    }
   }
 
+  # Ordenar las columnas y estandarizar los nombres de las variables
+  final <- standardize_columns(final, var )
+  return(final)
+
+  # Se calculan los intervalos de confianza solo si el usuario lo requiere
+  if (ci == T) {
+    final <- calcular_ic(final, tipo = "media_agregado", ajuste_ene = ajuste_ene)
+  }
+
+  return(final)
 
   # Reacomodar columnas en caso de que sea necesario
   if (deff == T) {

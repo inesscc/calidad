@@ -1,5 +1,15 @@
 
 #-----------------------------------------------------------------------
+filter_design <- function(disenio, subpop) {
+  if (!is.null(subpop)) {
+    disenio <- disenio[disenio$variables[[subpop]] == 1]
+  }
+  return(disenio)
+}
+
+
+
+#-----------------------------------------------------------------------
 #' Ordena nombre de columnas y estandariza el orden
 #'
 #' Recibe la tabla en estado bruto y la ordena
@@ -12,7 +22,8 @@ standardize_columns <- function(data, var) {
   names(data) <- names(data) %>%
     tolower() %>%
     stringr::str_replace(pattern =  var, "stat") %>%
-    stringr::str_remove(pattern =  "\\.stat"  )
+    stringr::str_remove(pattern =  "\\.stat"  ) %>%
+    stringr::str_replace(pattern =  "mean", "stat")
 
   data <- data %>%
     dplyr::relocate(deff, .after = last_col())
@@ -30,14 +41,26 @@ standardize_columns <- function(data, var) {
 #' @return dataframe con toda la información para estándar INE
 
 create_output <- function(table, domains, gl, n, cv) {
-  final <- table %>%
-    dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character) %>%
-    dplyr::left_join(gl %>% dplyr::select(c(domains, "df")),
-                     by = domains) %>%
-    dplyr::left_join(n %>% dplyr::select(c(domains, "n")),
-                     by = domains) %>%
-    dplyr::left_join(cv %>% dplyr::select(c(domains, "cv")),
-                     by = domains)
+
+  # tabla con desagregación
+  if (nrow(data.frame(table)) > 1 ) {
+    final <- table %>%
+      dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character) %>%
+      dplyr::left_join(gl %>% dplyr::select(c(domains, "df")),
+                       by = domains) %>%
+      dplyr::left_join(n %>% dplyr::select(c(domains, "n")),
+                       by = domains) %>%
+      dplyr::left_join(cv %>% dplyr::select(c(domains, "cv")),
+                       by = domains)
+
+  } else {
+    final <- data.frame(table)
+
+    final <- dplyr::bind_cols(final, "df" = gl , "n" = n, "cv" = cv[1])
+    names(final)[2] <- "se"
+    return(final)
+
+  }
 
   return(final)
 }
@@ -55,12 +78,17 @@ create_output <- function(table, domains, gl, n, cv) {
 
 get_cv <- function(table, design, domains) {
 
-  cv <- cv(table, design = design)
+  if (!is.null(domains)) {
+    cv <- cv(table, design = design)
 
-  cv <- table %>%
-    dplyr::select(domains) %>%
-    dplyr::bind_cols(cv = cv) %>%
-    dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
+    cv <- table %>%
+      dplyr::select(domains) %>%
+      dplyr::bind_cols(cv = cv) %>%
+      dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
+
+  } else {
+    cv <- cv(table, design = design)
+  }
 
   return(cv)
 }
@@ -77,11 +105,19 @@ get_cv <- function(table, design, domains) {
 
 
 get_df <- function(data, domains) {
-  gl <- calcular_upm(data, domains) %>%
-    dplyr::left_join(calcular_estrato(data, domains), by = domains) %>%
-    dplyr::mutate(df = .data$upm - varstrat) %>%
-    dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
 
+  if (!is.null(domains)) {
+    gl <- calcular_upm(data, domains) %>%
+      dplyr::left_join(calcular_estrato(data, domains), by = domains) %>%
+      dplyr::mutate(df = .data$upm - varstrat) %>%
+      dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
+
+  } else {
+    varstrat <- length(unique(data$varstrat))
+    varunit <- length(unique(data$varunit))
+    gl <- varunit - varstrat
+
+  }
   return(gl)
 }
 
@@ -99,9 +135,13 @@ get_df <- function(data, domains) {
 
 
 create_groupby_vars <- function(domains) {
-  #nombres <- names(tabla)
-  agrupacion <-  strsplit(domains, split = "\\+")[[1]] %>%
-    trimws(which = "both")
+  if (!is.null(domains)) {
+    agrupacion <-  strsplit(domains, split = "\\+")[[1]] %>%
+      trimws(which = "both")
+  } else {
+    agrupacion <- NULL
+  }
+
   return(agrupacion)
 }
 
@@ -136,8 +176,13 @@ concat_domains <- function(domains, subpop) {
 
 
 convert_to_formula <- function(var) {
-  var_form <- paste0("~",var) %>%
-    stats::as.formula()
+  if (!is.null(var)) {
+    var_form <- paste0("~",var) %>%
+      stats::as.formula()
+
+  } else {
+   var_form <- NULL
+  }
   return(var_form)
 
 }
@@ -263,7 +308,7 @@ unificar_variables_factExp = function(disenio){
 #' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
-calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.frame(), subpop = NULL) {
+calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.frame()) {
 
 
   # El primer if es para dominios
@@ -304,13 +349,6 @@ calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.fram
                                  interval.type = "quantile",
                                  ties="discrete")
     }
-
-  }
-
-  # Sacar las filas con subpoblación 0. Esto se usa para los casos en los que se usa parámetro subpop
-  if (!is.null(subpop)) {
-    estimacion <- estimacion %>%
-      dplyr::filter(!!rlang::parse_expr(get("subpop", env)) == 1)
 
   }
 
