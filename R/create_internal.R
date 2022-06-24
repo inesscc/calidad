@@ -593,28 +593,23 @@ calcular_gl_total <- function(variables, datos) {
 #'
 
 
-calcular_ic <-  function(data, env = parent.frame(), tipo = "resto", ajuste_ene) {
+calcular_ic <-  function(data,  ajuste_ene) {
 
-  est <- switch(tipo, "resto" =  get("var", env),
-                "media_agregado" = "stat",
-                "prop_agregado" = "objetivo",
-                "total_agregado" = "total",
-                "mediana_agregado" = "median")
 
   # Se calculan los intervalos de la manera tradicional en la generalidad de los casos
   if (ajuste_ene == F) {
 
     final <- data %>%
       dplyr::mutate(t = stats::qt(c(.975), df = df),
-                    li = !!rlang::parse_expr(est) - .data$se*t,
-                    ls = !!rlang::parse_expr(est) + .data$se*t)
+                    li = .data$stat - .data$se*t,
+                    ls = .data$stat + .data$se*t)
     # Estos corresponde al ajuste de la ENE: el t se fija en 2
   } else if (ajuste_ene == T) {
 
     final <- data %>%
       dplyr::mutate(t = 2,
-                    li = !!rlang::parse_expr(est) - .data$se*t,
-                    ls = !!rlang::parse_expr(est) + .data$se*t)
+                    li = .data$stat - .data$se*t,
+                    ls = .data$stat + .data$se*t)
   }
 
   return(final)

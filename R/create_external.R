@@ -53,76 +53,43 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- convert_to_formula(var)
 
-  # ESTO CORRESPONDE AL CASO CON DESAGREGACION
-  if (!is.null(dominios[[1]])) {
 
-      # Convertir en formula para survey
-      dominios_form <- convert_to_formula(dominios)
+  # Convertir en formula para survey
+  dominios_form <- convert_to_formula(dominios)
 
-      #Generar la tabla con los calculos
-      tabla <- calcular_tabla(var_form, dominios_form, disenio)
+  #Generar la tabla con los calculos
+  tabla <- calcular_tabla(var_form, dominios_form, disenio)
 
-      # Crear listado de variables que se usan para el cálculo
-      agrupacion <- create_groupby_vars(dominios)
+  # Crear listado de variables que se usan para el cálculo
+  agrupacion <- create_groupby_vars(dominios)
 
-      #Calcular el tamanio muestral de cada grupo
-      n <- calcular_n(disenio$variables, agrupacion)
+  #Calcular el tamanio muestral de cada grupo
+  n <- calcular_n(disenio$variables, agrupacion)
 
-      #Calcular los grados de libertad de todos los cruces
-      gl <- get_df(disenio$variables, agrupacion)
+  #Calcular los grados de libertad de todos los cruces
+  gl <- get_df(disenio$variables, agrupacion)
 
+  #Extrear el coeficiente de variacion
+  cv <- get_cv(tabla, disenio, agrupacion)
 
-      #Extrear el coeficiente de variacion
-      cv <- get_cv(tabla, disenio, agrupacion)
-
-      #Unir toda la informacion en una tabla final
-      final <- create_output(tabla, agrupacion,  gl, n, cv)
-
-    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIoN
-  } else {
-
-    #Generar la tabla con los calculos
-    dominios_form <- convert_to_formula(dominios)
-    tabla <- calcular_tabla(var_form, dominios_form, disenio)
-
-    # Crear listado de variables que se usan para el cálculo
-    agrupacion <- create_groupby_vars(dominios)
-
-    # Tamanio muestral
-    n <- calcular_n(disenio$variables, agrupacion)
-
-    # Calcular grados de libertad
-    gl <- get_df(disenio$variables, agrupacion)
-
-    # Calcular coeficiente de variacion
-    cv <- get_cv(tabla, design = disenio, agrupacion)
-
-    final <- create_output(tabla, agrupacion,  gl, n, cv)
-
-  }
+  #Unir toda la informacion en una tabla final
+  final <- create_output(tabla, agrupacion,  gl, n, cv)
 
   # Ordenar las columnas y estandarizar los nombres de las variables
   final <- standardize_columns(final, var )
-  return(final)
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
   if (ci == T) {
-    final <- calcular_ic(final, tipo = "media_agregado", ajuste_ene = ajuste_ene)
+    final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
   }
 
-  return(final)
-
-  # Reacomodar columnas en caso de que sea necesario
-  if (deff == T) {
-    final <- final %>%
-      dplyr::relocate(deff, .after = dplyr::last_col())
-  }
 
   # add relative error, if the user uses this parameter
   if (rel_error == T) {
     final <- final %>%
-      dplyr::mutate(relative_error = stats::qt(c(.975), df = gl) * coef_var)
+      dplyr::mutate(relative_error = stats::qt(c(.975), df = df) * cv)
   }
+
 
   # add the ess if the user uses this parameter
   final <- get_ess(ess)
@@ -133,9 +100,6 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
       dplyr::mutate(unweighted = n)
   }
 
-  if(!is.null(dominios) && !is.null(subpop)){
-    final = final %>% dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
-  }
   return(final)
 }
 
