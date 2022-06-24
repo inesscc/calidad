@@ -33,10 +33,9 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F,
                        rm.na = F, deff = F, rel_error = F, unweighted = F) {
 
+
   # Homologar nombres de variables  del diseño
-  disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
-  disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
-  disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
+  disenio <- standardize_design_variables(disenio)
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == T) {
@@ -47,12 +46,14 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   check_input_var(var, disenio)
   check_subpop_var(subpop, disenio)
 
+  # Lanzar warning del error estándar cuando no se usa el diseño
+  se_message(disenio)
+
   # Filtrar diseño, si el usuario agrega el parámetro subpop
   disenio <- filter_design(disenio, subpop)
 
   #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- convert_to_formula(var)
-
 
   # Convertir en formula para survey
   dominios_form <- convert_to_formula(dominios)
@@ -60,14 +61,16 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   #Generar la tabla con los calculos
   tabla <- calcular_tabla(var_form, dominios_form, disenio)
 
+
   # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(dominios)
 
   #Calcular el tamanio muestral de cada grupo
   n <- calcular_n(disenio$variables, agrupacion)
 
+
   #Calcular los grados de libertad de todos los cruces
-  gl <- get_df(disenio$variables, agrupacion)
+  gl <- get_df(disenio, agrupacion)
 
   #Extrear el coeficiente de variacion
   cv <- get_cv(tabla, disenio, agrupacion)
@@ -78,18 +81,17 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   # Ordenar las columnas y estandarizar los nombres de las variables
   final <- standardize_columns(final, var )
 
+
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
   if (ci == T) {
     final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
   }
-
 
   # add relative error, if the user uses this parameter
   if (rel_error == T) {
     final <- final %>%
       dplyr::mutate(relative_error = stats::qt(c(.975), df = df) * cv)
   }
-
 
   # add the ess if the user uses this parameter
   final <- get_ess(ess)

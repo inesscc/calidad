@@ -15,6 +15,19 @@ dc <- survey::svydesign(ids = ~varunit,
                         strata = ~varstrat,
                         weights = ~fe)
 
+
+dc_sin_varunit <- survey::svydesign(ids = ~1,
+                        data = epf_personas %>%
+                          dplyr::group_by(folio) %>%
+                          dplyr::slice(1) %>%
+                          dplyr::ungroup() %>%
+                          dplyr::mutate(
+                            metro = dplyr::if_else(zona == 1, 1, 0),
+                            metro_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, metro )),
+                        weights = ~fe)
+
+
+
 #####################
 # PROBAR NA EN SUBPOP
 #####################

@@ -1,5 +1,40 @@
 
 #-----------------------------------------------------------------------
+
+
+se_message <- function(design) {
+  if (as.character(design$call$ids)[[2]] == "1") {
+    warning("se calculated without complex design")
+  }
+
+}
+
+
+#-----------------------------------------------------------------------
+
+#' Homologa el nombre de las variables disenio
+#'
+#' Cambia el nombre de las variables de disenio, para poder utilizarlas más adelante
+#' @param design dataframe con los resultados
+#' @return disenio con los nombres homologados
+
+standardize_design_variables <- function(design) {
+
+  # Cambiar nombre de UPM y estrato solo si el disenio fue declarado con ellas
+  if (as.character(dc_sin_varunit$call$ids)[[2]] != "1") {
+    design$variables$varunit = design$variables[[unificar_variables_upm(design)]]
+    design$variables$varstrat = design$variables[[unificar_variables_estrato(design)]]
+  }
+
+  design$variables$fe = design$variables[[unificar_variables_factExp(design)]]
+
+  return(design)
+
+}
+
+
+
+#-----------------------------------------------------------------------
 filter_design <- function(disenio, subpop) {
   if (!is.null(subpop)) {
     disenio <- disenio[disenio$variables[[subpop]] == 1]
@@ -105,9 +140,25 @@ get_cv <- function(table, design, domains) {
 
 
 get_df <- function(data, domains) {
+  design <- data
+  data <- data$variables
+
+  # Si no hay diseño, no se calcula nada
+ if (as.character(design$call$ids)[[2]] == "1") {
+    gl <- data %>%
+      dplyr::group_by(.dots = domains) %>%
+      dplyr::summarise(upm = NA,
+                       vartstrat = NA,
+                       df = NA
+                       ) %>%
+      dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
+
+    return(gl)
+  }
+
 
   if (!is.null(domains)) {
-    gl <- calcular_upm(data, domains) %>%
+    gl <- calcular_upm(data, dominios = domains) %>%
       dplyr::left_join(calcular_estrato(data, domains), by = domains) %>%
       dplyr::mutate(df = .data$upm - varstrat) %>%
       dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
@@ -481,31 +532,26 @@ chequear_var_disenio <- function(data) {
 #'
 
 calcular_upm <- function(data, dominios, var = NULL ) {
+    listado <- c("varunit", as.list(dominios))
+    if (is.null(var)) {
+      data %>%
+        dplyr::group_by(.dots = listado) %>%
+        dplyr::summarise(conteo = dplyr::n()) %>%
+        dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0))  %>%
+        dplyr::group_by(.dots = as.list(dominios)) %>%
+        dplyr::summarise(upm = sum(.data$tiene_info))
+    } else {
+      symbol_var <- rlang::parse_expr(var)
+      data %>%
+        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>%
+        dplyr::group_by(.dots = listado) %>%
+        dplyr::summarise(conteo = sum(!!symbol_var)) %>%
+        dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0))  %>%
+        dplyr::group_by(.dots = as.list(dominios)) %>%
+        dplyr::summarise(upm = sum(.data$tiene_info))
+    }
 
-  #Chequear que existe variable varunit en el dataset
-  if (sum(grepl(pattern = "varunit" , x = names(data))) == 0) {
-    stop("La columna que contiene informacion de las UPMs debe llamarse varunit!")
-  }
 
-
-  listado <- c("varunit", as.list(dominios))
-  if (is.null(var)) {
-    data %>%
-      dplyr::group_by(.dots = listado) %>%
-      dplyr::summarise(conteo = dplyr::n()) %>%
-      dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0))  %>%
-      dplyr::group_by(.dots = as.list(dominios)) %>%
-      dplyr::summarise(upm = sum(.data$tiene_info))
-  } else {
-    symbol_var <- rlang::parse_expr(var)
-    data %>%
-      dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>%
-      dplyr::group_by(.dots = listado) %>%
-      dplyr::summarise(conteo = sum(!!symbol_var)) %>%
-      dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0))  %>%
-      dplyr::group_by(.dots = as.list(dominios)) %>%
-      dplyr::summarise(upm = sum(.data$tiene_info))
-  }
 }
 #-----------------------------------------------------------------------
 
@@ -524,10 +570,6 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 
 calcular_estrato <- function(data, dominios, var = NULL ) {
 
-  #Chequear que existe variable varstrat en el dataset
-  if (sum(grepl(pattern = "varstrat" , x = names(data))) == 0) {
-    stop("La columna que contiene informacion de los estratos debe llamarse varstrat!")
-  }
 
   listado <- c("varstrat", as.list(dominios))
   if (is.null(var)) {
