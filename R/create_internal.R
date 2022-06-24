@@ -1,5 +1,27 @@
 
 #-----------------------------------------------------------------------
+#' Ordena nombre de columnas y estandariza el orden
+#'
+#' Recibe la tabla en estado bruto y la ordena
+#' @param data dataframe con los resultados
+#' @param var variable objetivo
+#' @return dataframe con todos los datos ordenados
+
+
+standardize_columns <- function(data, var) {
+  names(data) <- names(data) %>%
+    tolower() %>%
+    stringr::str_replace(pattern =  var, "stat") %>%
+    stringr::str_remove(pattern =  "\\.stat"  )
+
+  data <- data %>%
+    dplyr::relocate(deff, .after = last_col())
+
+  return(data)
+}
+
+
+#-----------------------------------------------------------------------
 #' Une información de indicadores y genera tabla final
 #'
 #' Recibe los indicadores de calidad calculados previamente y los une en una tabla
@@ -134,12 +156,16 @@ convert_to_formula <- function(var) {
 
 
 check_subpop_var <- function(subpop, disenio) {
-  es_prop <- disenio$variables %>%
-    dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
 
-  if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
+  if (!is.null(subpop)) {
+    es_prop <- disenio$variables %>%
+      dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
 
-  if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
+    if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
+
+    if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
+  }
+
 }
 
 
@@ -532,7 +558,7 @@ calcular_gl_total <- function(variables, datos) {
 calcular_ic <-  function(data, env = parent.frame(), tipo = "resto", ajuste_ene) {
 
   est <- switch(tipo, "resto" =  get("var", env),
-                "media_agregado" = "mean",
+                "media_agregado" = "stat",
                 "prop_agregado" = "objetivo",
                 "total_agregado" = "total",
                 "mediana_agregado" = "median")
@@ -541,7 +567,7 @@ calcular_ic <-  function(data, env = parent.frame(), tipo = "resto", ajuste_ene)
   if (ajuste_ene == F) {
 
     final <- data %>%
-      dplyr::mutate(t = stats::qt(c(.975), df = gl),
+      dplyr::mutate(t = stats::qt(c(.975), df = df),
                     li = !!rlang::parse_expr(est) - .data$se*t,
                     ls = !!rlang::parse_expr(est) + .data$se*t)
     # Estos corresponde al ajuste de la ENE: el t se fija en 2

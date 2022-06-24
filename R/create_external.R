@@ -38,32 +38,14 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
-
-  # if(standard_eval == F){
-  #
-  #   var <- rlang::enexpr(var)
-  #   var <- rlang::expr_name(var)
-  #
-  #   dominios <- rlang::enexpr(dominios)
-  #   if(!is.null(dominios)){
-  #     dominios <- rlang::expr_name(dominios)
-  #   }
-  #
-  #   subpop <- rlang::enexpr(subpop)
-  #   if(!is.null(subpop)){
-  #     subpop <- rlang::expr_name(subpop)
-  #   }
-  #
-  # }
-
-
   # Sacar los NA si el usuario lo requiere
   if (rm.na == T) {
     disenio <- disenio[!is.na(disenio$variables[[var]])]
   }
 
-  # Chequear que la variable objetivo cumpla con ciertas condiciones
+  # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
   check_input_var(var, disenio)
+  check_subpop_var(subpop, disenio)
 
   #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- convert_to_formula(var)
@@ -114,37 +96,15 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
     #Unir toda la informacion en una tabla final
     final <- create_output(tabla, agrupacion,  gl, n, cv)
 
-    # Ajustar nombres de la tabla, para que tengan un formato estándar. Se deja el deff al final
-    # names(final) <- names(final) %>%
-    #   tolower() %>%
-    #   stringr::str_replace(pattern =  var, "stat") %>%
-    #   stringr::str_remove(pattern =  "\\.stat"  )
-    #
-    # final <- final %>%
-    #   dplyr::relocate(deff, .after = last_col())
-
-    standarize_columns <- function(data, var) {
-      names(data) <- names(data) %>%
-        tolower() %>%
-        stringr::str_replace(pattern =  var, "stat") %>%
-        stringr::str_remove(pattern =  "\\.stat"  )
-
-      data <- data %>%
-        dplyr::relocate(deff, .after = last_col())
-
-      return(data)
-    }
-
-    return(standarize_columns(final, var ))
+    # Ordenar las columnas y estandarizar los nombres de las variables
+    final <- standardize_columns(final, var )
 
 
     # Se calculan los intervalos de confianza solo si el usuario lo requiere
-
     if (ci == T) {
       #var_string = var
       final <- calcular_ic(final, tipo = "media_agregado", ajuste_ene = ajuste_ene)
     }
-
 
     # ESTO CORRESPONDE AL CASO SIN DESAGREGACIoN
   } else {
@@ -153,15 +113,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
     if (!is.null(subpop)) {
 
       # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
-      es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop) == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
-
-      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
-
-      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
-
-
-
+      check_subpop_var(subpop, disenio)
       disenio <- disenio[disenio$variables[[subpop]] == 1]
     }
 
@@ -170,6 +122,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 
     #Generar la tabla con los calculos
     tabla <- calcular_tabla(var_form, dominios_form, disenio)
+    return(tabla)
 
     # Tamanio muestral
     n <- nrow(disenio$variables)
