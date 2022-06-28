@@ -21,7 +21,7 @@ se_message <- function(design) {
 standardize_design_variables <- function(design) {
 
   # Cambiar nombre de UPM y estrato solo si el disenio fue declarado con ellas
-  if (as.character(dc_sin_varunit$call$ids)[[2]] != "1") {
+  if (as.character(design$call$ids)[[2]] != "1") {
     design$variables$varunit = design$variables[[unificar_variables_upm(design)]]
     design$variables$varstrat = design$variables[[unificar_variables_estrato(design)]]
   }
@@ -60,8 +60,11 @@ standardize_columns <- function(data, var) {
     stringr::str_remove(pattern =  "\\.stat"  ) %>%
     stringr::str_replace(pattern =  "mean", "stat")
 
-  data <- data %>%
-    dplyr::relocate(deff, .after = last_col())
+  if (!is.null(data$deff) ) {
+    data <- data %>%
+      dplyr::relocate(deff, .after = last_col())
+
+  }
 
   return(data)
 }
