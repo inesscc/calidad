@@ -26,7 +26,6 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
-#' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' create_mean(gastot_hd, zona+sexo,  disenio = dc)
 #' @export
 
