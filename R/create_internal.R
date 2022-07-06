@@ -281,17 +281,21 @@ check_subpop_var <- function(subpop, disenio) {
 
 
 
-check_input_var <- function(var, disenio) {
+check_input_var <- function(var, disenio, estimation = "mean") {
 
   # Chequear que la variable no sea character
   if (is.character(disenio$variables[[var]]) == T) stop("You are using a character vector!")
 
-  #Chequear que la variable sea dummy. Si es una dummy, aparece un warning
-  es_prop <- disenio$variables %>%
-    dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0 | is.na(!!rlang::parse_expr(var)),
-                                           1, 0))
+  #Chequear que la variable sea dummy. Si es una dummy, aparece un warning. Solo aplica para el caso de una estimación de medias
+  if (estimation == "mean") {
+    es_prop <- disenio$variables %>%
+      dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0 | is.na(!!rlang::parse_expr(var)),
+                                             1, 0))
 
-  if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("It seems yor are using a proportion variable!")
+    if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("It seems yor are using a proportion variable!")
+
+  }
+
 
 }
 
@@ -362,7 +366,13 @@ unificar_variables_factExp = function(disenio){
 #' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
-calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.frame()) {
+calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.frame(), fun) {
+
+  estimacion <-  survey::svyby(formula = var,
+                               by = dominios,
+                               design = disenio,
+                               FUN = fun,
+                               deff = get("deff", env))
 
 
   # El primer if es para dominios
@@ -374,6 +384,13 @@ calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.fram
                                   design = disenio,
                                   by = dominios,
                                   FUN = svymean,
+                                  deff = get("deff", env))
+   }  else if (media == "total") {
+
+     estimacion <-  survey::svyby(formula = var,
+                                  by = dominios,
+                                  design = disenio,
+                                  FUN = survey::svytotal,
                                   deff = get("deff", env))
 
     } else { # para calcular la mediana

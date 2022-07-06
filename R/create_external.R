@@ -365,42 +365,35 @@ create_tot_con <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F,
 create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
                          deff = F, rel_error = F, unweighted = F) {
 
-  # chequear_var_disenio(disenio$variables)
-
-  disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
-  disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
-  disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
-
-
-  if(standard_eval == F){
-
-    var <- rlang::enexpr(var)
-    var <- rlang::expr_name(var)
-
-    dominios <- rlang::enexpr(dominios)
-    if(!is.null(dominios)){
-      dominios <- rlang::expr_name(dominios)
-    }
-
-    subpop <- rlang::enexpr(subpop)
-    if(!is.null(subpop)){
-      subpop <- rlang::expr_name(subpop)
-    }
-
-  }
+  # Homologar nombres de variables  del diseño
+  disenio <- standardize_design_variables(disenio)
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == T) {
     disenio <- disenio[!is.na(disenio$variables[[var]])]
   }
 
+  # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
+  check_input_var(var, disenio, estimation = "total")
+  check_subpop_var(subpop, disenio)
 
-  # Verificar que la variable de estimacion sea numerica. Se interrumpe si no es numerica
-  if (!is.numeric(disenio$variables[[var]]) ) stop("Debes usar una variable numerica")
+  # Lanzar warning del error estándar cuando no se usa el diseño
+  se_message(disenio)
 
-  # Pasar la variable objetivo al formato de survey
-  var_form <- paste0("~", var) %>%
-    stats::as.formula()
+  # Filtrar diseño, si el usuario agrega el parámetro subpop
+  disenio <- filter_design(disenio, subpop)
+
+
+  #Convertir los inputs en formulas para adecuarlos a survey
+  var_form <- convert_to_formula(var)
+
+  # Convertir en formula para survey
+  dominios_form <- convert_to_formula(dominios)
+
+  #Generar la tabla con los calculos
+  tabla <- calcular_tabla(var_form, dominios_form, disenio, media = "total", fun = survey::svytotal)
+
+  return(tabla)
 
   # ESTO CORRESPONDE AL CASO EN EL QUE HAY DESAGREGACIoN
   if (!is.null(dominios)) {
