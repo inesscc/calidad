@@ -368,30 +368,17 @@ unificar_variables_factExp = function(disenio){
 
 calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.frame(), fun) {
 
-  estimacion <-  survey::svyby(formula = var,
-                               by = dominios,
-                               design = disenio,
-                               FUN = fun,
-                               deff = get("deff", env))
-
 
   # El primer if es para dominios
   if (!is.null(dominios)) {
 
-    if (media == T) { # para calcular la media
+    if (media == T) { # para estimaciones de media, proporción y tamaños
 
-      estimacion <- survey::svyby(var ,
-                                  design = disenio,
-                                  by = dominios,
-                                  FUN = svymean,
-                                  deff = get("deff", env))
-   }  else if (media == "total") {
-
-     estimacion <-  survey::svyby(formula = var,
-                                  by = dominios,
-                                  design = disenio,
-                                  FUN = survey::svytotal,
-                                  deff = get("deff", env))
+      estimacion <-  survey::svyby(formula = var,
+                                   by = dominios,
+                                   design = disenio,
+                                   FUN = fun,
+                                   deff = get("deff", env))
 
     } else { # para calcular la mediana
 
@@ -408,7 +395,7 @@ calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.fram
   } else {
     if (media == T) { # para calcular la media
 
-      estimacion <- survey::svymean(var, disenio, deff = get("deff", env))
+      estimacion <- fun(var, disenio, deff = get("deff", env))
 
 
     } else { # para calcular la mediana

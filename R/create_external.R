@@ -58,8 +58,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   dominios_form <- convert_to_formula(dominios)
 
   #Generar la tabla con los calculos
-  tabla <- calcular_tabla(var_form, dominios_form, disenio)
-
+  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svymean)
 
   # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(dominios)
@@ -391,151 +390,41 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
   dominios_form <- convert_to_formula(dominios)
 
   #Generar la tabla con los calculos
-  tabla <- calcular_tabla(var_form, dominios_form, disenio, media = "total", fun = survey::svytotal)
-
+  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svytotal)
   return(tabla)
 
-  # ESTO CORRESPONDE AL CASO EN EL QUE HAY DESAGREGACIoN
-  if (!is.null(dominios)) {
+  # Crear listado de variables que se usan para el cálculo
+  agrupacion <- create_groupby_vars(dominios)
 
-    # Esto corre para el caso en el que NO hay subpop
-    if (is.null(subpop)) {
-
-      #Identificar las variables ingresadas para la desagregacion
-      agrupacion <- dominios %>%
-        stringr::str_split(pattern = "\\+")
-
-      agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
-      agrup1 <- c(agrupacion, var)
-
-      # Agregar ~ para adecuar a formato de survey
-      dominios_form <- paste0("~", dominios) %>%
-        stats::as.formula()
-
-      # Esto corre para subpop
-    } else if (!is.null(subpop)) { # caso que tiene subpop
-
-      # Chequear que la variable de subpop es una dummy. Si no se cumple, se interrumpe la ejecucion
-      es_prop <- disenio$variables %>%
-        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
-      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
-
-      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
-
-      #Identificar las variables ingresadas para la desagregacion
-      agrupacion <- dominios %>%
-        stringr::str_split(pattern = "\\+")
-      agrupacion <- stringr::str_remove_all(string =  agrupacion[[1]], pattern = " ")
-      agrupacion <- c(subpop, agrupacion)
-      agrup1 <- c(agrupacion, var)
+  #Calcular el tamanio muestral de cada grupo
+  n <- calcular_n(disenio$variables, agrupacion)
 
 
-      dominios_form <- paste(subpop, dominios, sep =  "+")
-      dominios_form <- paste0("~", dominios_form) %>%
-        stats::as.formula()
-    }
+  #Calcular los grados de libertad de todos los cruces
+  gl <- get_df(disenio, agrupacion)
 
+  #Extrear el coeficiente de variacion
+  cv <- get_cv(tabla, disenio, agrupacion)
 
-    tabla <- survey::svyby(formula = var_form, by = dominios_form, design = disenio, FUN = survey::svytotal, deff = deff)
+  #Unir toda la informacion en una tabla final
+  final <- create_output(tabla, agrupacion,  gl, n, cv)
 
-    gl <- calcular_upm(disenio$variables, agrupacion) %>%
-      dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
-      dplyr::mutate(gl = .data$upm - .data$varstrat)  %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
+  # Ordenar las columnas y estandarizar los nombres de las variables
+  final <- standardize_columns(final, var )
 
-
-    n <- calcular_n(disenio$variables, dominios = agrupacion) %>%
-      dplyr::mutate_at(.vars = dplyr::vars(agrupacion), .funs = as.character)
-
-    # Coeficiente de variación
-    tabla$cv <- survey::cv(tabla)
-
-    # #Unir toda la informacion. Se hace con join para asegurar que no existan problemas en la union
-    final <- tabla %>%
-      dplyr::mutate_at(dplyr::vars(agrupacion), as.character) %>%
-      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
-                       by = agrupacion) %>%
-      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
-                       by = agrupacion) %>%
-      dplyr::rename(coef_var = cv) %>%
-      dplyr::relocate(coef_var, .after = last_col()) %>%
-      dplyr::relocate(gl, .after = n)
-
-
-    # Ajustar nombres de la tabla, para que tengan un formato estándar. Se deja el deff al final
-    names(final) <- names(final) %>%
-      stringr::str_replace(pattern = paste0("DEff.", var), "deff") %>%
-      stringr::str_replace(pattern =  var, "total")
-
-
-    #Se calculan los intervalos de confianza solo si el usuario lo requiere
-    if (ci == T) {
-      final <- calcular_ic(final, tipo = "total_agregado",ajuste_ene = ajuste_ene)
-    }
-
-
-    # ESTE ES EL CASO NO AGREGADO
-  } else {
-
-    tabla <- survey::svytotal(x = var_form, design = disenio, deff = T )
-
-    # Tabla con los totales
-    totales <- as.data.frame(tabla) %>%
-      tibble::rownames_to_column(var = "variable") %>%
-      dplyr::rename(se = var)
-
-
-    # Tamanio muestral
-    n <- nrow(disenio$variables) %>%
-      as.data.frame() %>%
-      dplyr::mutate(variable = var) %>%
-      dplyr::rename(n = ".")
-
-    # Grados de libertad
-    upm <- length(unique(disenio$variables$varunit))
-    varstrat <- length(unique(disenio$variables$varstrat))
-    gl <- cbind(upm, varstrat)
-    gl <- gl %>%
-      as.data.frame() %>%
-      dplyr::mutate(variable = var,
-                    gl =  upm - varstrat)
-
-    # Coeficiente de variacion
-    cv <- cv(tabla, design = disenio)
-    cv <- as.data.frame(cv) %>%
-      tibble::rownames_to_column(var = "variable") %>%
-      dplyr::rename(coef_var = var)
-
-    # COnstruir tabla final
-    final <- totales %>%
-      dplyr::left_join(n, by = "variable") %>%
-      dplyr::left_join(gl %>% dplyr::select(-upm, -varstrat), by = "variable") %>%
-      dplyr::left_join(cv, by = "variable")
-
-
-    # Se calcula el intervalo de confianza solo si el usuario lo pide
-    if (ci == T) {
-      final <- calcular_ic(data = final, tipo = "total_agregado",  ajuste_ene = ajuste_ene)
-    }
-
+  # Se calculan los intervalos de confianza solo si el usuario lo requiere
+  if (ci == T) {
+    final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
   }
-
-  # Reorder columns if it is neccesary
-  if (deff == T) {
-    final <- final %>%
-      dplyr::relocate(deff, .after = dplyr::last_col())
-  }
-
-
-  # add the ess if the user uses this parameter
-  final <- get_ess(ess)
-
 
   # add relative error, if the user uses this parameter
   if (rel_error == T) {
     final <- final %>%
-      dplyr::mutate(relative_error = stats::qt(c(.975), df = gl) * coef_var)
+      dplyr::mutate(relative_error = stats::qt(c(.975), df = df) * cv)
   }
+
+  # add the ess if the user uses this parameter
+  final <- get_ess(ess)
 
   # add non weighted count if it is required
   if (unweighted) {
@@ -544,13 +433,8 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
   }
 
 
-  if(!is.null(dominios) && !is.null(subpop)){
-    final = final %>% dplyr::filter(!!rlang::parse_expr(subpop) == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
-  }
 
 
-
-  return(final)
 }
 
 
