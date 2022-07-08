@@ -117,7 +117,6 @@ standardize_columns <- function(data, var, denom = denominador) {
 
   names(data) <- names(data) %>%
     tolower() %>%
-    stringr::str_replace(pattern =  denom, "stat") %>%
     stringr::str_replace(pattern =  ratio_name, "stat") %>%
     stringr::str_replace(pattern =  var, "stat") %>%
     stringr::str_remove(pattern =  "\\.stat"  ) %>%
@@ -212,7 +211,7 @@ get_df <- function(data, domains) {
   # Si no hay diseño, no se calcula nada
  if (as.character(design$call$ids)[[2]] == "1") {
     gl <- data %>%
-      dplyr::group_by(.dots = domains) %>%
+      dplyr::group_by_at(.vars  = domains) %>%
       dplyr::summarise(upm = NA,
                        vartstrat = NA,
                        df = NA
@@ -357,12 +356,13 @@ check_input_var <- function(var, disenio, estimation = "mean") {
 
     if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("It seems yor are using a proportion variable!")
 
+  # En el caso de proporción, se exige que la variable sea dummy
   } else if (estimation == "prop") {
     es_prop <- disenio$variables %>%
       dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0 | is.na(!!rlang::parse_expr(var)),
                                              1, 0))
 
-    if (sum(es_prop$es_prop) != nrow(disenio$variables)) stop("It seems yor are not using a proportion variable!")
+    if (sum(es_prop$es_prop) != nrow(disenio$variables)) stop("It seems yor are not using a dummy variable!")
 
 
   }
@@ -540,14 +540,15 @@ calcular_n <- function(data, dominios, var = NULL) {
   # Esto es para el caso de proporcion
   if (is.null(var)) {
     sample_n <- data %>%
-      dplyr::group_by(.dots = as.list(dominios)  ) %>%
+      #dplyr::group_by(.dots = as.list(dominios)  ) %>%
+      dplyr::group_by_at(.vars = dominios) %>%
       dplyr::summarise(n = dplyr::n())
     # Este es el caso de nivel
   } else {
     symbol_var <- rlang::parse_expr(var)
     sample_n <-  data %>%
       dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-      dplyr::group_by(.dots = as.list(dominios)) %>%
+      dplyr::group_by_at(.vars = dominios) %>%
       dplyr::summarise(n = sum(!!symbol_var))
   }
   sample_n <- sample_n  %>%
@@ -564,7 +565,7 @@ unweighted_cases <- function(data, dominios, var) {
 
   data %>%
     dplyr::filter(!is.na(var)) %>%
-    dplyr::group_by(.dots = as.list(dominios)  ) %>%
+    dplyr::group_by_at(.vars = dominios) %>%
     dplyr::summarise(n = dplyr::n())
 }
 
@@ -580,7 +581,7 @@ unweighted_cases <- function(data, dominios, var) {
 
 calcular_n_total <- function(x, datos) {
   datos %>%
-    dplyr::group_by(.dots = as.list(x)) %>%
+    dplyr::group_by_at(.vars = x) %>%
     dplyr::count() %>%
     dplyr::rename(variable := x) %>%
     dplyr::mutate(variable = paste0(x, .data$variable))
@@ -624,22 +625,22 @@ chequear_var_disenio <- function(data) {
 #'
 
 calcular_upm <- function(data, dominios, var = NULL ) {
-    listado <- c("varunit", as.list(dominios))
+    listado <- c("varunit", dominios)
     if (is.null(var)) {
       data %>%
-        dplyr::group_by(.dots = listado) %>%
+        dplyr::group_by_at(.vars = listado) %>%
         dplyr::summarise(conteo = dplyr::n()) %>%
         dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0))  %>%
-        dplyr::group_by(.dots = as.list(dominios)) %>%
+        dplyr::group_by_at(.vars = dominios) %>%
         dplyr::summarise(upm = sum(.data$tiene_info))
     } else {
       symbol_var <- rlang::parse_expr(var)
       data %>%
         dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>%
-        dplyr::group_by(.dots = listado) %>%
+        dplyr::group_by_at(.vars = listado) %>%
         dplyr::summarise(conteo = sum(!!symbol_var)) %>%
         dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0))  %>%
-        dplyr::group_by(.dots = as.list(dominios)) %>%
+        dplyr::group_by_at(.vars = dominios) %>%
         dplyr::summarise(upm = sum(.data$tiene_info))
     }
 
@@ -663,22 +664,22 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 calcular_estrato <- function(data, dominios, var = NULL ) {
 
 
-  listado <- c("varstrat", as.list(dominios))
+  listado <- c("varstrat", dominios)
   if (is.null(var)) {
     data %>%
-      dplyr::group_by( .dots = listado) %>%
+      dplyr::group_by_at(.vars = listado) %>%
       dplyr::summarise(conteo = dplyr::n()) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0)) %>%
-      dplyr::group_by(.dots = as.list(dominios)) %>%
+      dplyr::group_by_at(.vars = dominios) %>%
       dplyr::summarise(varstrat = sum(.data$tiene_info))
   } else {
     symbol_var <- rlang::parse_expr(var)
     data %>%
       dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>%
-      dplyr::group_by(.dots = listado) %>%
+      dplyr::group_by_at(.vars = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0)) %>%
-      dplyr::group_by(.dots = as.list(dominios)) %>%
+      dplyr::group_by_at(.vars = dominios) %>%
       dplyr::summarise(varstrat = sum(.data$tiene_info))
   }
 }
@@ -950,7 +951,7 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
 
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
-  check_input_var(var, disenio, estimation = "prop")
+  check_input_var(var, disenio, estimation = "ratio")
   check_subpop_var(subpop, disenio)
 
   # Lanzar warning del error estándar cuando no se usa el diseño

@@ -391,7 +391,6 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
 
   #Generar la tabla con los calculos
   tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svytotal)
-  return(tabla)
 
   # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(dominios)
@@ -433,7 +432,7 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
   }
 
 
-
+  return(final)
 
 }
 
@@ -1050,6 +1049,8 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
 create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F,standard_eval = F,
                           rm.na = F, seed = 1234, rel_error = F, interval_type = "quantile") {
 
+  warning("this function will be removed")
+
   # Ajustar nombre de variables del disenio muestral
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
@@ -1225,7 +1226,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
     dominios_form = dominios
     #Generar la tabla con los calculos
-    tabla <- calcular_tabla(var_form, dominios_form, disenio, media = F)
+    tabla <- calcular_tabla(var_form, dominios_form, disenio, estimation = "median")
 
     # Tamanio muestral
     n <- nrow(disenio$variables)
