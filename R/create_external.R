@@ -77,7 +77,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   final <- create_output(tabla, agrupacion,  gl, n, cv)
 
   # Ordenar las columnas y estandarizar los nombres de las variables
-  final <- standardize_columns(final, var )
+  final <- standardize_columns(final, var, denom = NULL )
 
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
@@ -410,7 +410,7 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
   final <- create_output(tabla, agrupacion,  gl, n, cv)
 
   # Ordenar las columnas y estandarizar los nombres de las variables
-  final <- standardize_columns(final, var )
+  final <- standardize_columns(final, var, denom = NULL )
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
   if (ci == T) {
@@ -1318,26 +1318,6 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
                        rel_error = F, log_cv = F, unweighted = F, standard_eval = F){
 
-  #  # Encapsular inputs para usarlos mas tarde
-  if (standard_eval == F) {
-
-    var <- rlang::enexpr(var)
-    var <- rlang::expr_name(var)
-
-    denominador <- rlang::enexpr(denominador)
-    if(!is.null(denominador)){
-      denominador <-  rlang::expr_name(denominador)
-    }
-
-    dominios <- rlang::enexpr(dominios)
-    if(!is.null(dominios)){
-      dominios <- rlang::expr_name(dominios)
-    }
-    subpop <- rlang::enexpr(subpop)
-    if(!is.null(subpop)){
-      subpop <- rlang::expr_name(subpop)
-    }
-  }
 
   if(!is.null(denominador)){
     final = create_ratio_internal(var,denominador, dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error )
