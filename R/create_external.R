@@ -100,6 +100,8 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
       dplyr::mutate(unweighted = n)
   }
 
+  # Add a class to the object
+  final <- add_class(final, "calidad.mean")
   return(final)
 }
 
@@ -431,6 +433,8 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
       dplyr::mutate(unweighted = n)
   }
 
+  # Add a class to the object
+  final <- add_class(final, "calidad.total")
 
   return(final)
 
@@ -645,9 +649,11 @@ create_tot <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
     n <- purrr::map(agrup1, calcular_n_total, datos = disenio$variables) %>%
       purrr::reduce(dplyr::bind_rows)
 
+
     # Grados de libertad
     gl <- calcular_gl_total(agrup1, disenio$variables)
 
+    return(list(agrup1, disenio$variables))
     #Extrear el coeficiente de variacion
     cv <- cv(tabla, design = disenio)
     cv <- as.data.frame(cv) %>%
@@ -1057,9 +1063,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
 
-
-
-  if(standard_eval == F){
+  if (standard_eval == F) {
 
     var <- rlang::enexpr(var)
     var <- rlang::expr_name(var)
@@ -1140,6 +1144,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
       #Generar la tabla con los calculos
       tabla <- calcular_medianas_internal(var_form, dominios_form, disenio)
+      return(tabla)
 
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
@@ -1166,6 +1171,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     #Extraer nombres
     nombres <- names(tabla)
     agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
+
 
     #Calcular el tamanio muestral de cada grupo
     n <- calcular_n(disenio$variables, agrupacion) %>%
@@ -1223,6 +1229,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
       disenio <- disenio[disenio$variables[[subpop]] == 1]
     }
+
 
     dominios_form = dominios
     #Generar la tabla con los calculos
@@ -1327,6 +1334,10 @@ create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, 
   if(is.null(denominador)) {
     final = create_prop_internal(var,  dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted)
   }
+
+  # Add a class to the object
+  final <- add_class(final, "calidad.prop")
+
   return(final)
 }
 

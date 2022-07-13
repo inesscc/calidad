@@ -1,5 +1,13 @@
 
 
+add_class <-  function(object, new_class) {
+  class(object)  <- append(class(object), new_class, after = F)
+  return(object)
+  }
+
+
+
+#------------------------------------------
 convert_ratio_to_df <- function(table, domains) {
   if (is.null(domains)) {
     table <- data.frame(table[1], table[2])
@@ -221,7 +229,7 @@ get_df <- function(data, domains) {
     return(gl)
   }
 
-
+  # Este es el caso cuando no hay dominios
   if (!is.null(domains)) {
     gl <- calcular_upm(data, dominios = domains) %>%
       dplyr::left_join(calcular_estrato(data, domains), by = domains) %>%
@@ -832,7 +840,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
   }
   # Crear una matriz para guardar resultados
-  acumulado <- data.frame(matrix(9999, ncol = 3, nrow = combinaciones))
+  acumulado <- data.frame(matrix(9999, ncol = 5, nrow = combinaciones))
 
   type <- get("interval_type", env)
 
@@ -862,7 +870,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
     )
 
-    acumulado[i, ] <- output %>%
+    acumulado[i, ] <- output[[1]] %>%
       as.data.frame() %>%
       dplyr::mutate(v = paste(x, collapse = "."))
 
@@ -871,6 +879,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
   }
 
+  return(list(output[[1]], acumulado))
 
   final <- acumulado  %>%
     tidyr::separate(into = doms, col = .data$X3 , sep = "\\.") %>%
