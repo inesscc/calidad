@@ -1,4 +1,63 @@
 
+
+add_class <-  function(object, new_class) {
+  class(object)  <- append(class(object), new_class, after = F)
+  return(object)
+  }
+
+
+
+#------------------------------------------
+convert_ratio_to_df <- function(table, domains) {
+  if (is.null(domains)) {
+    table <- data.frame(table[1], table[2])
+    rownames(table) <- NULL
+  } else {
+    table <- table
+  }
+
+  return(table)
+}
+
+#--------------------------------------------------------------
+
+get_unweighted <- function(table, disenio, var, domains) {
+
+  if (!is.null(domains)) {
+    unweighted_cases <- calcular_n(disenio$variables, c(domains, var) ) %>%
+      dplyr::mutate_at(dplyr::vars(domains), as.character)  %>%
+      dplyr::filter(!!rlang::parse_expr(var) == 1 ) %>%
+      dplyr::rename(unweighted = n)
+
+
+    unweighted_cases <- table %>%
+      dplyr::left_join(unweighted_cases %>% dplyr::select(c(domains, "unweighted" )),
+                       by = domains)
+
+  } else {
+    unweighted_cases <- disenio$variables %>%
+      dplyr::filter(!!rlang::parse_expr(var) == 1 ) %>%
+      nrow()
+
+    unweighted_cases <- table %>%
+      dplyr::bind_cols(unweighted = unweighted_cases )
+
+  }
+
+  return(unweighted_cases)
+
+}
+
+#-----------------------------------------------------------------------
+
+get_log_cv <- function(data) {
+  data <- data %>%
+    dplyr::mutate(log_cv = se / (-log(objetivo)*objetivo))
+  return(data)
+}
+
+
+
 #-----------------------------------------------------------------------
 
 
@@ -53,9 +112,20 @@ filter_design <- function(disenio, subpop) {
 #' @return dataframe con todos los datos ordenados
 
 
-standardize_columns <- function(data, var) {
+standardize_columns <- function(data, var, denom = denominador) {
+
+  # If there is not denominator, we use a random character
+  if (!is.null(denom)) {
+    ratio_name <- paste0(var, "/", denom)
+  } else {
+    ratio_name <- "perro"
+    denom <- "perro"
+  }
+
+
   names(data) <- names(data) %>%
     tolower() %>%
+    stringr::str_replace(pattern =  ratio_name, "stat") %>%
     stringr::str_replace(pattern =  var, "stat") %>%
     stringr::str_remove(pattern =  "\\.stat"  ) %>%
     stringr::str_replace(pattern =  "mean", "stat")
@@ -152,7 +222,7 @@ get_df <- function(var,data, domains,df_type = "cepal"){
 ### Si no hay diseño, no se calcula nada
   if (as.character(design$call$ids)[[2]] == "1") {
     gl <- data %>%
-      dplyr::group_by(.dots = domains) %>%
+      dplyr::group_by_at(.vars  = domains) %>%
       dplyr::summarise(upm = NA,
                        vartstrat = NA,
                        df = NA
@@ -161,6 +231,7 @@ get_df <- function(var,data, domains,df_type = "cepal"){
 
     return(gl)
   }
+
 
   if (!is.null(domains)) {
 
@@ -331,6 +402,15 @@ check_input_var <- function(var, disenio, estimation = "mean") {
 
     if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("It seems yor are using a proportion variable!")
 
+  # En el caso de proporción, se exige que la variable sea dummy
+  } else if (estimation == "prop") {
+    es_prop <- disenio$variables %>%
+      dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0 | is.na(!!rlang::parse_expr(var)),
+                                             1, 0))
+
+    if (sum(es_prop$es_prop) != nrow(disenio$variables)) stop("It seems yor are not using a dummy variable!")
+
+
   }
 
 
@@ -403,19 +483,29 @@ unificar_variables_factExp = function(disenio){
 #' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
-calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.frame(), fun) {
-
+calcular_tabla <-  function(var, dominios, disenio, estimation = "mean", env = parent.frame(), fun, denom = denominador) {
 
   # El primer if es para dominios
   if (!is.null(dominios)) {
 
-    if (media == T) { # para estimaciones de media, proporción y tamaños
+    if (estimation == "mean") { # para estimaciones de media, proporción y tamaños
 
       estimacion <-  survey::svyby(formula = var,
                                    by = dominios,
                                    design = disenio,
                                    FUN = fun,
                                    deff = get("deff", env))
+
+
+    } else if (estimation == "ratio")  {
+
+      estimacion <- survey::svyby(var, denominator = denom,
+                                  design =  disenio,
+                                  by = dominios ,
+                                  FUN = fun,
+                                  deff = get("deff", env))
+
+      return(estimacion)
 
     } else { # para calcular la mediana
 
@@ -430,9 +520,13 @@ calcular_tabla <-  function(var, dominios, disenio, media = T, env = parent.fram
     }
     # Esto corresponde al caso sin desagregacion
   } else {
-    if (media == T) { # para calcular la media
+    if (estimation == "mean") { # para calcular la media
 
-      estimacion <- fun(var, disenio, deff = get("deff", env))
+        estimacion <- fun(var, disenio, deff = get("deff", env))
+
+    } else if (estimation == "ratio") {
+
+        estimacion <- survey::svyratio(var, denominator = denom, design = disenio, deff = get("deff", env))
 
 
     } else { # para calcular la mediana
@@ -559,10 +653,9 @@ unweighted_cases <- function(data, dominios, var) {
 
   data %>%
     dplyr::filter(!is.na(var)) %>%
-    dplyr::group_by(.dots = as.list(dominios)  ) %>%
+    dplyr::group_by_at(.vars = dominios) %>%
     dplyr::summarise(n = dplyr::n())
 }
-
 
 #----------------------------------------------------------------------
 #' Chequea que las variables de disenio tengan el nombre correcto
@@ -602,22 +695,22 @@ chequear_var_disenio <- function(data) {
 #'
 
 calcular_upm <- function(data, dominios, var = NULL ) {
-    listado <- c("varunit", as.list(dominios))
+    listado <- c("varunit", dominios)
     if (is.null(var)) {
       data %>%
-        dplyr::group_by(.dots = listado) %>%
+        dplyr::group_by_at(.vars = listado) %>%
         dplyr::summarise(conteo = dplyr::n()) %>%
         dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0))  %>%
-        dplyr::group_by(.dots = as.list(dominios)) %>%
+        dplyr::group_by_at(.vars = dominios) %>%
         dplyr::summarise(upm = sum(.data$tiene_info))
     } else {
       symbol_var <- rlang::parse_expr(var)
       data %>%
         dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>%
-        dplyr::group_by(.dots = listado) %>%
+        dplyr::group_by_at(.vars = listado) %>%
         dplyr::summarise(conteo = sum(!!symbol_var)) %>%
         dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0))  %>%
-        dplyr::group_by(.dots = as.list(dominios)) %>%
+        dplyr::group_by_at(.vars = dominios) %>%
         dplyr::summarise(upm = sum(.data$tiene_info))
     }
 
@@ -641,22 +734,22 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 calcular_estrato <- function(data, dominios, var = NULL ) {
 
 
-  listado <- c("varstrat", as.list(dominios))
+  listado <- c("varstrat", dominios)
   if (is.null(var)) {
     data %>%
-      dplyr::group_by( .dots = listado) %>%
+      dplyr::group_by_at(.vars = listado) %>%
       dplyr::summarise(conteo = dplyr::n()) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0)) %>%
-      dplyr::group_by(.dots = as.list(dominios)) %>%
+      dplyr::group_by_at(.vars = dominios) %>%
       dplyr::summarise(varstrat = sum(.data$tiene_info))
   } else {
     symbol_var <- rlang::parse_expr(var)
     data %>%
       dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>%
-      dplyr::group_by(.dots = listado) %>%
+      dplyr::group_by_at(.vars = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0)) %>%
-      dplyr::group_by(.dots = as.list(dominios)) %>%
+      dplyr::group_by_at(.vars = dominios) %>%
       dplyr::summarise(varstrat = sum(.data$tiene_info))
   }
 }
@@ -811,7 +904,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
   }
   # Crear una matriz para guardar resultados
-  acumulado <- data.frame(matrix(9999, ncol = 3, nrow = combinaciones))
+  acumulado <- data.frame(matrix(9999, ncol = 5, nrow = combinaciones))
 
   type <- get("interval_type", env)
 
@@ -841,7 +934,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
     )
 
-    acumulado[i, ] <- output %>%
+    acumulado[i, ] <- output[[1]] %>%
       as.data.frame() %>%
       dplyr::mutate(v = paste(x, collapse = "."))
 
@@ -850,6 +943,7 @@ calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = pa
 
   }
 
+  return(list(output[[1]], acumulado))
 
   final <- acumulado  %>%
     tidyr::separate(into = doms, col = .data$X3 , sep = "\\.") %>%
@@ -1084,34 +1178,74 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
     }
 
 
+  # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
+  check_input_var(var, disenio, estimation = "ratio")
+  check_subpop_var(subpop, disenio)
+
+  # Lanzar warning del error estándar cuando no se usa el diseño
+  se_message(disenio)
 
 
+  # Homologar nombres de variables  del diseño
+  disenio <- standardize_design_variables(disenio)
+
+  # Sacar los NA si el usuario lo requiere
+  if (rm.na == T) {
+    disenio <- disenio[!is.na(disenio$variables[[var]])]
   }
 
-  # Reorder columns if it is neccesary
-  if (deff == T) {
-    final <- final %>%
-      dplyr::relocate(deff, .after = dplyr::last_col())
+  # Filtrar diseño, si el usuario agrega el parámetro subpop
+  disenio <- filter_design(disenio, subpop)
+
+  #Convertir los inputs en formulas para adecuarlos a survey
+  var_form <- convert_to_formula(var)
+  dominios_form <- convert_to_formula(dominios)
+  denominador_form <- convert_to_formula(denominador)
+
+  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svyratio, estimation = "ratio", denom = denominador_form)
+
+  # Crear listado de variables que se usan para el cálculo
+  agrupacion <- create_groupby_vars(dominios)
+
+  #Calcular el tamanio muestral de cada grupo
+  n <- calcular_n(disenio$variables, agrupacion)
+
+
+  #Calcular los grados de libertad de todos los cruces
+  gl <- get_df(disenio, agrupacion)
+
+  #Extrear el coeficiente de variacion
+  cv <- get_cv(tabla, disenio, agrupacion)
+
+
+  # Convert to df if there is not any domain
+  tabla <- convert_ratio_to_df(tabla, dominios)
+
+
+  #Unir toda la informacion en una tabla final
+  final <- create_output(tabla, agrupacion,  gl, n, cv)
+
+  # Ordenar las columnas y estandarizar los nombres de las variables
+  final <- standardize_columns(final, var, denominador )
+
+  # Add unweighted counting
+  if (unweighted) {
+    final <- get_unweighted(final, disenio, var, agrupacion)
   }
 
-  # rename column name for CV. It has to be coef_var cause the evaluation function
-  final <- final %>%
-    dplyr::rename(coef_var = cv)
+  # Add confidence intervals
+  if (ci == T) {
+    final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
+  }
 
   # add relative error, if the user uses this parameter
   if (rel_error == T) {
     final <- final %>%
-      dplyr::mutate(relative_error = stats::qt(c(.975), df = gl) * coef_var)
+      dplyr::mutate(relative_error = stats::qt(c(.975), df = df) * cv)
   }
 
   # add the ess if the user uses this parameter
   final <- get_ess(ess)
-
-  if(!is.null(dominios) && !is.null(subpop)){
-
-    final = final %>% dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>% dplyr::select(-!!rlang::parse_expr(subpop))
-
-  }
 
   return(final)
 
@@ -1140,42 +1274,47 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
 #'
 
 create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
-                                 rel_error = F, log_cv = F, unweighted = F, standard_eval = T){
+                                 rel_error = F, log_cv = F, unweighted = F, standard_eval = T, rm.na = F, env =  parent.frame()) {
+
+  # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
+  check_input_var(var, disenio, estimation = "prop")
+  check_subpop_var(subpop, disenio)
+
+  # Lanzar warning del error estándar cuando no se usa el diseño
+  se_message(disenio)
 
 
-  # Chequar que esten presentes las variables del disenio muestral. Si no se llaman varstrat y varunit, se
-  #  detiene la ejecucion
-  # chequear_var_disenio(disenio$variables)
-  disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
-  disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
-  disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
+  # Homologar nombres de variables  del diseño
+  disenio <- standardize_design_variables(disenio)
 
-  if (standard_eval == F) {
-    #  # Encapsular inputs para usarlos mas tarde
-    var <- rlang::enexpr(var)
-    var <-  rlang::expr_name(var)
-    dominios <- rlang::enexpr(dominios)
-    if(!is.null(dominios)){
-      dominios <-  rlang::expr_name(dominios)
-    }
-
-    subpop <- rlang::enexpr(subpop)
-    if(!is.null(subpop)){
-      subpop <-  rlang::expr_name(subpop)
-    }
-
+  # Sacar los NA si el usuario lo requiere
+  if (rm.na == T) {
+    disenio <- disenio[!is.na(disenio$variables[[var]])]
   }
 
+  # Filtrar diseño, si el usuario agrega el parámetro subpop
+  disenio <- filter_design(disenio, subpop)
+
   #Convertir los inputs en formulas para adecuarlos a survey
-  var_form <- paste0("~",var) %>%
-    stats::as.formula()
+  var_form <- convert_to_formula(var)
+
+  # Convertir en formula para survey
+  dominios_form <- convert_to_formula(dominios)
+
+  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svymean)
+
+  # Crear listado de variables que se usan para el cálculo
+  agrupacion <- create_groupby_vars(dominios)
+
+  #Calcular el tamanio muestral de cada grupo
+  n <- calcular_n(disenio$variables, agrupacion)
 
 
-  # Guardar una variable para usarla más tarde
-  var_string <- var
+  #Calcular los grados de libertad de todos los cruces
+  gl <- get_df(disenio, agrupacion)
 
-  # Test básica para evaluar que la variable no sea character
-  if (is.character(disenio$variables[[var]]) == T) stop("You are using a character vector!")
+  #Extrear el coeficiente de variacion
+  cv <- get_cv(tabla, disenio, agrupacion)
 
   #Chequear que la variable sea de proporcion. Si no lo es, se interrumpe la ejecucion
   es_prop <- disenio$variables %>%
@@ -1349,46 +1488,35 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 
     }
 
+  # Ordenar las columnas y estandarizar los nombres de las variables
+  final <- standardize_columns(final, var, denom = get("denominador", env) )
 
+  # Add unweighted counting
+  if (unweighted) {
+    final <- get_unweighted(final, disenio, var, agrupacion)
   }
 
-
-  #################
-  # Shared outputs #
-  #################
-
-  # Ajustar nombres de la tabla, para que tengan un formato estándar. Se deja el deff al final
-  if (deff == T) {
-
-    final <- final %>%
-      dplyr::relocate(deff, .after = dplyr::last_col())
-
+  # Add confidence intervals
+  if (ci == T) {
+    final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
   }
+
 
   # add relative error, if the user uses this parameter
   if (rel_error == T) {
     final <- final %>%
-      dplyr::mutate(relative_error = stats::qt(c(.975), df = gl) * coef_var)
+      dplyr::mutate(relative_error = stats::qt(c(.975), df = df) * cv)
   }
-
 
   # add the ess if the user uses this parameter
   final <- get_ess(ess)
 
-  # add log cv, if the user uses this parameter
-  if (log_cv) {
-    final <- final %>%
-      dplyr::mutate(log_cv = se / (-log(objetivo)*objetivo))
-  }
-
-  if(!is.null(dominios) && !is.null(subpop)){
-    final = final %>%
-      dplyr::filter(!!rlang::parse_expr(subpop)  == 1) %>%
-      dplyr::select(-!!rlang::parse_expr(subpop))
-  }
-
   return(final)
 
-}
+
+
+
+  }
+
 
 

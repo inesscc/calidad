@@ -76,7 +76,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   final <- create_output(tabla, agrupacion,  gl, n, cv)
 
   # Ordenar las columnas y estandarizar los nombres de las variables
-  final <- standardize_columns(final, var )
+  final <- standardize_columns(final, var, denom = NULL )
 
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
@@ -99,6 +99,8 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
       dplyr::mutate(unweighted = n)
   }
 
+  # Add a class to the object
+  final <- add_class(final, "calidad.mean")
   return(final)
 }
 
@@ -390,7 +392,6 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
 
   #Generar la tabla con los calculos
   tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svytotal)
-  return(tabla)
 
   # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(dominios)
@@ -409,7 +410,7 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
   final <- create_output(tabla, agrupacion,  gl, n, cv)
 
   # Ordenar las columnas y estandarizar los nombres de las variables
-  final <- standardize_columns(final, var )
+  final <- standardize_columns(final, var, denom = NULL )
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
   if (ci == T) {
@@ -431,10 +432,13 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
       dplyr::mutate(unweighted = n)
   }
 
+  # Add a class to the object
+  final <- add_class(final, "calidad.total")
 
-
+  return(final)
 
 }
+
 
 #--------------------------------------------------------------------
 
@@ -572,15 +576,15 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
 create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, replicas = 10,  ajuste_ene = F,standard_eval = F,
                           rm.na = F, seed = 1234, rel_error = F, interval_type = "quantile") {
 
+  warning("this function will be removed")
+
   # Ajustar nombre de variables del disenio muestral
   disenio$variables$varunit = disenio$variables[[unificar_variables_upm(disenio)]]
   disenio$variables$varstrat = disenio$variables[[unificar_variables_estrato(disenio)]]
   disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
 
-
-
-  if(standard_eval == F){
+  if (standard_eval == F) {
 
     var <- rlang::enexpr(var)
     var <- rlang::expr_name(var)
@@ -661,6 +665,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
       #Generar la tabla con los calculos
       tabla <- calcular_medianas_internal(var_form, dominios_form, disenio)
+      return(tabla)
 
       # Esto corre para subpop
     } else if (!is.null(subpop)) { # caso que tiene subpop
@@ -687,6 +692,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
     #Extraer nombres
     nombres <- names(tabla)
     agrupacion <-  nombres[c(-(length(nombres) - 1), -length(nombres)) ]
+
 
     #Calcular el tamanio muestral de cada grupo
     n <- get_sample_size(disenio$variables, agrupacion) %>%
@@ -745,9 +751,10 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
       disenio <- disenio[disenio$variables[[subpop]] == 1]
     }
 
+
     dominios_form = dominios
     #Generar la tabla con los calculos
-    tabla <- calcular_tabla(var_form, dominios_form, disenio, media = F)
+    tabla <- calcular_tabla(var_form, dominios_form, disenio, estimation = "median")
 
     # Tamanio muestral
     n <- nrow(disenio$variables)
@@ -840,26 +847,6 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
                        rel_error = F, log_cv = F, unweighted = F, standard_eval = F){
 
-  #  # Encapsular inputs para usarlos mas tarde
-  if (standard_eval == F) {
-
-    var <- rlang::enexpr(var)
-    var <- rlang::expr_name(var)
-
-    denominador <- rlang::enexpr(denominador)
-    if(!is.null(denominador)){
-      denominador <-  rlang::expr_name(denominador)
-    }
-
-    dominios <- rlang::enexpr(dominios)
-    if(!is.null(dominios)){
-      dominios <- rlang::expr_name(dominios)
-    }
-    subpop <- rlang::enexpr(subpop)
-    if(!is.null(subpop)){
-      subpop <- rlang::expr_name(subpop)
-    }
-  }
 
   if(!is.null(denominador)){
     final = create_ratio_internal(var,denominador, dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error )
@@ -868,6 +855,10 @@ create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, 
   if(is.null(denominador)) {
     final = create_prop_internal(var,  dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted)
   }
+
+  # Add a class to the object
+  final <- add_class(final, "calidad.prop")
+
   return(final)
 }
 
