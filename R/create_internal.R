@@ -82,6 +82,7 @@ create_output <- function(table, domains, gl, n, cv) {
 
   # tabla con desagregación
   if (nrow(data.frame(table)) > 1 ) {
+
     final <- table %>%
       dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character) %>%
       dplyr::left_join(gl %>% dplyr::select(c(domains, "df")),
@@ -137,45 +138,81 @@ get_cv <- function(table, design, domains) {
 #' Cálcula los grados de libertad para cada estimación
 #'
 #' Recibe datos y los dominios. Devuelve un data frame con las upm, varstrat y gl para cada celda
+#' @param var variable objetivo
 #' @param data dataframe
 #' @param domains dominios en formato string
+#' @df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return dataframe con grados de libertad
 
 
-get_df <- function(data, domains) {
+get_df <- function(var,data, domains,df_type = "cepal"){
   design <- data
   data <- data$variables
 
-  # Si no hay diseño, no se calcula nada
- if (as.character(design$call$ids)[[2]] == "1") {
+### Si no hay diseño, no se calcula nada
+  if (as.character(design$call$ids)[[2]] == "1") {
     gl <- data %>%
       dplyr::group_by(.dots = domains) %>%
       dplyr::summarise(upm = NA,
                        vartstrat = NA,
                        df = NA
-                       ) %>%
+      ) %>%
       dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
 
     return(gl)
   }
 
-
   if (!is.null(domains)) {
-    gl <- calcular_upm(data, dominios = domains) %>%
-      dplyr::left_join(calcular_estrato(data, domains), by = domains) %>%
-      dplyr::mutate(df = .data$upm - varstrat) %>%
-      dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
 
+    domains_ine <- c(var,domains)
+
+    if(df_type == "ine"){
+
+      gl <- calcular_upm(design$variables, domains_ine) %>%
+        dplyr::left_join(calcular_estrato(design$variables, domains_ine), by = domains_ine) %>%
+        dplyr::mutate(df = .data$upm - .data$varstrat)  %>%
+        dplyr::filter(!!rlang::parse_expr(var) == 1)  %>%
+        dplyr::mutate_at(.vars = dplyr::vars(domains_ine), .funs = as.character) %>%
+        dplyr::ungroup() %>%
+        dplyr::select(-c(var,"upm","varstrat"))
+
+    } else if(df_type == "cepal"){
+
+      gl <- calcular_upm(design$variables, domains) %>%
+        dplyr::left_join(calcular_estrato(design$variables, domains), by = domains) %>%
+        dplyr::mutate(df = .data$upm - .data$varstrat)  %>%
+        dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)  %>%
+        dplyr::ungroup() %>%
+        dplyr::select(-c("upm","varstrat"))
+
+    }
+
+### sin desagregación
   } else {
-    varstrat <- length(unique(data$varstrat))
-    varunit <- length(unique(data$varunit))
-    gl <- varunit - varstrat
+
+    if(df_type == "ine"){
+
+    gl <- data %>%
+      dplyr::group_by(!!rlang::parse_expr(var)) %>%
+      dplyr::summarise(upm = length(unique(varunit)),
+                varstrat = length(unique(varstrat)),
+                df = upm-varstrat) %>%
+      dplyr::filter(!!rlang::parse_expr(var) == 1) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-c(var,"upm","varstrat"))
+
+    } else if(df_type == "cepal"){
+
+       varstrat <- length(unique(design$variables$varstrat))
+       varunit <- length(unique(design$variables$varunit))
+       gl <- varunit - varstrat
+    }
 
   }
+
   return(gl)
+
 }
-
-
 
 #-----------------------------------------------------------------------
 
@@ -443,32 +480,75 @@ calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio, env
 #'
 #' Genera una tabla con el conteo de cada cada una de los dominios del tabulado.
 #' La funcion contempla un caso para proporcion y un caso para promedio
-#'
-#' @param data \code{dataframe} que contiene los datos que se estan evaluando
-#' @param dominios vector de caracteres que contiene los dominios a evaluar
 #' @param var string que contiene el nombre de la variable de proporcion que se evalua.
+#' @param data \code{dataframe} que contiene los datos que se estan evaluando
+#' @param domains vector de caracteres que contiene los dominios a evaluar
+#' @df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
-#'
 
-calcular_n <- function(data, dominios, var = NULL) {
+get_sample_size <- function(var, data, domains, df_type = "cepal") {
 
-  # Esto es para el caso de proporcion
-  if (is.null(var)) {
-    sample_n <- data %>%
-      dplyr::group_by(.dots = as.list(dominios)  ) %>%
-      dplyr::summarise(n = dplyr::n())
-    # Este es el caso de nivel
-  } else {
-    symbol_var <- rlang::parse_expr(var)
-    sample_n <-  data %>%
-      dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-      dplyr::group_by(.dots = as.list(dominios)) %>%
-      dplyr::summarise(n = sum(!!symbol_var))
+  if(!is.null(domains)){
+
+    if(df_type == "ine"){
+
+      #### version INE con dominios
+      dom1 <- c(var, domains)
+      symbol_var <- rlang::parse_expr(var)
+
+      data %>%
+        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+        dplyr::group_by(.dots = as.list(dom1)) %>%
+        dplyr::summarise(n = n()) %>%
+        dplyr::ungroup() %>% #%>%     dplyr::select(-var)
+        dplyr::filter(!!symbol_var == 1) %>%
+        dplyr::select(-symbol_var) %>%
+        dplyr::mutate_at(dplyr::vars(domains), as.character)
+
+    }else if(df_type == "cepal"){
+
+      dom1 <- c(var, domains)
+      symbol_var <- rlang::parse_expr(var)
+
+      data %>%
+        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+        dplyr::group_by(.dots = as.list(dom1)) %>%
+        dplyr::summarise(n = n()) %>%
+        dplyr::ungroup() %>% #%>%     dplyr::select(-var)
+        dplyr::group_by(!!rlang::parse_expr(domains)) %>%
+        dplyr::summarise(n = sum(n)) %>%
+        dplyr::mutate_at(dplyr::vars(domains), as.character)
+
+    }
+
+    ### sin dominios
+  }else{
+
+    if(df_type == "ine"){
+
+      #### version INE con dominios
+      symbol_var <- rlang::parse_expr(var)
+
+      data %>%
+        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+        dplyr::group_by(.dots = as.list(var)) %>%
+        dplyr::summarise(n = n()) %>%
+        dplyr::ungroup() %>% #
+        dplyr::filter(!!symbol_var == 1) %>%
+        dplyr::select(-symbol_var)
+
+    }else if(df_type == "cepal"){
+
+      data %>%
+        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+        dplyr::group_by(.dots = as.list(var)) %>%
+        dplyr::summarise(n = n()) %>%
+        dplyr::ungroup() %>%
+        dplyr::summarise(n = sum(n))
+
+    }
+
   }
-  sample_n <- sample_n  %>%
-    dplyr::mutate_at(.vars = dplyr::vars(dominios), .funs = as.character)
-
-  return(sample_n)
 
 }
 
@@ -483,23 +563,6 @@ unweighted_cases <- function(data, dominios, var) {
     dplyr::summarise(n = dplyr::n())
 }
 
-#-----------------------------------------------------------------------
-#' Calcula tamanio muestral para la funcion de totales poblacionales
-#'
-#' Genera una tabla con el conteo de cada cada una de los dominios de las categorias ingresadas.
-#'
-#' @param x  vector de strings que contiene las variables para las cuales se calcula el tamanio muestra
-#' @param datos \code{dataframe} que se esta utilizando. Se extrae del disenio muestral
-#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
-#'
-
-calcular_n_total <- function(x, datos) {
-  datos %>%
-    dplyr::group_by(.dots = as.list(x)) %>%
-    dplyr::count() %>%
-    dplyr::rename(variable := x) %>%
-    dplyr::mutate(variable = paste0(x, .data$variable))
-}
 
 #----------------------------------------------------------------------
 #' Chequea que las variables de disenio tengan el nombre correcto
@@ -607,6 +670,8 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #' @param datos \code{dataframe} que contiene los datos que se estan evaluando. Se obtiene a partir del disenio muestral
 #' @param variables variables objetivo. vector de strings que contiene los nombres de las variables
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+
+# deprecated
 
 calcular_gl_total <- function(variables, datos) {
   upm <- purrr::map(variables, ~calcular_upm(datos, .x) %>%
@@ -918,7 +983,7 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
       trimws(which = "both")
 
     #+ Calcular N
-    n <- calcular_n(disenio$variables, agrupacion) %>%
+    n <- get_sample_size(disenio$variables, agrupacion) %>%
       dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
 
     #+ Calcular GL de todos los cruces
@@ -1161,7 +1226,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 
 
     #Calcular el tamanio muestral de cada grupo
-    n <- calcular_n(disenio$variables, agrupacion) %>%
+    n <- get_sample_size(disenio$variables, agrupacion) %>%
       dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
 
 
@@ -1185,7 +1250,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 
     # Get unweighted counting if it is required by the user
     if (unweighted) {
-      unweighted_cases <- calcular_n(disenio$variables, c(agrupacion, var_string) ) %>%
+      unweighted_cases <- get_sample_size(disenio$variables, c(agrupacion, var_string) ) %>%
         dplyr::mutate_at(dplyr::vars(agrupacion), as.character)  %>%
         dplyr::filter(!!rlang::parse_expr(var_string) == 1 ) %>%
         dplyr::rename(unweighted = n)
