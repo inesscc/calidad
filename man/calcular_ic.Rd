@@ -4,16 +4,16 @@
 \alias{calcular_ic}
 \title{Genera intervalos de confianza para todos los dominios estimados}
 \usage{
-calcular_ic(data, env = parent.frame(), tipo = "resto", ajuste_ene)
+calcular_ic(data, ajuste_ene)
 }
 \arguments{
 \item{data}{\code{dataframe} con todos los datos necesarios para calcular el estandar}
 
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
+
 \item{env}{\code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos}
 
 \item{tipo}{\code{string} que indica cual es el tipo de estimacion que se realiza.}
-
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
 }
 \value{
 \code{dataframe} que contiene todos los elementos del estandar, junto a tres columnas nuevas que contienen el limite inferior, el limite superior y el valor t

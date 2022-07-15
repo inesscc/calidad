@@ -16,7 +16,8 @@ create_size(
   rm.na = F,
   deff = F,
   rel_error = F,
-  unweighted = F
+  unweighted = F,
+  df_type = "ine"
 )
 }
 \arguments{

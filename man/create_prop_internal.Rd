@@ -16,7 +16,9 @@ create_prop_internal(
   rel_error = F,
   log_cv = F,
   unweighted = F,
-  standard_eval = T
+  standard_eval = T,
+  rm.na = F,
+  env = parent.frame()
 )
 }
 \arguments{

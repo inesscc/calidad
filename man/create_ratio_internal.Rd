@@ -14,7 +14,9 @@ create_ratio_internal(
   deff = F,
   ess = F,
   ajuste_ene = F,
-  rel_error = F
+  unweighted = F,
+  rel_error = F,
+  rm.na = F
 )
 }
 \arguments{
@@ -36,11 +38,11 @@ create_ratio_internal(
 
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
 
+\item{unweighted}{\code{boolean} Add non weighted count if it is required}
+
 \item{rel_error}{\code{boolean} Relative error}
 
 \item{log_cv}{\code{boolean} logarithmic coefficient of variation}
-
-\item{unweighted}{\code{boolean} Add non weighted count if it is required}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated
