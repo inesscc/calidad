@@ -152,6 +152,7 @@ create_output <- function(table, domains, gl, n, cv) {
 
   # tabla con desagregación
   if (nrow(data.frame(table)) > 1 ) {
+
     final <- table %>%
       dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character) %>%
       dplyr::left_join(gl %>% dplyr::select(c(domains, "df")),
@@ -207,45 +208,82 @@ get_cv <- function(table, design, domains) {
 #' Cálcula los grados de libertad para cada estimación
 #'
 #' Recibe datos y los dominios. Devuelve un data frame con las upm, varstrat y gl para cada celda
+#' @param var variable objetivo
 #' @param data dataframe
 #' @param domains dominios en formato string
+#' @df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return dataframe con grados de libertad
 
 
-get_df <- function(data, domains) {
+get_df <- function(var,data, domains,df_type = "cepal"){
   design <- data
   data <- data$variables
 
-  # Si no hay diseño, no se calcula nada
- if (as.character(design$call$ids)[[2]] == "1") {
+### Si no hay diseño, no se calcula nada
+  if (as.character(design$call$ids)[[2]] == "1") {
     gl <- data %>%
       dplyr::group_by_at(.vars  = domains) %>%
       dplyr::summarise(upm = NA,
                        vartstrat = NA,
                        df = NA
-                       ) %>%
+      ) %>%
       dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
 
     return(gl)
   }
 
-  # Este es el caso cuando no hay dominios
-  if (!is.null(domains)) {
-    gl <- calcular_upm(data, dominios = domains) %>%
-      dplyr::left_join(calcular_estrato(data, domains), by = domains) %>%
-      dplyr::mutate(df = .data$upm - varstrat) %>%
-      dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
 
+  if (!is.null(domains)) {
+
+    domains_ine <- c(var,domains)
+
+    if(df_type == "ine"){
+
+      gl <- calcular_upm(design$variables, domains_ine) %>%
+        dplyr::left_join(calcular_estrato(design$variables, domains_ine), by = domains_ine) %>%
+        dplyr::mutate(df = .data$upm - .data$varstrat)  %>%
+        dplyr::filter(!!rlang::parse_expr(var) == 1)  %>%
+        dplyr::mutate_at(.vars = dplyr::vars(domains_ine), .funs = as.character) %>%
+        dplyr::ungroup() %>%
+        dplyr::select(-c(var,"upm","varstrat"))
+
+    } else if(df_type == "cepal"){
+
+      gl <- calcular_upm(design$variables, domains) %>%
+        dplyr::left_join(calcular_estrato(design$variables, domains), by = domains) %>%
+        dplyr::mutate(df = .data$upm - .data$varstrat)  %>%
+        dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)  %>%
+        dplyr::ungroup() %>%
+        dplyr::select(-c("upm","varstrat"))
+
+    }
+
+### sin desagregación
   } else {
-    varstrat <- length(unique(data$varstrat))
-    varunit <- length(unique(data$varunit))
-    gl <- varunit - varstrat
+
+    if(df_type == "ine"){
+
+    gl <- data %>%
+      dplyr::group_by(!!rlang::parse_expr(var)) %>%
+      dplyr::summarise(upm = length(unique(varunit)),
+                varstrat = length(unique(varstrat)),
+                df = upm-varstrat) %>%
+      dplyr::filter(!!rlang::parse_expr(var) == 1) %>%
+      dplyr::ungroup() %>%
+      dplyr::select(-c(var,"upm","varstrat"))
+
+    } else if(df_type == "cepal"){
+
+       varstrat <- length(unique(design$variables$varstrat))
+       varunit <- length(unique(design$variables$varunit))
+       gl <- varunit - varstrat
+    }
 
   }
+
   return(gl)
+
 }
-
-
 
 #-----------------------------------------------------------------------
 
@@ -536,33 +574,75 @@ calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio, env
 #'
 #' Genera una tabla con el conteo de cada cada una de los dominios del tabulado.
 #' La funcion contempla un caso para proporcion y un caso para promedio
-#'
-#' @param data \code{dataframe} que contiene los datos que se estan evaluando
-#' @param dominios vector de caracteres que contiene los dominios a evaluar
 #' @param var string que contiene el nombre de la variable de proporcion que se evalua.
+#' @param data \code{dataframe} que contiene los datos que se estan evaluando
+#' @param domains vector de caracteres que contiene los dominios a evaluar
+#' @df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
-#'
 
-calcular_n <- function(data, dominios, var = NULL) {
+get_sample_size <- function(var, data, domains, df_type = "cepal") {
 
-  # Esto es para el caso de proporcion
-  if (is.null(var)) {
-    sample_n <- data %>%
-      #dplyr::group_by(.dots = as.list(dominios)  ) %>%
-      dplyr::group_by_at(.vars = dominios) %>%
-      dplyr::summarise(n = dplyr::n())
-    # Este es el caso de nivel
-  } else {
-    symbol_var <- rlang::parse_expr(var)
-    sample_n <-  data %>%
-      dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-      dplyr::group_by_at(.vars = dominios) %>%
-      dplyr::summarise(n = sum(!!symbol_var))
+  if(!is.null(domains)){
+
+    if(df_type == "ine"){
+
+      #### version INE con dominios
+      dom1 <- c(var, domains)
+      symbol_var <- rlang::parse_expr(var)
+
+      data %>%
+        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+        dplyr::group_by(.dots = as.list(dom1)) %>%
+        dplyr::summarise(n = n()) %>%
+        dplyr::ungroup() %>% #%>%     dplyr::select(-var)
+        dplyr::filter(!!symbol_var == 1) %>%
+        dplyr::select(-symbol_var) %>%
+        dplyr::mutate_at(dplyr::vars(domains), as.character)
+
+    }else if(df_type == "cepal"){
+
+      dom1 <- c(var, domains)
+      symbol_var <- rlang::parse_expr(var)
+
+      data %>%
+        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+        dplyr::group_by(.dots = as.list(dom1)) %>%
+        dplyr::summarise(n = n()) %>%
+        dplyr::ungroup() %>% #%>%     dplyr::select(-var)
+        dplyr::group_by(!!rlang::parse_expr(domains)) %>%
+        dplyr::summarise(n = sum(n)) %>%
+        dplyr::mutate_at(dplyr::vars(domains), as.character)
+
+    }
+
+    ### sin dominios
+  }else{
+
+    if(df_type == "ine"){
+
+      #### version INE con dominios
+      symbol_var <- rlang::parse_expr(var)
+
+      data %>%
+        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+        dplyr::group_by(.dots = as.list(var)) %>%
+        dplyr::summarise(n = n()) %>%
+        dplyr::ungroup() %>% #
+        dplyr::filter(!!symbol_var == 1) %>%
+        dplyr::select(-symbol_var)
+
+    }else if(df_type == "cepal"){
+
+      data %>%
+        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+        dplyr::group_by(.dots = as.list(var)) %>%
+        dplyr::summarise(n = n()) %>%
+        dplyr::ungroup() %>%
+        dplyr::summarise(n = sum(n))
+
+    }
+
   }
-  sample_n <- sample_n  %>%
-    dplyr::mutate_at(.vars = dplyr::vars(dominios), .funs = as.character)
-
-  return(sample_n)
 
 }
 
@@ -575,24 +655,6 @@ unweighted_cases <- function(data, dominios, var) {
     dplyr::filter(!is.na(var)) %>%
     dplyr::group_by_at(.vars = dominios) %>%
     dplyr::summarise(n = dplyr::n())
-}
-
-#-----------------------------------------------------------------------
-#' Calcula tamanio muestral para la funcion de totales poblacionales
-#'
-#' Genera una tabla con el conteo de cada cada una de los dominios de las categorias ingresadas.
-#'
-#' @param x  vector de strings que contiene las variables para las cuales se calcula el tamanio muestra
-#' @param datos \code{dataframe} que se esta utilizando. Se extrae del disenio muestral
-#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
-#'
-
-calcular_n_total <- function(x, datos) {
-  datos %>%
-    dplyr::group_by_at(.vars = x) %>%
-    dplyr::count() %>%
-    dplyr::rename(variable := x) %>%
-    dplyr::mutate(variable = paste0(x, .data$variable))
 }
 
 #----------------------------------------------------------------------
@@ -701,6 +763,8 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 #' @param datos \code{dataframe} que contiene los datos que se estan evaluando. Se obtiene a partir del disenio muestral
 #' @param variables variables objetivo. vector de strings que contiene los nombres de las variables
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+
+# deprecated
 
 calcular_gl_total <- function(variables, datos) {
   upm <- purrr::map(variables, ~calcular_upm(datos, .x) %>%
@@ -954,9 +1018,164 @@ get_ess <- function(ess, env = parent.frame() ) {
 #'
 
 create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F,
-                                  ajuste_ene = F, unweighted = F, rel_error = F, rm.na = F) {
+                                  ajuste_ene = F, rel_error = F ) {
+
+  # Chequar que esten presentes las variables del disenio muestral. Si no se llaman varstrat y varunit, se
+  #  detiene la ejecucion
+  # chequear_var_disenio(disenio$variables)
+  disenio$variables$varunit <- disenio$variables[[unificar_variables_upm(disenio)]]
+  disenio$variables$varstrat <- disenio$variables[[unificar_variables_estrato(disenio)]]
+  disenio$variables$fe = disenio$variables[[unificar_variables_factExp(disenio)]]
 
 
+  ### filtramos base de disenioo por los casos que tengan datos tanto del denominador como del numerador. para
+  ### calcular correctamente los GL y N
+  disenio <- disenio[disenio$variables[[var]] != 0 | disenio$variables[[denominador]] != 0]
+
+  # Chequear que la variable no sea character
+  if (is.character(disenio$variables[[var]]) == T) stop("You are using a character vector!")
+
+  # Chequear que la variable no sea character
+  if (is.character(disenio$variables[[denominador]]) == T) stop("You are using a character vector for denominador!")
+
+  #Convertir los inputs en formulas para adecuarlos a survey
+  var <- paste0("~", var) %>%
+    stats::as.formula()
+
+  #Convertir los inputs en formulas para adecuarlos a survey
+  denominador <- paste0("~", denominador) %>%
+    stats::as.formula()
+
+  # CON DESAGREGACIoN
+  if (!is.null(dominios[[1]])) {
+
+    # Sin subpop #
+    if (is.null(subpop)) {
+      dominios <- paste0("~", dominios) %>%
+        stats::as.formula()
+
+      # con subpop
+    } else if (!is.null(subpop)) { # caso que tiene subpop
+
+      dominios <- paste(dominios, subpop, sep = "+")
+      dominios <- paste0("~", dominios) %>%
+        stats::as.formula()
+    }
+
+    #Generar la tabla con los calculos
+    tabla <- calcular_tabla_ratio(var, denominador, dominios, disenio)
+
+    #Extraer nombres
+    # nombres <- names(tabla)
+    # agrupacion <-  nombres[-c(length(nombres) - 2, (length(nombres) - 1), length(nombres)) ]
+    #var_ratio <- nombres[length(nombres) - 2]
+
+    # Building of the estimated ratio
+    var_ratio <- paste(as.character(var)[[2]], as.character(denominador)[[2]], sep = "/")
+
+    agrupacion <-  strsplit(as.character(dominios)[[2]], split = "\\+")[[1]] %>%
+      trimws(which = "both")
+
+    #+ Calcular N
+    n <- get_sample_size(disenio$variables, agrupacion) %>%
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
+
+    #+ Calcular GL de todos los cruces
+    gl <- calcular_upm(disenio$variables, agrupacion) %>%
+      dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
+      dplyr::mutate(gl = .data$upm - .data$varstrat) %>%
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
+
+    #+ Calcurar CV
+    tabla$cv = survey::cv(tabla)
+
+
+
+    #* * Armar tabla final
+    final <- tabla %>%
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character) %>%
+      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
+                       by = agrupacion) %>%
+      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
+                       by = agrupacion)
+
+
+    #Cambiar el nombre de la variable objetivo para que siempre sea igual.
+    final <- final  %>%
+      dplyr::rename(objetivo = var_ratio) %>%
+      dplyr::filter(.data$objetivo > 0) # se eliminan los ceros de la tabla
+
+
+    # Se renombra el error estándar
+    names(final)[grep("objetivo", names(final)) +1] = "se"
+    names(final) <- tolower(names(final))
+
+
+    #intervalos de confianza solo si el usuario lo requiere
+    if (ci == T) {
+      final <- calcular_ic(final,tipo = "prop_agregado",  ajuste_ene = ajuste_ene)
+    }
+
+    # SIN DESAGREGACIoN #
+  } else {
+
+    # Con subpobp
+    if (!is.null(subpop)) {
+
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
+
+      # Aqui se filtra el disenio
+      #  subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
+      disenio <- disenio[disenio$variables[[subpop]] == 1]
+
+    }
+
+    #Generar la tabla con los calculos
+    tabla <- calcular_tabla_ratio(var, denominador, dominios, disenio)
+
+    #+ Calcular N
+    n <- nrow(disenio$variables)
+
+    #+ Calcular GL
+    varstrat <- length(unique(disenio$variables$varstrat))
+    varunit <- length(unique(disenio$variables$varunit))
+    gl <- varunit - varstrat
+
+    #+ Calcular CV
+    cv <- cv(tabla, design = disenio)
+
+    #* * Armar tabla final
+    if (deff == T) {
+      final <- data.frame(tabla$ratio, survey::SE(tabla), deff = survey::deff(tabla))
+      final$cv = cv[1]
+      names(final) = c("objetivo", "se",  "deff", "cv")
+
+    } else {
+      final <- data.frame(tabla$ratio, survey::SE(tabla))
+      final$cv = cv[1]
+      names(final) = c("objetivo", "se", "cv")
+
+    }
+
+    # Armar tabla completa con todos los insumos
+    final <- dplyr::bind_cols(final, "gl" = gl, "n" = n)
+    #names(final)[2] <- "se"
+
+
+    ##Cambiar el nombre de la variable objetivo para que siempre sea igual
+    #final <- final %>%
+    #  dplyr::rename(objetivo = mean)
+
+    #intervalo de confianza solo si el usuario lo pide
+    if (ci == T) {
+      final <- calcular_ic(data = final, tipo = "prop_agregado",  ajuste_ene = ajuste_ene)
+
+    }
 
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
@@ -1097,8 +1316,177 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
   #Extrear el coeficiente de variacion
   cv <- get_cv(tabla, disenio, agrupacion)
 
-  #Unir toda la informacion en una tabla final
-  final <- create_output(tabla, agrupacion,  gl, n, cv)
+  #Chequear que la variable sea de proporcion. Si no lo es, se interrumpe la ejecucion
+  es_prop <- disenio$variables %>%
+    dplyr::mutate(es_prop_var = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var)  == 0 | is.na(!!rlang::parse_expr(var)), 1, 0))
+
+  if (sum(es_prop$es_prop_var) != nrow(es_prop)) stop("La variable no es de proporcion!")
+
+  #COnvertir los inputs en formulas para adecuarlos a survey
+  var <- paste0("~", var) %>%
+    stats::as.formula()
+
+
+  # ESTO CORRESPONDE AL CASO CON DESAGREGACIoN
+  if (!is.null(dominios[[1]])) {
+
+    # Esto corre para el caso en el que NO hay subpop
+    if (is.null(subpop)) {
+      dominios <- paste0("~", dominios) %>%
+        stats::as.formula()
+
+      # Esto corre para subpop
+    } else if (!is.null(subpop)) { # caso que tiene subpop
+
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
+
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
+
+      dominios <- paste(dominios, subpop, sep = "+")
+      dominios <- paste0("~", dominios) %>%
+        stats::as.formula()
+    }
+
+
+    #Generar la tabla con los calculos
+    tabla <- calcular_tabla(var, dominios, disenio)
+
+    #Extraer nombres
+    nombres <- names(tabla)
+    # agrupacion <-  nombres[-c((length(nombres) - 2), (length(nombres) - 1), length(nombres)) ]
+    var_prop <- var_string
+
+    agrupacion <-  strsplit(as.character(dominios)[[2]], split = "\\+")[[1]] %>%
+      trimws(which = "both")
+
+
+    #Calcular el tamanio muestral de cada grupo
+    n <- get_sample_size(disenio$variables, agrupacion) %>%
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
+
+
+    #Calcular los grados de libertad de todos los cruces
+    gl <- calcular_upm(disenio$variables, agrupacion) %>%
+      dplyr::left_join(calcular_estrato(disenio$variables, agrupacion), by = agrupacion) %>%
+      dplyr::mutate(gl = .data$upm - .data$varstrat) %>%
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character)
+
+    # Coeficiente de variación
+    tabla$cv <- survey::cv(tabla)
+
+
+    #Unir toda la informacion. Se hace con join para asegurar que no existan problemas en la union
+    final <- tabla %>%
+      dplyr::mutate_at(dplyr::vars(agrupacion), as.character) %>%
+      dplyr::left_join(gl %>% dplyr::select(c(agrupacion, "gl" )),
+                       by = agrupacion) %>%
+      dplyr::left_join(n %>% dplyr::select(c(agrupacion, "n" )),
+                       by = agrupacion)
+
+    # Get unweighted counting if it is required by the user
+    if (unweighted) {
+      unweighted_cases <- get_sample_size(disenio$variables, c(agrupacion, var_string) ) %>%
+        dplyr::mutate_at(dplyr::vars(agrupacion), as.character)  %>%
+        dplyr::filter(!!rlang::parse_expr(var_string) == 1 ) %>%
+        dplyr::rename(unweighted = n)
+
+      final <- final %>%
+        dplyr::left_join(unweighted_cases %>% dplyr::select(c(agrupacion, "unweighted" )),
+                         by = agrupacion)
+    }
+
+
+    var_string = var
+
+    #Cambiar el nombre de la variable objetivo para que siempre sea igual.
+    final <- final  %>%
+      dplyr::rename(objetivo = var_prop) # %>%
+    #dplyr::filter(.data$objetivo > 0) # se eliminan los ceros de la tabla
+
+
+
+    # Ajustar nombres de la tabla, para que tengan un formato estándar
+    names(final) <- names(final) %>%
+      stringr::str_replace(pattern = paste0("DEff.", var_prop), "deff")
+
+
+    final <- final %>%
+      dplyr::rename(coef_var = cv)
+
+
+    #Se calculan los intervalos de confianza solo si el usuario lo requiere
+    if (ci == T) {
+      final <- calcular_ic(final,tipo = "prop_agregado",  ajuste_ene = ajuste_ene)
+    }
+
+
+    # ESTO CORRESPONDE AL CASO SIN DESAGREGACIoN
+  } else {
+
+    # Si el usuario ingresa subpoblacion, se filtra la base de datos para la subpoblacion de referencia
+    if (!is.null(subpop)) {
+
+      # Chequear que subpop sea una variable dummy. Si no se cumple, se detiene la ejecucion
+      es_prop <- disenio$variables %>%
+        dplyr::mutate(es_prop_subpop = dplyr::if_else(!!rlang::parse_expr(subpop)  == 1 | !!rlang::parse_expr(subpop) == 0, 1, 0))
+
+
+      if (sum(is.na(disenio$variables[[subpop]] > 0 ))) stop("subpop contains NAs!")
+      if (sum(es_prop$es_prop_subpop) != nrow(es_prop)) stop("subpop must be a dummy variable!")
+
+      # Aqui se filtra el disenio
+      #  subpop_text <- rlang::expr_text(rlang::enexpr(subpop))
+      disenio <- disenio[disenio$variables[[subpop]] == 1]
+
+    }
+
+    dominios_form = dominios
+
+    #Generar la tabla con los calculos
+    tabla <- calcular_tabla(var_form, dominios_form, disenio)
+
+    # Tamanio muestral
+    n <- nrow(disenio$variables)
+
+    # get unweighted counting
+    unweighted_cases <- disenio$variables %>%
+      dplyr::filter(!!rlang::parse_expr(var_string) == 1 ) %>%
+      nrow()
+
+    # Calcular grados de libertad
+    varstrat <- length(unique(disenio$variables$varstrat))
+    varunit <- length(unique(disenio$variables$varunit))
+    gl <- varunit - varstrat
+
+    # Calcular coeficiente de variacion
+    cv <- cv(tabla, design = disenio)
+
+    # Armar tabla final
+    final <- data.frame(tabla)
+
+    # Armar tabla completa con todos los insumos
+    final <- dplyr::bind_cols(final, "gl" = gl , "n" = n, "coef_var" = cv[1])
+    names(final)[2] <- "se"
+
+
+    if (unweighted) {
+      final <- dplyr::bind_cols(final, "unweighted" =  unweighted_cases)
+
+    }
+
+    #Cambiar el nombre de la variable objetivo para que siempre sea igual
+    final <- final %>%
+      dplyr::rename(objetivo = mean)
+
+    # Se calcula el intervalo de confianza solo si el usuario lo pide
+    if (ci == T) {
+      final <- calcular_ic(data = final, tipo = "prop_agregado",  ajuste_ene = ajuste_ene)
+
+    }
 
   # Ordenar las columnas y estandarizar los nombres de las variables
   final <- standardize_columns(final, var, denom = get("denominador", env) )
