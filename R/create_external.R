@@ -63,9 +63,9 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(dominios)
 
+  return(dominios_form)
   #Calcular el tamanio muestral de cada grupo
   n <- calcular_n(disenio$variables, agrupacion)
-
 
   #Calcular los grados de libertad de todos los cruces
   gl <- get_df(disenio, agrupacion)

@@ -41,12 +41,8 @@ dc_sin_varunit <- survey::svydesign(ids = ~1,
 # Con desagregación
 
 agrupacion <- c("sexo", "zona")
+agrupacion <- NULL
 n <- calcular_n(dc$variables, agrupacion)
-
-true_n <- dc$variables %>%
-  dplyr::group_by(sexo, zona) %>%
-  dplyr::summarise(contar = dplyr::n()) %>%
-  dplyr::mutate_at( .vars =  dplyr::vars(sexo, zona), as.character)
 
 test_that("conteo n agrupado", {
   expect_equal(n$n, true_n$contar)
