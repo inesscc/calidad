@@ -24,7 +24,7 @@ convert_ratio_to_df <- function(table, domains) {
 get_unweighted <- function(table, disenio, var, domains) {
 
   if (!is.null(domains)) {
-    unweighted_cases <- calcular_n(disenio$variables, c(domains, var) ) %>%
+    unweighted_cases <- get_sample_size(var,disenio$variables, c(domains, var) ) %>%
       dplyr::mutate_at(dplyr::vars(domains), as.character)  %>%
       dplyr::filter(!!rlang::parse_expr(var) == 1 ) %>%
       dplyr::rename(unweighted = n)
@@ -591,7 +591,7 @@ get_sample_size <- function(var, data, domains, df_type = "cepal") {
       symbol_var <- rlang::parse_expr(var)
 
       data %>%
-        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+     #   dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
         dplyr::group_by(.dots = as.list(dom1)) %>%
         dplyr::summarise(n = n()) %>%
         dplyr::ungroup() %>% #%>%     dplyr::select(-var)
@@ -605,7 +605,7 @@ get_sample_size <- function(var, data, domains, df_type = "cepal") {
       symbol_var <- rlang::parse_expr(var)
 
       data %>%
-        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+      #  dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
         dplyr::group_by(.dots = as.list(dom1)) %>%
         dplyr::summarise(n = n()) %>%
         dplyr::ungroup() %>% #%>%     dplyr::select(-var)
@@ -624,7 +624,7 @@ get_sample_size <- function(var, data, domains, df_type = "cepal") {
       symbol_var <- rlang::parse_expr(var)
 
       data %>%
-        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+    #    dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
         dplyr::group_by(.dots = as.list(var)) %>%
         dplyr::summarise(n = n()) %>%
         dplyr::ungroup() %>% #
@@ -634,9 +634,9 @@ get_sample_size <- function(var, data, domains, df_type = "cepal") {
     }else if(df_type == "cepal"){
 
       data %>%
-        dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+     #   dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
         dplyr::group_by(.dots = as.list(var)) %>%
-        dplyr::summarise(n = n()) %>%
+        dplyr::summarise(n = dplyr::n()) %>%
         dplyr::ungroup() %>%
         dplyr::summarise(n = sum(n))
 
@@ -1054,7 +1054,7 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
   agrupacion <- create_groupby_vars(dominios)
 
   #Calcular el tamanio muestral de cada grupo
-  n <- calcular_n(disenio$variables, agrupacion)
+  n <- get_sample_size(var,disenio$variables, agrupacion)
 
 
   #Calcular los grados de libertad de todos los cruces
@@ -1153,8 +1153,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
   agrupacion <- create_groupby_vars(dominios)
 
   #Calcular el tamanio muestral de cada grupo
-  n <- calcular_n(disenio$variables, agrupacion)
-
+  n <- get_sample_size(var,disenio$variables, agrupacion)
 
   #Calcular los grados de libertad de todos los cruces
   gl <- get_df(disenio, agrupacion)
