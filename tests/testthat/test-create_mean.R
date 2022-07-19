@@ -42,7 +42,7 @@ dc_sin_varunit <- survey::svydesign(ids = ~1,
 
 agrupacion <- c("sexo", "zona")
 agrupacion <- NULL
-n <- calcular_n(dc$variables, agrupacion)
+n <- get_sample_size("gastot_hd", dc$variables, agrupacion)
 
 test_that("conteo n agrupado", {
   expect_equal(n$n, true_n$contar)

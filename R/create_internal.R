@@ -580,7 +580,7 @@ calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio, env
 #' @df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 
-get_sample_size <- function(var, data, domains, df_type = "cepal") {
+get_sample_size <- function(var, data, domains = NULL, df_type = "cepal") {
 
   if(!is.null(domains)){
 
@@ -592,8 +592,8 @@ get_sample_size <- function(var, data, domains, df_type = "cepal") {
 
       data %>%
         dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-        dplyr::group_by(.dots = as.list(dom1)) %>%
-        dplyr::summarise(n = n()) %>%
+        dplyr::group_by_at(.vars = dom1) %>%
+        dplyr::summarise(n = dplyr::n()) %>%
         dplyr::ungroup() %>% #%>%     dplyr::select(-var)
         dplyr::filter(!!symbol_var == 1) %>%
         dplyr::select(-symbol_var) %>%
@@ -601,15 +601,16 @@ get_sample_size <- function(var, data, domains, df_type = "cepal") {
 
     }else if(df_type == "cepal"){
 
+
       dom1 <- c(var, domains)
       symbol_var <- rlang::parse_expr(var)
 
       data %>%
         dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-        dplyr::group_by(.dots = as.list(dom1)) %>%
-        dplyr::summarise(n = n()) %>%
+        dplyr::group_by(.dots = as.list(dom1))  %>%
+        dplyr::summarise(n = dplyr::n()) %>%
         dplyr::ungroup() %>% #%>%     dplyr::select(-var)
-        dplyr::group_by(!!rlang::parse_expr(domains)) %>%
+        dplyr::group_by_at(.vars = domains) %>%
         dplyr::summarise(n = sum(n)) %>%
         dplyr::mutate_at(dplyr::vars(domains), as.character)
 
@@ -617,16 +618,16 @@ get_sample_size <- function(var, data, domains, df_type = "cepal") {
 
     ### sin dominios
   }else{
+    symbol_var <- rlang::parse_expr(var)
 
     if(df_type == "ine"){
 
       #### version INE con dominios
-      symbol_var <- rlang::parse_expr(var)
 
       data %>%
         dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
         dplyr::group_by(.dots = as.list(var)) %>%
-        dplyr::summarise(n = n()) %>%
+        dplyr::summarise(n = dplyr::n()) %>%
         dplyr::ungroup() %>% #
         dplyr::filter(!!symbol_var == 1) %>%
         dplyr::select(-symbol_var)
@@ -635,8 +636,8 @@ get_sample_size <- function(var, data, domains, df_type = "cepal") {
 
       data %>%
         dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-        dplyr::group_by(.dots = as.list(var)) %>%
-        dplyr::summarise(n = n()) %>%
+        dplyr::group_by_at(.vars = var) %>%
+        dplyr::summarise(n = dplyr::n()) %>%
         dplyr::ungroup() %>%
         dplyr::summarise(n = sum(n))
 
