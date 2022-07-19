@@ -33,7 +33,7 @@ dc_sin_varunit <- survey::svydesign(ids = ~1,
                         weights = ~fe)
 
 #####################
-# ACTUALIZANDO A GET_SAMPLE_SIZE # PROBAR CALCULAR_N
+# GET_SAMPLE_SIZE
 #####################
 
 # Con desagregación
@@ -43,7 +43,7 @@ agrupacion <- NULL
 
 # n <- calcular_n(dc$variables, agrupacion)
 
-n <- get_sample_size("ecivil",dc$variables, agrupacion)
+n <- get_sample_size(dc$variables, agrupacion)
 
 
 
@@ -54,6 +54,9 @@ test_that("conteo n agrupado", {
 # Sin desagregación
 agrupacion <- NULL
 # n <- calcular_n(dc$variables, agrupacion)
+
+n <- get_sample_size(dc$variables, agrupacion)
+
 true_n <- nrow(dc$variables)
 
 test_that("conteo n sin agrupar", {

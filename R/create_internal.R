@@ -24,7 +24,7 @@ convert_ratio_to_df <- function(table, domains) {
 get_unweighted <- function(table, disenio, var, domains) {
 
   if (!is.null(domains)) {
-    unweighted_cases <- get_sample_size(var,disenio$variables, c(domains, var) ) %>%
+    unweighted_cases <- get_sample_size(disenio$variables, c(domains, var) ) %>%
       dplyr::mutate_at(dplyr::vars(domains), as.character)  %>%
       dplyr::filter(!!rlang::parse_expr(var) == 1 ) %>%
       dplyr::rename(unweighted = n)
@@ -574,73 +574,30 @@ calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio, env
 #'
 #' Genera una tabla con el conteo de cada cada una de los dominios del tabulado.
 #' La funcion contempla un caso para proporcion y un caso para promedio
-#' @param var string que contiene el nombre de la variable de proporcion que se evalua.
 #' @param data \code{dataframe} que contiene los datos que se estan evaluando
 #' @param domains vector de caracteres que contiene los dominios a evaluar
 #' @df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 
-get_sample_size <- function(var, data, domains, df_type = "cepal") {
+get_sample_size <- function(data, domains = NULL, df_type = "cepal") {
 
-  if(!is.null(domains)){
+  if(df_type == "ine"){
 
-    if(df_type == "ine"){
+    #symbol_var <- rlang::parse_expr(var)
 
-      #### version INE con dominios
-      dom1 <- c(var, domains)
-      symbol_var <- rlang::parse_expr(var)
+    data %>%
+      #dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+      dplyr::group_by(.dots = as.list(domains)) %>%
+      dplyr::summarise(n = sum(!!symbol_var))
 
-      data %>%
-     #   dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-        dplyr::group_by(.dots = as.list(dom1)) %>%
-        dplyr::summarise(n = n()) %>%
-        dplyr::ungroup() %>% #%>%     dplyr::select(-var)
-        dplyr::filter(!!symbol_var == 1) %>%
-        dplyr::select(-symbol_var) %>%
-        dplyr::mutate_at(dplyr::vars(domains), as.character)
+  }else if(df_type == "cepal"){
 
-    }else if(df_type == "cepal"){
+    #symbol_var <- rlang::parse_expr(var)
 
-      dom1 <- c(var, domains)
-      symbol_var <- rlang::parse_expr(var)
-
-      data %>%
-      #  dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-        dplyr::group_by(.dots = as.list(dom1)) %>%
-        dplyr::summarise(n = n()) %>%
-        dplyr::ungroup() %>% #%>%     dplyr::select(-var)
-        dplyr::group_by(!!rlang::parse_expr(domains)) %>%
-        dplyr::summarise(n = sum(n)) %>%
-        dplyr::mutate_at(dplyr::vars(domains), as.character)
-
-    }
-
-    ### sin dominios
-  }else{
-
-    if(df_type == "ine"){
-
-      #### version INE con dominios
-      symbol_var <- rlang::parse_expr(var)
-
-      data %>%
-    #    dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-        dplyr::group_by(.dots = as.list(var)) %>%
-        dplyr::summarise(n = n()) %>%
-        dplyr::ungroup() %>% #
-        dplyr::filter(!!symbol_var == 1) %>%
-        dplyr::select(-symbol_var)
-
-    }else if(df_type == "cepal"){
-
-      data %>%
-     #   dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-        dplyr::group_by(.dots = as.list(var)) %>%
-        dplyr::summarise(n = dplyr::n()) %>%
-        dplyr::ungroup() %>%
-        dplyr::summarise(n = sum(n))
-
-    }
+    data %>%
+     # dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
+      dplyr::group_by(.dots = as.list(domains)) %>%
+      dplyr::summarise(n = n())
 
   }
 
@@ -1054,7 +1011,7 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
   agrupacion <- create_groupby_vars(dominios)
 
   #Calcular el tamanio muestral de cada grupo
-  n <- get_sample_size(var,disenio$variables, agrupacion)
+  n <- get_sample_size(disenio$variables, agrupacion)
 
 
   #Calcular los grados de libertad de todos los cruces
@@ -1153,7 +1110,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
   agrupacion <- create_groupby_vars(dominios)
 
   #Calcular el tamanio muestral de cada grupo
-  n <- get_sample_size(var,disenio$variables, agrupacion)
+  n <- get_sample_size(disenio$variables, agrupacion)
 
   #Calcular los grados de libertad de todos los cruces
   gl <- get_df(disenio, agrupacion)
