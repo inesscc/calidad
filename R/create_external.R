@@ -64,7 +64,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   agrupacion <- create_groupby_vars(dominios)
 
   #Calcular el tamanio muestral de cada grupo
-  n <- get_sample_size(var, disenio$variables, agrupacion)
+  n <- get_sample_size(disenio$variables, agrupacion)
 
   #Calcular los grados de libertad de todos los cruces
   gl <- get_df(var, disenio, agrupacion)
@@ -279,7 +279,7 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
   agrupacion <- create_groupby_vars(dominios)
 
   #Calcular el tamanio muestral de cada grupo
-  n <- get_sample_size(var,disenio$variables, agrupacion,df_type)
+  n <- get_sample_size(isenio$variables, agrupacion,df_type)
 
     #Calcular los grados de libertad de todos los cruces
   gl <- get_df(var,disenio,agrupacion,df_type)
