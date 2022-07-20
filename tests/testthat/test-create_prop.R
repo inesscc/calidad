@@ -44,15 +44,6 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
                                             fdt_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, fdt ) ),
                               weights = ~fact_cal)
 
-  #create_prop(var = fdt, dominios = sexo, disenio = dc_ene)
-
-# enusc <- enusc %>%
-#   dplyr::rename(varunit = Conglomerado,
-#          varstrat = VarStrat) %>%
-#   dplyr::mutate_at(.vars =  dplyr::vars(rph_sexo), .funs =  as.numeric)
-
-#dc_enusc <- svydesign(ids = ~varunit, strata = ~varstrat, data = enusc, weights = ~Fact_Pers)
-
 
 #####################
 # PROBAR NA EN SUBPOP

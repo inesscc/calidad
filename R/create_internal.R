@@ -1,5 +1,37 @@
 
 
+formula_to_string <- function(formula) {
+  v <- deparse(formula) %>%
+    stringr::str_remove("~")
+  return(v)
+}
+
+
+#--------------------------------
+
+fix_repeated_columns <- function(table, v) {
+  v <- deparse(v) %>%
+    stringr::str_remove("~")
+
+  aparicion <- 0
+  i <- 1
+  for (col in names(table)) {
+    if (col == v) {
+      aparicion <- aparicion + 1
+      if (col == v & aparicion == 2) {
+        names(table)[i] <- "est"
+
+      }
+    }
+    i = i + 1
+  }
+
+  return(table)
+}
+
+
+
+#--------------------------------------------------
 add_class <-  function(object, new_class) {
   class(object)  <- append(class(object), new_class, after = F)
   return(object)
@@ -215,7 +247,7 @@ get_cv <- function(table, design, domains) {
 #' @return dataframe con grados de libertad
 
 
-get_df <- function(var,data, domains,df_type = "cepal"){
+get_df <- function(data, domains,df_type = "cepal"){
   design <- data
   data <- data$variables
 
@@ -235,17 +267,18 @@ get_df <- function(var,data, domains,df_type = "cepal"){
 
   if (!is.null(domains)) {
 
-    domains_ine <- c(var,domains)
-
     if(df_type == "ine"){
 
-      gl <- calcular_upm(design$variables, domains_ine) %>%
-        dplyr::left_join(calcular_estrato(design$variables, domains_ine), by = domains_ine) %>%
-        dplyr::mutate(df = .data$upm - .data$varstrat)  %>%
-        dplyr::filter(!!rlang::parse_expr(var) == 1)  %>%
-        dplyr::mutate_at(.vars = dplyr::vars(domains_ine), .funs = as.character) %>%
-        dplyr::ungroup() %>%
-        dplyr::select(-c(var,"upm","varstrat"))
+      #  Get estimation variable for the case size-INE. We need this variable to filter the table in order to exclude zero values
+      estimation_var <- domains[length(domains)]
+
+      gl <- calcular_upm(design$variables, domains)  %>%
+        dplyr::left_join(calcular_estrato(design$variables, domains), by = domains)  %>%
+        dplyr::mutate(df = .data$upm - .data$varstrat)   %>%
+        dplyr::filter(!!rlang::parse_expr(estimation_var) == 1)   %>% # the zero cases are deleted
+        dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character) %>%
+        dplyr::ungroup()   %>%
+        dplyr::select(-c("upm","varstrat"))
 
     } else if(df_type == "cepal"){
 
@@ -273,7 +306,6 @@ get_df <- function(var,data, domains,df_type = "cepal"){
       dplyr::select(-c(var,"upm","varstrat"))
 
     } else if(df_type == "cepal"){
-
        varstrat <- length(unique(design$variables$varstrat))
        varunit <- length(unique(design$variables$varunit))
        gl <- varunit - varstrat
@@ -403,7 +435,7 @@ check_input_var <- function(var, disenio, estimation = "mean") {
     if (sum(es_prop$es_prop) == nrow(disenio$variables)) warning("It seems yor are using a proportion variable!")
 
   # En el caso de proporción, se exige que la variable sea dummy
-  } else if (estimation == "prop") {
+  } else if (estimation == "prop" | estimation == "size" ) {
     es_prop <- disenio$variables %>%
       dplyr::mutate(es_prop = dplyr::if_else(!!rlang::parse_expr(var) == 1 | !!rlang::parse_expr(var) == 0 | is.na(!!rlang::parse_expr(var)),
                                              1, 0))
@@ -485,6 +517,7 @@ unificar_variables_factExp = function(disenio){
 
 calcular_tabla <-  function(var, dominios, disenio, estimation = "mean", env = parent.frame(), fun, denom = denominador) {
 
+
   # El primer if es para dominios
   if (!is.null(dominios)) {
 
@@ -495,6 +528,16 @@ calcular_tabla <-  function(var, dominios, disenio, estimation = "mean", env = p
                                    design = disenio,
                                    FUN = fun,
                                    deff = get("deff", env))
+
+      # sometimes survey outputs two coluns with the same name. In those cases we keep the first occurrence and the second one is modified
+      estimacion <- fix_repeated_columns(estimacion, v = var)
+
+
+      # drop rows with zero values
+      string_var <- formula_to_string(var)
+
+      estimacion <- estimacion %>%
+        dplyr::filter(!!rlang::parse_expr(string_var)  != 0)
 
 
     } else if (estimation == "ratio")  {
@@ -579,25 +622,25 @@ calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio, env
 #' @df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 
-get_sample_size <- function(data, domains = NULL, df_type = "cepal") {
+get_sample_size <- function(data, domains = NULL, df_type = "cepal", env = parent.frame()) {
 
   if(df_type == "ine"){
 
-    #symbol_var <- rlang::parse_expr(var)
+    #  Get estimation variable for the case size-INE. We need this variable to filter the table in order to exclude zero values
+    estimation_var <- domains[length(domains)]
 
     data %>%
-      #dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-      dplyr::group_by(.dots = as.list(domains)) %>%
-      dplyr::summarise(n = sum(!!symbol_var))
+      dplyr::group_by_at(.vars = domains) %>%
+      dplyr::summarise(n = dplyr::n()) %>%
+      dplyr::filter(!!rlang::parse_expr(estimation_var) == 1) %>%
+      dplyr::mutate_at(domains, as.character)
 
   }else if(df_type == "cepal"){
 
-    #symbol_var <- rlang::parse_expr(var)
-
     data %>%
-     # dplyr::mutate(!!symbol_var := as.numeric(!!symbol_var)) %>% # para prevenir problemas
-      dplyr::group_by(.dots = as.list(domains)) %>%
-      dplyr::summarise(n = n())
+      dplyr::group_by_at(.vars = domains) %>%
+      dplyr::summarise(n = dplyr::n()) %>%
+      dplyr::mutate_at(domains, as.character)
 
   }
 
