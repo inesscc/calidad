@@ -170,7 +170,7 @@ true_strata <- length(unique(dc$variables$varstrat))
 true_df <- true_upm - true_strata
 
 test_that("conteo df sin dominios", {
-  expect_equal(true_df, df)
+  expect_equal(true_df, df[[1]])
 })
 
 # Con diseño complejo caso especial ine-size sin dominios

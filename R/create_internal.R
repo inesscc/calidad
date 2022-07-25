@@ -154,19 +154,30 @@ standardize_columns <- function(data, var, denom = denominador) {
     denom <- "perro"
   }
 
+  # print(names(data))
+  # print(var)
+
+  # # when you have objective variable and est
+  if(sum(names(data) %in% c(var,"est")) == 2){
+
+    data[var] = NULL
+
+  }
 
   names(data) <- names(data) %>%
     tolower() %>%
     stringr::str_replace(pattern =  ratio_name, "stat") %>%
-    stringr::str_replace(pattern =  var, "stat") %>%
+    stringr::str_replace(pattern =  tolower(var), "stat") %>%
     stringr::str_remove(pattern =  "\\.stat"  ) %>%
-    stringr::str_replace(pattern =  "mean", "stat")
+    stringr::str_replace(pattern =  "mean|total|est", "stat")
 
   if (!is.null(data$deff) ) {
     data <- data %>%
       dplyr::relocate(deff, .after = last_col())
 
   }
+
+  rownames(data) = NULL
 
   return(data)
 }
@@ -180,7 +191,7 @@ standardize_columns <- function(data, var, denom = denominador) {
 #' @param domains listado de variables para desagregar
 #' @return dataframe con toda la información para estándar INE
 
-create_output <- function(table, domains, gl, n, cv) {
+create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
 
   # tabla con desagregación
   if (nrow(data.frame(table)) > 1 ) {
@@ -195,11 +206,20 @@ create_output <- function(table, domains, gl, n, cv) {
                        by = domains)
 
   } else {
+
+    var <- get("var",envir = env)
+
+    gl <- gl %>% dplyr::select(-dplyr::any_of(var))
+    n <- n %>% dplyr::select(-dplyr::any_of(var))
+
     final <- data.frame(table)
 
     final <- dplyr::bind_cols(final, "df" = gl , "n" = n, "cv" = cv[1])
-    names(final)[2] <- "se"
-    return(final)
+
+## en ocaciones survey te entrega el error estandar con el nombre de la variable objetivo.
+    if(names(final)[2] == var){
+      names(final)[2] <- "se"
+    }
 
   }
 
@@ -268,7 +288,6 @@ get_df <- function(data, domains,df_type = "cepal"){
   if (!is.null(domains)) {
 
     if(df_type == "ine"){
-
       #  Get estimation variable for the case size-INE. We need this variable to filter the table in order to exclude zero values
       estimation_var <- domains[length(domains)]
 
@@ -281,14 +300,12 @@ get_df <- function(data, domains,df_type = "cepal"){
         dplyr::select(-c("upm","varstrat"))
 
     } else if(df_type == "cepal"){
-
       gl <- calcular_upm(design$variables, domains) %>%
         dplyr::left_join(calcular_estrato(design$variables, domains), by = domains) %>%
         dplyr::mutate(df = .data$upm - .data$varstrat)  %>%
         dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)  %>%
         dplyr::ungroup() %>%
         dplyr::select(-c("upm","varstrat"))
-
     }
 
 ### sin desagregación
@@ -296,19 +313,28 @@ get_df <- function(data, domains,df_type = "cepal"){
 
     if(df_type == "ine"){
 
+      estimation_var <- domains[length(domains)]
+
     gl <- data %>%
-      dplyr::group_by(!!rlang::parse_expr(var)) %>%
+      dplyr::filter(!!rlang::parse_expr(estimation_var) == 1) %>%
       dplyr::summarise(upm = length(unique(varunit)),
                 varstrat = length(unique(varstrat)),
                 df = upm-varstrat) %>%
-      dplyr::filter(!!rlang::parse_expr(var) == 1) %>%
-      dplyr::ungroup() %>%
-      dplyr::select(-c(var,"upm","varstrat"))
+      dplyr::select(-c(estimation_var,"upm","varstrat"))
+
+  #  print(paste("fe",gl))
 
     } else if(df_type == "cepal"){
-       varstrat <- length(unique(design$variables$varstrat))
-       varunit <- length(unique(design$variables$varunit))
-       gl <- varunit - varstrat
+       # varstrat <- length(unique(design$variables$varstrat))
+       # varunit <- length(unique(design$variables$varunit))
+       # gl <- varunit - varstrat
+
+     gl <- calcular_estrato(design$variables,dominios = NULL) %>%
+               dplyr::bind_cols(calcular_upm(design$variables,dominios = NULL)) %>%
+               dplyr::mutate(df = upm-varstrat) %>%
+               dplyr::select(-c("upm","varstrat"))
+
+     return(gl)
     }
 
   }
@@ -528,10 +554,8 @@ calcular_tabla <-  function(var, dominios, disenio, estimation = "mean", env = p
                                    design = disenio,
                                    FUN = fun,
                                    deff = get("deff", env))
-
       # sometimes survey outputs two coluns with the same name. In those cases we keep the first occurrence and the second one is modified
       estimacion <- fix_repeated_columns(estimacion, v = var)
-
 
       # drop rows with zero values
       string_var <- formula_to_string(var)

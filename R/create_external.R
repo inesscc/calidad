@@ -271,7 +271,6 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
   # Convertir en formula para survey
   dominios_form <- convert_to_formula(dominios)
 
-
   # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(dominios)
 
@@ -284,7 +283,7 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
   #Generar la tabla con los calculos
   tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svytotal)
 
-  #Calcular el tamanio muestral de cada grupo
+    #Calcular el tamanio muestral de cada grupo
   n <- get_sample_size(disenio$variables, agrupacion, df_type)
 
   #Calcular los grados de libertad de todos los cruces
@@ -293,6 +292,9 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
   #Extrear el coeficiente de variacion
   cv <- get_cv(tabla, disenio, agrupacion)
 
+  if(df_type == "ine" & is.null(dominios)){
+    cv <- cv[2]
+  }
 
   #Unir toda la informacion en una tabla final
   final <- create_output(tabla, agrupacion,  gl, n, cv)
