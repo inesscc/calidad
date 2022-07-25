@@ -1208,6 +1208,13 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
       dplyr::mutate(relative_error = stats::qt(c(.975), df = df) * cv)
   }
 
+
+  # add log cv, if the user uses this parameter
+  if (log_cv) {
+    final <- final %>%
+      dplyr::mutate(log_cv = se / (-log(stat)*stat))
+  }
+
   # add the ess if the user uses this parameter
   final <- get_ess(ess)
 
