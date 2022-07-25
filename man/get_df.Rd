@@ -4,14 +4,14 @@
 \alias{get_df}
 \title{Cálcula los grados de libertad para cada estimación}
 \usage{
-get_df(var, data, domains, df_type = "cepal")
+get_df(data, domains, df_type = "cepal")
 }
 \arguments{
-\item{var}{variable objetivo}
-
 \item{data}{dataframe}
 
 \item{domains}{dominios en formato string}
+
+\item{var}{variable objetivo}
 }
 \value{
 dataframe con grados de libertad

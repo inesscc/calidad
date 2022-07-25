@@ -4,7 +4,7 @@
 \alias{create_output}
 \title{Une información de indicadores y genera tabla final}
 \usage{
-create_output(table, domains, gl, n, cv)
+create_output(table, domains, gl, n, cv, env = parent.frame())
 }
 \arguments{
 \item{table}{objeto creado con survey}

@@ -4,11 +4,9 @@
 \alias{get_sample_size}
 \title{Calcula tamanio muestral para las medias}
 \usage{
-get_sample_size(var, data, domains, df_type = "cepal")
+get_sample_size(data, domains = NULL, df_type = "cepal", env = parent.frame())
 }
 \arguments{
-\item{var}{string que contiene el nombre de la variable de proporcion que se evalua.}
-
 \item{data}{\code{dataframe} que contiene los datos que se estan evaluando}
 
 \item{domains}{vector de caracteres que contiene los dominios a evaluar}
