@@ -100,8 +100,8 @@ test_that("conteo df diseño complejo", {
 
 test2 <-  create_mean("gastot_hd", disenio = dc)
 test2 <-  create_mean("gastot_hd", dominios =  "zona+sexo", disenio = dc, deff = F, rm.na = F)
-test2 <-  create_mean("gastot_hd", dominios =  "zona+sexo", disenio = dc, ess = T)
 
-
+expect_warning(create_mean("gastot_hd", dominios =  "zona+sexo", disenio = dc, ess = T),
+               "to get effective sample size use deff = T")
 
 

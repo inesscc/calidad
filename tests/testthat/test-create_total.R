@@ -53,13 +53,19 @@ test_that("suma del gasto", {
   expect_equal(suma, suma_real)
 })
 
-# Probar sin diseño complejo
-suma <- create_total("gastot_hd", dominios = "zona", disenio = dc_sin_varunit) %>%
-  dplyr::pull(stat)
+
+suma <- expect_warning( create_total("gastot_hd", dominios = "zona", disenio = dc_sin_varunit) %>%
+                          dplyr::pull(stat),
+                        "se calculated without complex design")
+
 
 test_that("suma del gasto sin ", {
   expect_equal(suma, suma_real)
 })
+
+
+
+
 
 
 ##############################

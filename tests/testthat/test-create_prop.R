@@ -194,7 +194,9 @@ test_that("gl proporción desagregado ene", {
 test2 <-  create_prop("desocupado", disenio = dc_ene)
 test2 <-  create_prop("desocupado", dominios =  "region", disenio = dc_ene)
 test2 <-  create_prop("desocupado", dominios =  "region", subpop = "fdt", disenio = dc_ene)
-test2 <-  create_prop("desocupado", dominios =  "region+sexo", disenio = dc_ene, ess = T)
+
+expect_warning(create_prop("desocupado", dominios =  "region+sexo", disenio = dc_ene, ess = T),
+               "to get effective sample size use deff = T")
 
 
 #########################
