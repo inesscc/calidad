@@ -64,10 +64,10 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
   agrupacion <- create_groupby_vars(dominios)
 
   #Calcular el tamanio muestral de cada grupo
-  n <- get_sample_size(var, disenio$variables, agrupacion)
+  n <- get_sample_size(disenio$variables, agrupacion)
 
   #Calcular los grados de libertad de todos los cruces
-  gl <- get_df(var, disenio, agrupacion)
+  gl <- get_df(disenio, agrupacion)
 
   #Extrear el coeficiente de variacion
   cv <- get_cv(tabla, disenio, agrupacion)
@@ -77,7 +77,6 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 
   # Ordenar las columnas y estandarizar los nombres de las variables
   final <- standardize_columns(final, var, denom = NULL )
-
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
   if (ci == T) {
@@ -257,7 +256,7 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
   }
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
-  check_input_var(var, disenio)
+  check_input_var(var, disenio, estimation = "size")
   check_subpop_var(subpop, disenio)
 
   # Lanzar warning del error estándar cuando no se usa el diseño
@@ -272,26 +271,36 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
   # Convertir en formula para survey
   dominios_form <- convert_to_formula(dominios)
 
-  #Generar la tabla con los calculos
-  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svytotal)
-
   # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(dominios)
 
-  #Calcular el tamanio muestral de cada grupo
-  n <- get_sample_size(var,disenio$variables, agrupacion,df_type)
+  # Add estimation variable for the case ine-size
+  if (df_type == "ine") {
+    agrupacion <- c(agrupacion, var)
+    dominios_form <- convert_to_formula(paste0(dominios, "+", var))
+  }
 
-    #Calcular los grados de libertad de todos los cruces
-  gl <- get_df(var,disenio,agrupacion,df_type)
+  #Generar la tabla con los calculos
+  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svytotal)
+
+    #Calcular el tamanio muestral de cada grupo
+  n <- get_sample_size(disenio$variables, agrupacion, df_type)
+
+  #Calcular los grados de libertad de todos los cruces
+  gl <- get_df(disenio,agrupacion,df_type)
 
   #Extrear el coeficiente de variacion
   cv <- get_cv(tabla, disenio, agrupacion)
+
+  if(df_type == "ine" & is.null(dominios)){
+    cv <- cv[2]
+  }
 
   #Unir toda la informacion en una tabla final
   final <- create_output(tabla, agrupacion,  gl, n, cv)
 
   # Ordenar las columnas y estandarizar los nombres de las variables
-  final <- standardize_columns(final, var)
+  final <- standardize_columns(final, var, denom = NULL)
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
   if (ci == T) {
