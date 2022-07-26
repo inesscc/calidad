@@ -1,11 +1,11 @@
 
 
-#' Genera tabla en html con los resultados de la evaluación
+#' Genera table en html con los resultados de la evaluación
 #'
 #' La función recibe como input la evaluación de las estimaciones
 #'
-#' @param tabla \code{dataframe} generado por la funciones \code{evaluacion_calidad_prop} o \code{evaluacion_calidad}.
-#'  Contiene el resultado de aplicar el protocolo de calidad.
+#' @param table \code{dataframe} generado por la funciones \code{evaluacion_label_prop} o \code{evaluacion_label}.
+#'  Contiene el resultado de aplicar el protocolo de label.
 #'
 #' @return \code{html} con los resultados de la evaluación
 #'
@@ -18,21 +18,22 @@
 #'   group_by(folio) %>%
 #'   slice(1)
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
-#' tabla <- evaluate(create_prop("ocupado", dominios = "zona+sexo", disenio = dc))
+#' table <- evaluate(create_prop("ocupado", domains = "zona+sexo", design = dc))
 #' @export
 
 
-tabla_html <- function(tabla) {
+create_html <- function(table) {
 
-  # Esto se hace en el caso de que la etiqueta diga calidad
-  if ( sum(names(tabla) == "calidad") == 1) {
-    tabla %>%
+
+  # This is the INE case
+  if ( sum(class(table) %in% "cepal.eval")  == 0) {
+    table %>%
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
-        calidad = kableExtra::cell_spec(.data$calidad, background  = dplyr::case_when(
-          .data$calidad == "fiable" ~ "green",
-          .data$calidad == "poco fiable" ~ "yellow",
-          .data$calidad == "no fiable" ~ "red"
+        label = kableExtra::cell_spec(.data$label, background  = dplyr::case_when(
+          .data$label == "fiable" ~ "green",
+          .data$label == "poco fiable" ~ "yellow",
+          .data$label == "no fiable" ~ "red"
         ),
         color = "black")) %>%
       dplyr::mutate(
@@ -40,9 +41,9 @@ tabla_html <- function(tabla) {
           .data$n < 60  ~ "red",
           .data$n >= 60 ~ "black"
         )),
-        gl = kableExtra::cell_spec(.data$gl, color = dplyr::case_when(
-          .data$gl < 9  ~ "red",
-          .data$gl >= 9 ~ "black"
+        df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
+          .data$df < 9  ~ "red",
+          .data$df >= 9 ~ "black"
         ))) %>%
       kableExtra::kable(format.args = list(decimal.mark = ',', big.mark = "."),
                         format = "html",
@@ -56,13 +57,13 @@ tabla_html <- function(tabla) {
       kableExtra::row_spec(0, bold = TRUE, color = "black")
 
   } else {
-    tabla %>%
+    table %>%
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
-        calidad = kableExtra::cell_spec(.data$tag, background  = dplyr::case_when(
-          .data$tag == "publish" ~ "green",
-          .data$tag == "review" ~ "yellow",
-          .data$tag == "supress" ~ "red"
+        label = kableExtra::cell_spec(.data$label, background  = dplyr::case_when(
+          .data$label == "publish" ~ "green",
+          .data$label == "review" ~ "yellow",
+          .data$label == "supress" ~ "red"
         ),
         color = "black")) %>%
       dplyr::mutate(
@@ -70,9 +71,9 @@ tabla_html <- function(tabla) {
           .data$n < 60  ~ "red",
           .data$n >= 60 ~ "black"
         )),
-        gl = kableExtra::cell_spec(.data$gl, color = dplyr::case_when(
-          .data$gl < 9  ~ "red",
-          .data$gl >= 9 ~ "black"
+        df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
+          .data$df < 9  ~ "red",
+          .data$df >= 9 ~ "black"
         ))) %>%
       kableExtra::kable(format.args = list(decimal.mark = ',', big.mark = "."),
                         format = "html",

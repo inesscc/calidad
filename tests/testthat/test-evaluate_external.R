@@ -24,17 +24,35 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 
 
 # INE Chile Standard for mean
-test <-  create_mean("gastot_hd", dominios =  "zona+sexo+ecivil", disenio = dc, deff = T, ess = T)
-test2 <- evaluate(test)
-test2 <- evaluate(test, publish = T)
+test1 <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc, deff = T, ess = T)
+test <- evaluate(test1, publish = T)
 
 
 # INE Chile Standard for proportion
-test <-  create_prop("desocupado", dominios =  "region", disenio = dc_ene, deff = T, ess = T, log_cv = T, unweighted = T)
-test2 <- evaluate(test)
+test2 <-  create_prop("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T, log_cv = T, unweighted = T)
+test <- evaluate(test2)
+
+# INE Chile Standard for size
+test3 <-  create_size("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T, unweighted = T)
+test <- evaluate(test3, publish = T)
+
+
+# INE Chile Standard for total
+test4 <-  create_total("gastot_hd", domains =  "zona", design = dc, deff = T, ess = T, unweighted = T)
+test_ine <- evaluate(test4, publish = T)
+
+
 
 # CEPAL standard with default parameters
-test2 <- evaluate(test, scheme = "cepal")
+test <- evaluate(test1, scheme = "cepal")
+test <- evaluate(test2, scheme = "cepal")
+test <- evaluate(test3, scheme = "cepal")
+test <- evaluate(test4, scheme = "cepal")
+
 
 # CEPAL standard with custom parameters
-test2 <- evaluate(test, scheme = "cepal", unweighted = 500)
+test <- evaluate(test1, scheme = "cepal", unweighted = 500)
+
+# html output
+out1 <- create_html(test)
+out2 <- create_html(test_ine)

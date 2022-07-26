@@ -11,9 +11,9 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' grouping in several domains.
 #'
 #' @param var numeric variable within the  \code{dataframe}.
-#' @param dominios domains to be estimated separated by the + character.
+#' @param domains domains to be estimated separated by the + character.
 #' @param subpop integer dummy variable to filter the dataframe
-#' @param disenio complex design created by \code{survey} package
+#' @param design complex design created by \code{survey} package
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
@@ -27,51 +27,51 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #'
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' create_mean("gastot_hd", "zona+sexo",  disenio = dc)
+#' create_mean("gastot_hd", "zona+sexo",  design = dc)
 #' @export
 
-create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F,
+create_mean = function(var, domains = NULL, subpop = NULL, design, ci = F, ess = F, ajuste_ene = F, standard_eval = F,
                        rm.na = F, deff = F, rel_error = F, unweighted = F) {
 
 
   # Homologar nombres de variables  del diseño
-  disenio <- standardize_design_variables(disenio)
+  design <- standardize_design_variables(design)
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == T) {
-    disenio <- disenio[!is.na(disenio$variables[[var]])]
+    design <- design[!is.na(design$variables[[var]])]
   }
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
-  check_input_var(var, disenio)
-  check_subpop_var(subpop, disenio)
+  check_input_var(var, design)
+  check_subpop_var(subpop, design)
 
   # Lanzar warning del error estándar cuando no se usa el diseño
-  se_message(disenio)
+  se_message(design)
 
   # Filtrar diseño, si el usuario agrega el parámetro subpop
-  disenio <- filter_design(disenio, subpop)
+  design <- filter_design(design, subpop)
 
   #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- convert_to_formula(var)
 
   # Convertir en formula para survey
-  dominios_form <- convert_to_formula(dominios)
+  domains_form <- convert_to_formula(domains)
 
   #Generar la tabla con los calculos
-  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svymean)
+  tabla <- calcular_tabla(var_form, domains_form, design, fun = survey::svymean)
 
   # Crear listado de variables que se usan para el cálculo
-  agrupacion <- create_groupby_vars(dominios)
+  agrupacion <- create_groupby_vars(domains)
 
   #Calcular el tamanio muestral de cada grupo
-  n <- get_sample_size(disenio$variables, agrupacion)
+  n <- get_sample_size(design$variables, agrupacion)
 
   #Calcular los grados de libertad de todos los cruces
-  gl <- get_df(disenio, agrupacion)
+  gl <- get_df(design, agrupacion)
 
   #Extrear el coeficiente de variacion
-  cv <- get_cv(tabla, disenio, agrupacion)
+  cv <- get_cv(tabla, design, agrupacion)
 
   #Unir toda la informacion en una tabla final
   final <- create_output(tabla, agrupacion,  gl, n, cv)
@@ -81,7 +81,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
   if (ci == T) {
-    final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
+    final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
 
   # add relative error, if the user uses this parameter
@@ -116,9 +116,9 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 #' grouping in several domains.
 #'
 #' @param var numeric variable within the  \code{dataframe}.
-#' @param dominios domains to be estimated separated by the + character.
+#' @param domains domains to be estimated separated by the + character.
 #' @param subpop integer dummy variable to filter the dataframe
-#' @param disenio complex design created by \code{survey} package
+#' @param design complex design created by \code{survey} package
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
@@ -133,52 +133,52 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 #'
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' create_total("gastot_hd", "zona+sexo", subpop = "ocupado", disenio = dc)
+#' create_total("gastot_hd", "zona+sexo", subpop = "ocupado", design = dc)
 #' @export
 
-create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
+create_total <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
                          deff = F, rel_error = F, unweighted = F) {
 
   # Homologar nombres de variables  del diseño
-  disenio <- standardize_design_variables(disenio)
+  design <- standardize_design_variables(design)
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == T) {
-    disenio <- disenio[!is.na(disenio$variables[[var]])]
+    design <- design[!is.na(design$variables[[var]])]
   }
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
-  check_input_var(var, disenio, estimation = "total")
-  check_subpop_var(subpop, disenio)
+  check_input_var(var, design, estimation = "total")
+  check_subpop_var(subpop, design)
 
   # Lanzar warning del error estándar cuando no se usa el diseño
-  se_message(disenio)
+  se_message(design)
 
   # Filtrar diseño, si el usuario agrega el parámetro subpop
-  disenio <- filter_design(disenio, subpop)
+  design <- filter_design(design, subpop)
 
 
   #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- convert_to_formula(var)
 
   # Convertir en formula para survey
-  dominios_form <- convert_to_formula(dominios)
+  domains_form <- convert_to_formula(domains)
 
   #Generar la tabla con los calculos
-  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svytotal)
+  tabla <- calcular_tabla(var_form, domains_form, design, fun = survey::svytotal)
 
   # Crear listado de variables que se usan para el cálculo
-  agrupacion <- create_groupby_vars(dominios)
+  agrupacion <- create_groupby_vars(domains)
 
   #Calcular el tamanio muestral de cada grupo
-  n <- get_sample_size(disenio$variables, agrupacion)
+  n <- get_sample_size(design$variables, agrupacion)
 
 
   #Calcular los grados de libertad de todos los cruces
-  gl <- get_df(disenio, agrupacion)
+  gl <- get_df(design, agrupacion)
 
   #Extrear el coeficiente de variacion
-  cv <- get_cv(tabla, disenio, agrupacion)
+  cv <- get_cv(tabla, design, agrupacion)
 
   #Unir toda la informacion en una tabla final
   final <- create_output(tabla, agrupacion,  gl, n, cv)
@@ -188,7 +188,7 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
   if (ci == T) {
-    final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
+    final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
 
   # add relative error, if the user uses this parameter
@@ -224,9 +224,9 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
 #' @param var numeric variable within the  \code{dataframe}. When the domain parameter is not used,
 #' it is possible to include more than one variable using the + separator. When a value is introduced
 #' in the domain parameter, the estimation variable must be a dummy variable.
-#' @param dominios domains to be estimated separated by the + character.
+#' @param domains domains to be estimated separated by the + character.
 #' @param subpop integer dummy variable to filter the dataframe
-#' @param disenio complex design created by \code{survey} package
+#' @param design complex design created by \code{survey} package
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
@@ -242,58 +242,58 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
 #' @import tidyr
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' create_size("ocupado", "zona+sexo", disenio = dc)
+#' create_size("ocupado", "zona+sexo", design = dc)
 #' @export
 
-create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
+create_size <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
                          deff = F, rel_error = F,  unweighted = F, df_type = "ine") {
 
   # Homologar nombres de variables  del diseño
-  disenio <- standardize_design_variables(disenio)
+  design <- standardize_design_variables(design)
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == T) {
-    disenio <- disenio[!is.na(disenio$variables[[var]])]
+    design <- design[!is.na(design$variables[[var]])]
   }
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
-  check_input_var(var, disenio, estimation = "size")
-  check_subpop_var(subpop, disenio)
+  check_input_var(var, design, estimation = "size")
+  check_subpop_var(subpop, design)
 
   # Lanzar warning del error estándar cuando no se usa el diseño
-  se_message(disenio)
+  se_message(design)
 
   # Filtrar diseño, si el usuario agrega el parámetro subpop
-  disenio <- filter_design(disenio, subpop)
+  design <- filter_design(design, subpop)
 
   #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- convert_to_formula(var)
 
   # Convertir en formula para survey
-  dominios_form <- convert_to_formula(dominios)
+  domains_form <- convert_to_formula(domains)
 
   # Crear listado de variables que se usan para el cálculo
-  agrupacion <- create_groupby_vars(dominios)
+  agrupacion <- create_groupby_vars(domains)
 
   # Add estimation variable for the case ine-size
   if (df_type == "ine") {
     agrupacion <- c(agrupacion, var)
-    dominios_form <- convert_to_formula(paste0(dominios, "+", var))
+    domains_form <- convert_to_formula(paste0(domains, "+", var))
   }
 
   #Generar la tabla con los calculos
-  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svytotal)
+  tabla <- calcular_tabla(var_form, domains_form, design, fun = survey::svytotal)
 
     #Calcular el tamanio muestral de cada grupo
-  n <- get_sample_size(disenio$variables, agrupacion, df_type)
+  n <- get_sample_size(design$variables, agrupacion, df_type)
 
   #Calcular los grados de libertad de todos los cruces
-  gl <- get_df(disenio,agrupacion,df_type)
+  gl <- get_df(design,agrupacion,df_type)
 
   #Extrear el coeficiente de variacion
-  cv <- get_cv(tabla, disenio, agrupacion)
+  cv <- get_cv(tabla, design, agrupacion)
 
-  if(df_type == "ine" & is.null(dominios)){
+  if(df_type == "ine" & is.null(domains)){
     cv <- cv[2]
   }
 
@@ -305,7 +305,7 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
   if (ci == T) {
-    final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
+    final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
 
   # add relative error, if the user uses this parameter
@@ -342,8 +342,8 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
 #'
 #' @param var numeric variable within the \code{dataframe}, is the numerator of the ratio to be calculated.
 #' @param denominador numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL
-#' @param dominios domains to be estimated separated by the + character.
-#' @param disenio complex design created by \code{survey} package
+#' @param domains domains to be estimated separated by the + character.
+#' @param design complex design created by \code{survey} package
 #' @param subpop integer dummy variable to filter the dataframe
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
@@ -364,27 +364,27 @@ create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, es
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
 #' options(survey.lonely.psu = "certainty")
 #'
-#' create_prop(var = "gasto_zona1", denominador = "gastot_hd", disenio =  dc)
+#' create_prop(var = "gasto_zona1", denominador = "gastot_hd", design =  dc)
 #'
 #' enusc <- filter(enusc, Kish == 1)
 #'
 #' dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 #' options(survey.lonely.psu = "certainty")
-#' create_prop(var = "VP_DC", denominador = "hom_insg_taxi", disenio = dc)
+#' create_prop(var = "VP_DC", denominador = "hom_insg_taxi", design = dc)
 #'
 #' @export
 #'
 
-create_prop = function(var, denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
+create_prop = function(var, denominador = NULL, domains = NULL, subpop = NULL, design, ci = F, deff = F, ess = F, ajuste_ene = F,
                        rel_error = F, log_cv = F, unweighted = F, standard_eval = F){
 
 
   if(!is.null(denominador)){
-    final = create_ratio_internal(var,denominador, dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error )
+    final = create_ratio_internal(var,denominador, domains, subpop, design, ci, deff, ess,  ajuste_ene, rel_error )
   }
 
   if(is.null(denominador)) {
-    final = create_prop_internal(var,  dominios, subpop, disenio, ci, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted)
+    final = create_prop_internal(var,  domains, subpop, design, ci, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted)
   }
 
   # Add a class to the object

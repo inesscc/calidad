@@ -2,18 +2,18 @@
 % Please edit documentation in R/create_internal.R
 \name{concat_domains}
 \alias{concat_domains}
-\title{Concatena los dominios y la subpoblación con signo +}
+\title{Concatena los domains y la subpoblación con signo +}
 \usage{
 concat_domains(domains, subpop)
 }
 \arguments{
-\item{domains}{dominios en formato string}
+\item{domains}{domains en formato string}
 
 \item{subpop}{subpoblación ingresada por el usuario en formato string}
 }
 \value{
-string concatenado de dominios y subpoblación
+string concatenado de domains y subpoblación
 }
 \description{
-Recibe strings con dominios y subpoblación y devuelve un string concatenado con caracter +
+Recibe strings con domains y subpoblación y devuelve un string concatenado con caracter +
 }

@@ -6,7 +6,7 @@
 \usage{
 create_prop_internal(
   var,
-  dominios = NULL,
+  domains = NULL,
   subpop = NULL,
   disenio,
   ci = F,
@@ -24,7 +24,7 @@ create_prop_internal(
 \arguments{
 \item{var}{integer dummy variable within the  \code{dataframe}}
 
-\item{dominios}{domains to be estimated separated by the + character.}
+\item{domains}{domains to be estimated separated by the + character.}
 
 \item{subpop}{integer dummy variable to filter the dataframe}
 

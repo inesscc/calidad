@@ -2,16 +2,16 @@
 % Please edit documentation in R/create_internal.R
 \name{create_groupby_vars}
 \alias{create_groupby_vars}
-\title{Concatena los dominios y la subpoblación con signo +}
+\title{Concatena los domains y la subpoblación con signo +}
 \usage{
 create_groupby_vars(domains)
 }
 \arguments{
-\item{domains}{dominios en formato string}
+\item{domains}{domains en formato string}
 }
 \value{
 listado de variables en formato string
 }
 \description{
-Recibe strings con dominios y subpoblación y devuelve un string concatenado con caracter +
+Recibe strings con domains y subpoblación y devuelve un string concatenado con caracter +
 }

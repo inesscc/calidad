@@ -6,7 +6,7 @@
 \usage{
 calcular_tabla(
   var,
-  dominios,
+  domains,
   disenio,
   estimation = "mean",
   env = parent.frame(),
@@ -17,7 +17,7 @@ calcular_tabla(
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~}
 
-\item{dominios}{dominios de estimacion separados por signo +. Debe anteponerse ~}
+\item{domains}{domains de estimacion separados por signo +. Debe anteponerse ~}
 
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 

@@ -17,5 +17,5 @@ get_df(data, domains, df_type = "cepal")
 dataframe con grados de libertad
 }
 \description{
-Recibe datos y los dominios. Devuelve un data frame con las upm, varstrat y gl para cada celda
+Recibe datos y los domains. Devuelve un data frame con las upm, varstrat y gl para cada celda
 }

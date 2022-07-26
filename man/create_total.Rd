@@ -6,9 +6,9 @@
 \usage{
 create_total(
   var,
-  dominios = NULL,
+  domains = NULL,
   subpop = NULL,
-  disenio,
+  design,
   ci = F,
   ess = F,
   ajuste_ene = F,
@@ -22,11 +22,11 @@ create_total(
 \arguments{
 \item{var}{numeric variable within the  \code{dataframe}.}
 
-\item{dominios}{domains to be estimated separated by the + character.}
+\item{domains}{domains to be estimated separated by the + character.}
 
 \item{subpop}{integer dummy variable to filter the dataframe}
 
-\item{disenio}{complex design created by \code{survey} package}
+\item{design}{complex design created by \code{survey} package}
 
 \item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
 
@@ -54,5 +54,5 @@ grouping in several domains.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-create_total("gastot_hd", "zona+sexo", subpop = "ocupado", disenio = dc)
+create_total("gastot_hd", "zona+sexo", subpop = "ocupado", design = dc)
 }

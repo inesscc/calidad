@@ -6,9 +6,9 @@
 \usage{
 create_size(
   var,
-  dominios = NULL,
+  domains = NULL,
   subpop = NULL,
-  disenio,
+  design,
   ci = F,
   ess = F,
   ajuste_ene = F,
@@ -25,11 +25,11 @@ create_size(
 it is possible to include more than one variable using the + separator. When a value is introduced
 in the domain parameter, the estimation variable must be a dummy variable.}
 
-\item{dominios}{domains to be estimated separated by the + character.}
+\item{domains}{domains to be estimated separated by the + character.}
 
 \item{subpop}{integer dummy variable to filter the dataframe}
 
-\item{disenio}{complex design created by \code{survey} package}
+\item{design}{complex design created by \code{survey} package}
 
 \item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
 
@@ -59,5 +59,5 @@ grouping in several domains.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-create_size("ocupado", "zona+sexo", disenio = dc)
+create_size("ocupado", "zona+sexo", design = dc)
 }

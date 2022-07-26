@@ -254,7 +254,7 @@ get_cv <- function(table, design, domains) {
 
 #' Cálcula los grados de libertad para cada estimación
 #'
-#' Recibe datos y los dominios. Devuelve un data frame con las upm, varstrat y gl para cada celda
+#' Recibe datos y los domains. Devuelve un data frame con las upm, varstrat y gl para cada celda
 #' @param data dataframe
 #' @param domains \code{string} with domains
 #' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
@@ -323,8 +323,8 @@ get_df <- function(data, domains,df_type = "cepal"){
        # varunit <- length(unique(design$variables$varunit))
        # gl <- varunit - varstrat
 
-     gl <- calcular_estrato(design$variables,dominios = NULL) %>%
-               dplyr::bind_cols(calcular_upm(design$variables,dominios = NULL)) %>%
+     gl <- calcular_estrato(design$variables,domains = NULL) %>%
+               dplyr::bind_cols(calcular_upm(design$variables,domains = NULL)) %>%
                dplyr::mutate(df = .data$upm - .data$varstrat) %>%
                dplyr::select(-c("upm","varstrat"))
 
@@ -339,11 +339,11 @@ get_df <- function(data, domains,df_type = "cepal"){
 
 #-----------------------------------------------------------------------
 
-#' Concatena los dominios y la subpoblación con signo +
+#' Concatena los domains y la subpoblación con signo +
 #'
-#' Recibe strings con dominios y subpoblación y devuelve un string concatenado con caracter +
+#' Recibe strings con domains y subpoblación y devuelve un string concatenado con caracter +
 #'
-#' @param domains dominios en formato string
+#' @param domains domains en formato string
 #'
 #' @return listado de variables en formato string
 
@@ -362,18 +362,18 @@ create_groupby_vars <- function(domains) {
 
 #-----------------------------------------------------------------------
 
-#' Concatena los dominios y la subpoblación con signo +
+#' Concatena los domains y la subpoblación con signo +
 #'
-#' Recibe strings con dominios y subpoblación y devuelve un string concatenado con caracter +
+#' Recibe strings con domains y subpoblación y devuelve un string concatenado con caracter +
 #'
-#' @param domains dominios en formato string
+#' @param domains domains en formato string
 #' @param subpop subpoblación ingresada por el usuario en formato string
 #'
-#' @return string concatenado de dominios y subpoblación
+#' @return string concatenado de domains y subpoblación
 
 concat_domains <- function(domains, subpop) {
-  dominios_form <-  paste(domains, subpop, sep = "+")
-  return(dominios_form)
+  domains_form <-  paste(domains, subpop, sep = "+")
+  return(domains_form)
 }
 
 
@@ -529,7 +529,7 @@ unificar_variables_factExp = function(disenio){
 #' Genera una tabla con estimaciones para una agregacion determinada
 #'
 #' @param var variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~
-#' @param dominios dominios de estimacion separados por signo +. Debe anteponerse ~
+#' @param domains domains de estimacion separados por signo +. Debe anteponerse ~
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @param estimation \code{string} indicating if the mean must be calculated
 #' @param env \code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos
@@ -538,16 +538,16 @@ unificar_variables_factExp = function(disenio){
 #' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
-calcular_tabla <-  function(var, dominios, disenio, estimation = "mean", env = parent.frame(), fun, denom = NULL) {
+calcular_tabla <-  function(var, domains, disenio, estimation = "mean", env = parent.frame(), fun, denom = NULL) {
 
 
-  # El primer if es para dominios
-  if (!is.null(dominios)) {
+  # El primer if es para domains
+  if (!is.null(domains)) {
 
     if (estimation == "mean") { # para estimaciones de media, proporción y tamaños
 
       estimacion <-  survey::svyby(formula = var,
-                                   by = dominios,
+                                   by = domains,
                                    design = disenio,
                                    FUN = fun,
                                    deff = get("deff", env))
@@ -565,7 +565,7 @@ calcular_tabla <-  function(var, dominios, disenio, estimation = "mean", env = p
 
       estimacion <- survey::svyby(var, denominator = denom,
                                   design =  disenio,
-                                  by = dominios ,
+                                  by = domains ,
                                   FUN = fun,
                                   deff = get("deff", env))
 
@@ -574,7 +574,7 @@ calcular_tabla <-  function(var, dominios, disenio, estimation = "mean", env = p
     } else { # para calcular la mediana
 
       estimacion <- survey::svyby(var,
-                                  by = dominios,
+                                  by = domains,
                                   FUN = survey::svyquantile,
                                   design = disenio,
                                   quantiles = 0.5,
@@ -616,15 +616,15 @@ calcular_tabla <-  function(var, dominios, disenio, estimation = "mean", env = p
 #'
 #' @param var variable objetivo o numerador del ratio a calcular, dentro de un \code{dataframe}. Debe anteponerse ~
 #' @param denominador variable denominador del ratio a calcular, dentro de un \code{dataframe}. Debe anteponerse ~
-#' @param dominios dominios de estimacion separados por signo +. Debe anteponerse ~
+#' @param domains domains de estimacion separados por signo +. Debe anteponerse ~
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
 #' @param env \code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos
 #' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
-calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio, env = parent.frame()) {
-  if (!is.null(dominios)) {
-    estimacion <- survey::svyby(var, denominator = denominador,design =  disenio, by = dominios , FUN = svyratio, deff = get("deff", env))
+calcular_tabla_ratio <-  function(var,denominador, domains = NULL, disenio, env = parent.frame()) {
+  if (!is.null(domains)) {
+    estimacion <- survey::svyby(var, denominator = denominador,design =  disenio, by = domains , FUN = svyratio, deff = get("deff", env))
   } else {
     estimacion <- survey::svyratio(var, denominator = denominador, design = disenio, deff = get("deff", env))
   }
@@ -636,13 +636,13 @@ calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio, env
 
 #' Calcula tamanio muestral para las medias
 #'
-#' Genera una tabla con el conteo de cada cada una de los dominios del tabulado.
+#' Genera una tabla con el conteo de cada cada una de los domains del tabulado.
 #' La funcion contempla un caso para proporcion y un caso para promedio
 #' @param data \code{dataframe} que contiene los datos que se estan evaluando
-#' @param domains vector de caracteres que contiene los dominios a evaluar
+#' @param domains vector de caracteres que contiene los domains a evaluar
 #' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @param env parent environment
-#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#' @return \code{dataframe} que contiene la frecuencia de todos los domains a evaluar
 
 get_sample_size <- function(data, domains = NULL, df_type = "cepal", env = parent.frame()) {
 
@@ -670,12 +670,12 @@ get_sample_size <- function(data, domains = NULL, df_type = "cepal", env = paren
 
 # -----------------------------------------------------------------------
 
-unweighted_cases <- function(data, dominios, var) {
+unweighted_cases <- function(data, domains, var) {
   symbol_var <- rlang::parse_expr(var)
 
   data %>%
     dplyr::filter(!is.na(var)) %>%
-    dplyr::group_by_at(.vars = dominios) %>%
+    dplyr::group_by_at(.vars = domains) %>%
     dplyr::summarise(n = dplyr::n())
 }
 
@@ -706,24 +706,24 @@ chequear_var_disenio <- function(data) {
 
 #' Calcula el numero de UPM
 #'
-#' Genera una tabla con el conteo de UPM para cada uno de los dominios del tabulado.
+#' Genera una tabla con el conteo de UPM para cada uno de los domains del tabulado.
 #' La columna que contiene la informacion de las UPMs debe llamarse varunit
 #' La funcion contempla un caso para proporcion y un caso para promedio
 #'
 #' @param data \code{dataframe} que contiene los datos que se estan evaluando
-#' @param dominios vector de caracteres que contiene los dominios a evaluar
+#' @param domains vector de caracteres que contiene los domains a evaluar
 #' @param var string que contiene el nombre de la variable de proporcion que se evalua.
-#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#' @return \code{dataframe} que contiene la frecuencia de todos los domains a evaluar
 #'
 
-calcular_upm <- function(data, dominios, var = NULL ) {
-    listado <- c("varunit", dominios)
+calcular_upm <- function(data, domains, var = NULL ) {
+    listado <- c("varunit", domains)
     if (is.null(var)) {
       data %>%
         dplyr::group_by_at(.vars = listado) %>%
         dplyr::summarise(conteo = dplyr::n()) %>%
         dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0))  %>%
-        dplyr::group_by_at(.vars = dominios) %>%
+        dplyr::group_by_at(.vars = domains) %>%
         dplyr::summarise(upm = sum(.data$tiene_info))
     } else {
       symbol_var <- rlang::parse_expr(var)
@@ -732,7 +732,7 @@ calcular_upm <- function(data, dominios, var = NULL ) {
         dplyr::group_by_at(.vars = listado) %>%
         dplyr::summarise(conteo = sum(!!symbol_var)) %>%
         dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0))  %>%
-        dplyr::group_by_at(.vars = dominios) %>%
+        dplyr::group_by_at(.vars = domains) %>%
         dplyr::summarise(upm = sum(.data$tiene_info))
     }
 
@@ -742,7 +742,7 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 
 #' Calcula el numero de estratos
 #'
-#' Genera una tabla con el conteo de estratos para cada uno de los dominios del tabulado.
+#' Genera una tabla con el conteo de estratos para cada uno de los domains del tabulado.
 #' La columna que contiene la informacion de los estratos debe llamarse varstrat
 #' La funcion contempla un caso para proporcion y un caso para promedio
 
@@ -750,19 +750,19 @@ calcular_upm <- function(data, dominios, var = NULL ) {
 #' @importFrom rlang  :=
 #' @param data \code{dataframe} que contiene los datos que se estan evaluando
 #' @param var variable objetivo. Debe ser un integer que toma los valores 1 o 0
-#' @param dominios vector de caracteres que contiene los dominios a evaluar
-#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#' @param domains vector de caracteres que contiene los domains a evaluar
+#' @return \code{dataframe} que contiene la frecuencia de todos los domains a evaluar
 
-calcular_estrato <- function(data, dominios, var = NULL ) {
+calcular_estrato <- function(data, domains, var = NULL ) {
 
 
-  listado <- c("varstrat", dominios)
+  listado <- c("varstrat", domains)
   if (is.null(var)) {
     data %>%
       dplyr::group_by_at(.vars = listado) %>%
       dplyr::summarise(conteo = dplyr::n()) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0)) %>%
-      dplyr::group_by_at(.vars = dominios) %>%
+      dplyr::group_by_at(.vars = domains) %>%
       dplyr::summarise(varstrat = sum(.data$tiene_info))
   } else {
     symbol_var <- rlang::parse_expr(var)
@@ -771,7 +771,7 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
       dplyr::group_by_at(.vars = listado) %>%
       dplyr::summarise(conteo = sum(!!symbol_var)) %>%
       dplyr::mutate(tiene_info = dplyr::if_else(.data$conteo > 0, 1, 0)) %>%
-      dplyr::group_by_at(.vars = dominios) %>%
+      dplyr::group_by_at(.vars = domains) %>%
       dplyr::summarise(varstrat = sum(.data$tiene_info))
   }
 }
@@ -780,11 +780,11 @@ calcular_estrato <- function(data, dominios, var = NULL ) {
 
 #' Calcula los grados de libertad para un estimaciones de total
 #'
-#' Genera una tabla con el conteo de grados de libertad para cada uno de los dominios del tabulado. Es un wrapper que reune a las funciones calcular_upm y calcular_estrato
+#' Genera una tabla con el conteo de grados de libertad para cada uno de los domains del tabulado. Es un wrapper que reune a las funciones calcular_upm y calcular_estrato
 #'
 #' @param datos \code{dataframe} que contiene los datos que se estan evaluando. Se obtiene a partir del disenio muestral
 #' @param variables variables objetivo. vector de strings que contiene los nombres de las variables
-#' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+#' @return \code{dataframe} que contiene la frecuencia de todos los domains a evaluar
 
 # deprecated
 
@@ -810,7 +810,7 @@ calcular_gl_total <- function(variables, datos) {
 
 #------------------------------
 
-#' Genera intervalos de confianza para todos los dominios estimados
+#' Genera intervalos de confianza para todos los domains estimados
 #'
 #' Usa la tabla creada para calcular el estandar y le agrega dos columnas con el limite inferior y superior del intervalo de confianza
 #'
@@ -820,22 +820,22 @@ calcular_gl_total <- function(variables, datos) {
 #'
 
 
-calcular_ic <-  function(data,  ajuste_ene) {
+get_ci <-  function(data,  ajuste_ene) {
 
   # Se calculan los intervalos de la manera tradicional en la generalidad de los casos
   if (ajuste_ene == F) {
 
     final <- data %>%
       dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
-                    li = .data$stat - .data$se*t,
-                    ls = .data$stat + .data$se*t)
+                    lower = .data$stat - .data$se*t,
+                    upper = .data$stat + .data$se*t)
     # Estos corresponde al ajuste de la ENE: el t se fija en 2
   } else if (ajuste_ene == T) {
 
     final <- data %>%
       dplyr::mutate(t = 2,
-                    li = .data$stat - .data$se*t,
-                    ls = .data$stat + .data$se*t)
+                    lower = .data$stat - .data$se*t,
+                    upper = .data$stat + .data$se*t)
   }
 
   return(final)
@@ -866,9 +866,9 @@ get_deff <- function(var, design, survey_est) {
 
 #----------------------------------------------------------------------
 
-convert_to_integer <- function(dominios, disenio) {
+convert_to_integer <- function(domains, disenio) {
   # Evaluar si alguna de las variables de dominio es un factor
-  variables_dominio <- stringr::str_split(dominios, pattern = "\\+")[[1]] %>%
+  variables_dominio <- stringr::str_split(domains, pattern = "\\+")[[1]] %>%
     trimws(which = "both")
   es_factor <- purrr::map(variables_dominio, ~is.factor(disenio$variables[[.x]]))
 
@@ -913,7 +913,7 @@ get_ess <- function(ess, env = parent.frame() ) {
 #'
 #' @param var numeric variable within the \code{dataframe}, is the numerator of the ratio to be calculated.
 #' @param denominador numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated.
-#' @param dominios domains to be estimated separated by the + character.
+#' @param domains domains to be estimated separated by the + character.
 #' @param disenio complex design created by \code{survey} package
 #' @param subpop integer dummy variable to filter the dataframe
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
@@ -926,7 +926,7 @@ get_ess <- function(ess, env = parent.frame() ) {
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
-create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F,
+create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F,
                                   ajuste_ene = F, unweighted = F, rel_error = F, rm.na = F) {
 
 
@@ -953,13 +953,13 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
 
   #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- convert_to_formula(var)
-  dominios_form <- convert_to_formula(dominios)
+  domains_form <- convert_to_formula(domains)
   denominador_form <- convert_to_formula(denominador)
 
-  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svyratio, estimation = "ratio", denom = denominador_form)
+  tabla <- calcular_tabla(var_form, domains_form, disenio, fun = survey::svyratio, estimation = "ratio", denom = denominador_form)
 
   # Crear listado de variables que se usan para el cálculo
-  agrupacion <- create_groupby_vars(dominios)
+  agrupacion <- create_groupby_vars(domains)
 
   #Calcular el tamanio muestral de cada grupo
   n <- get_sample_size(disenio$variables, agrupacion)
@@ -973,7 +973,7 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
 
 
   # Convert to df if there is not any domain
-  tabla <- convert_ratio_to_df(tabla, dominios)
+  tabla <- convert_ratio_to_df(tabla, domains)
 
 
   #Unir toda la informacion en una tabla final
@@ -989,7 +989,7 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
 
   # Add confidence intervals
   if (ci == T) {
-    final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
+    final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
 
   # add relative error, if the user uses this parameter
@@ -1011,7 +1011,7 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
 #' internal function to calculate proportion estimations
 #'
 #' @param var integer dummy variable within the  \code{dataframe}
-#' @param dominios domains to be estimated separated by the + character.
+#' @param domains domains to be estimated separated by the + character.
 #' @param subpop integer dummy variable to filter the dataframe
 #' @param disenio complex design created by \code{survey} package
 #' @param ci \code{boolean} indicating if the confidence intervals must be calculated
@@ -1027,7 +1027,7 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
-create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
+create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
                                  rel_error = F, log_cv = F, unweighted = F, standard_eval = T, rm.na = F, env =  parent.frame()) {
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
@@ -1053,12 +1053,12 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
   var_form <- convert_to_formula(var)
 
   # Convertir en formula para survey
-  dominios_form <- convert_to_formula(dominios)
+  domains_form <- convert_to_formula(domains)
 
-  tabla <- calcular_tabla(var_form, dominios_form, disenio, fun = survey::svymean)
+  tabla <- calcular_tabla(var_form, domains_form, disenio, fun = survey::svymean)
 
   # Crear listado de variables que se usan para el cálculo
-  agrupacion <- create_groupby_vars(dominios)
+  agrupacion <- create_groupby_vars(domains)
 
   #Calcular el tamanio muestral de cada grupo
   n <- get_sample_size(disenio$variables, agrupacion)
@@ -1082,7 +1082,7 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
 
   # Add confidence intervals
   if (ci == T) {
-    final <- calcular_ic(final,  ajuste_ene = ajuste_ene)
+    final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
 
 

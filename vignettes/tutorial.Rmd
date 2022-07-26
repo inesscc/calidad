@@ -1,5 +1,5 @@
 ---
-#title: "basic use"
+title: "basic usage"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{tutorial}
@@ -73,14 +73,14 @@ To assess the quality of an estimate, the [INE methodology](https://www.ine.cl/d
 The package includes separate functions to create the inputs for estimates of **mean, proportion, totals and size**. The following example shows how the proportion  and size functions are used.
 
 ```{r}
-insumos_prop <- create_prop(var = "desocupado", dominios = "sexo", subpop = "fdt", disenio =  dc_ene) # proportion of unemployed people
-insumos_total <-  create_size(var = "desocupado", dominios = "sexo", subpop = "fdt", disenio =  dc_ene) # number of unemployed people
+insumos_prop <- create_prop(var = "desocupado", domains = "sexo", subpop = "fdt", design =  dc_ene) # proportion of unemployed people
+insumos_total <-  create_size(var = "desocupado", domains = "sexo", subpop = "fdt", design =  dc_ene) # number of unemployed people
 ```
 
 - `var`: variable to be estimated. Must be a dummy variable
-- `dominios`: required domains.
+- `domains`: required domains.
 - `subpop`: reference subpopulation. It is optional and works as a filter (must be a dummy variable)
-- `disenio`: sample design
+- `design`: sample design
 
 
 The function returns all the neccesary inputs to implement the standard
@@ -94,7 +94,7 @@ insumos_total
 To get more domains, we can use the "+" symbol as follows:
 
 ```{r}
-desagregar <- create_prop(var = "desocupado", dominios = "sexo+region", subpop = "fdt", disenio =  dc_ene)
+desagregar <- create_prop(var = "desocupado", domains = "sexo+region", subpop = "fdt", design =  dc_ene)
 ```
 
  
@@ -104,13 +104,13 @@ desagregar <- create_prop(var = "desocupado", dominios = "sexo+region", subpop =
 In some cases it may be of interest to assess the quality of a sum. For example, the sum of all the income of the EPF at the geographical area level (Greater Santiago and other regional capitals). For this, there is the `create_total` function. This function receives a continuous variable such as hours, expense, or income and generates totals at the requested level. The ending "with" of the function alludes to the fact that a continuous variable is being used.
 
 ```{r, eval=T, warning=FALSE}
-insumos_suma <-  create_total(var = "gastot_hd", dominios = "zona", disenio =  dc_epf)
+insumos_suma <-  create_total(var = "gastot_hd", domains = "zona", design =  dc_epf)
 ```
 
 f we want to evaluate the estimate of a mean, we have the function `create_mean`. In this case, we will calculate the average expenditure of households, according to geographical area. 
 
 ```{r}
-insumos_media <-  create_mean(var = "gastot_hd", dominios = "zona", disenio =  dc_epf)
+insumos_media <-  create_mean(var = "gastot_hd", domains = "zona", design =  dc_epf)
 ```
 
 
@@ -118,11 +118,11 @@ The default usage is not to disaggregate, in which case the functions should be 
 
 ```{r}
 # ENE dataset
-insumos_prop_nacional <- create_prop("desocupado", subpop = "fdt", disenio = dc_ene)
-insumos_total_nacional <-  create_total("desocupado", subpop = "fdt", disenio = dc_ene)
+insumos_prop_nacional <- create_prop("desocupado", subpop = "fdt", design = dc_ene)
+insumos_total_nacional <-  create_total("desocupado", subpop = "fdt", design = dc_ene)
 # EPF dataset
-insumos_suma_nacional <- create_total("gastot_hd", disenio = dc_epf)
-insumos_media_nacional <-  create_mean("gastot_hd", disenio = dc_epf)
+insumos_suma_nacional <- create_total("gastot_hd", design = dc_epf)
+insumos_media_nacional <-  create_mean("gastot_hd", design = dc_epf)
 ```
 
 
@@ -143,7 +143,7 @@ The function `evaluate` has a parameter that allows us to know if the table shou
 
 ```{r}
 # Desempleo desagregado por region
-desagregar <- create_size(var = "desocupado", dominios = "region", subpop = "fdt", disenio =  dc_ene)
+desagregar <- create_size(var = "desocupado", domains = "region", subpop = "fdt", design =  dc_ene)
 # Evaluar tabulado
 evaluacion_tot_desagreg <- evaluate(desagregar, publicar = T)
 ```

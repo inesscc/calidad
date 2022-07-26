@@ -47,5 +47,5 @@ coeficient of variation.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-evaluate(create_mean("gastot_hd", dominios = "zona+sexo", disenio = dc))
+evaluate(create_mean("gastot_hd", domains = "zona+sexo", design = dc))
 }

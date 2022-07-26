@@ -4,20 +4,20 @@
 \alias{calcular_estrato}
 \title{Calcula el numero de estratos}
 \usage{
-calcular_estrato(data, dominios, var = NULL)
+calcular_estrato(data, domains, var = NULL)
 }
 \arguments{
 \item{data}{\code{dataframe} que contiene los datos que se estan evaluando}
 
-\item{dominios}{vector de caracteres que contiene los dominios a evaluar}
+\item{domains}{vector de caracteres que contiene los domains a evaluar}
 
 \item{var}{variable objetivo. Debe ser un integer que toma los valores 1 o 0}
 }
 \value{
-\code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+\code{dataframe} que contiene la frecuencia de todos los domains a evaluar
 }
 \description{
-Genera una tabla con el conteo de estratos para cada uno de los dominios del tabulado.
+Genera una tabla con el conteo de estratos para cada uno de los domains del tabulado.
 La columna que contiene la informacion de los estratos debe llamarse varstrat
 La funcion contempla un caso para proporcion y un caso para promedio
 }
