@@ -30,8 +30,11 @@ test2 <- evaluate(test, publish = T)
 
 
 # INE Chile Standard for proportion
-test <-  create_prop("desocupado", dominios =  "region", disenio = dc_ene, deff = T, ess = T, log_cv = T)
+test <-  create_prop("desocupado", dominios =  "region", disenio = dc_ene, deff = T, ess = T, log_cv = T, unweighted = T)
 test2 <- evaluate(test)
 
+# CEPAL standard with default parameters
+test2 <- evaluate(test, scheme = "cepal")
 
-
+# CEPAL standard with custom parameters
+test2 <- evaluate(test, scheme = "cepal", unweighted = 500)

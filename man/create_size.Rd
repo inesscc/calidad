@@ -46,6 +46,8 @@ in the domain parameter, the estimation variable must be a dummy variable.}
 \item{rel_error}{\code{boolean} Relative error}
 
 \item{unweighted}{\code{boolean} Add non weighted count if it is required}
+
+\item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

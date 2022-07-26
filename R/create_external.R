@@ -236,7 +236,7 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
 #' @param rel_error \code{boolean} Relative error
 #'
 #' @param unweighted \code{boolean} Add non weighted count if it is required
-#' @df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
+#' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #' @import tidyr
 #' @examples

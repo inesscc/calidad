@@ -263,7 +263,7 @@ get_cv <- function(table, design, domains) {
 #' @param var variable objetivo
 #' @param data dataframe
 #' @param domains dominios en formato string
-#' @df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
+#' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return dataframe con grados de libertad
 
 
@@ -643,7 +643,7 @@ calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio, env
 #' La funcion contempla un caso para proporcion y un caso para promedio
 #' @param data \code{dataframe} que contiene los datos que se estan evaluando
 #' @param domains vector de caracteres que contiene los dominios a evaluar
-#' @df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
+#' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 
 get_sample_size <- function(data, domains = NULL, df_type = "cepal", env = parent.frame()) {

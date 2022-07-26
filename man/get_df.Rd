@@ -11,6 +11,8 @@ get_df(data, domains, df_type = "cepal")
 
 \item{domains}{dominios en formato string}
 
+\item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".}
+
 \item{var}{variable objetivo}
 }
 \value{
