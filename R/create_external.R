@@ -26,7 +26,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 #' @examples
-#' create_mean(gastot_hd, zona+sexo,  disenio = dc)
+#' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
+#' create_mean("gastot_hd", "zona+sexo",  disenio = dc)
 #' @export
 
 create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F,
@@ -132,7 +133,7 @@ create_mean = function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess
 #'
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' create_tot_con(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
+#' create_total("gastot_hd", "zona+sexo", subpop = "ocupado", disenio = dc)
 #' @export
 
 create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
@@ -241,7 +242,7 @@ create_total <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, e
 #' @import tidyr
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' create_tot(ocupado, zona+sexo, disenio = dc)
+#' create_size("ocupado", "zona+sexo", disenio = dc)
 #' @export
 
 create_size <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
@@ -517,7 +518,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
     # Se calculan los intervalos de confianza solo si el usuario lo requiere
     if (ci == T) {
-      final <- calcular_ic(final, tipo = "mediana_agregado",ajuste_ene = ajuste_ene)
+      final <- calcular_ic(final, ajuste_ene = ajuste_ene)
     }
 
     # ESTO CORRESPONDE AL CASO SIN DESAGREGACIoN
@@ -564,7 +565,7 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 
     # Se calcular el intervalo de confianza solo si el usuario lo pide
     if (ci == T) {
-      final <- calcular_ic(data = final, tipo = "mediana_agregado",  ajuste_ene = ajuste_ene)
+      final <- calcular_ic(data = final,   ajuste_ene = ajuste_ene)
     }
 
   }
@@ -619,13 +620,13 @@ create_median <- function(var, dominios = NULL, subpop = NULL, disenio, ci = F, 
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
 #' options(survey.lonely.psu = "certainty")
 #'
-#' create_prop(var = gasto_zona1, denominador = gastot_hd, disenio =  dc)
+#' create_prop(var = "gasto_zona1", denominador = "gastot_hd", disenio =  dc)
 #'
 #' enusc <- filter(enusc, Kish == 1)
 #'
 #' dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 #' options(survey.lonely.psu = "certainty")
-#' create_prop(var = VP_DC, denominador = hom_insg_taxi, disenio = dc)
+#' create_prop(var = "VP_DC", denominador = "hom_insg_taxi", disenio = dc)
 #'
 #' @export
 #'

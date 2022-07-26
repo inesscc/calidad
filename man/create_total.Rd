@@ -54,5 +54,5 @@ grouping in several domains.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-create_tot_con(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
+create_total("gastot_hd", "zona+sexo", subpop = "ocupado", disenio = dc)
 }

@@ -62,12 +62,12 @@ epf <- mutate(epf_personas, gasto_zona1 = if_else(zona == 1, gastot_hd, 0))
 dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
 options(survey.lonely.psu = "certainty")
 
-create_prop(var = gasto_zona1, denominador = gastot_hd, disenio =  dc)
+create_prop(var = "gasto_zona1", denominador = "gastot_hd", disenio =  dc)
 
 enusc <- filter(enusc, Kish == 1)
 
 dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 options(survey.lonely.psu = "certainty")
-create_prop(var = VP_DC, denominador = hom_insg_taxi, disenio = dc)
+create_prop(var = "VP_DC", denominador = "hom_insg_taxi", disenio = dc)
 
 }

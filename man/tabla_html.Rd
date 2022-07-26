@@ -24,6 +24,5 @@ hogar <- epf_personas \%>\%
   group_by(folio) \%>\%
   slice(1)
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
-tabla <- evaluate_prop(create_prop(ocupado, dominios = zona+sexo, disenio = dc))
-tabla_html(tabla)
+tabla <- evaluate(create_prop("ocupado", dominios = "zona+sexo", disenio = dc))
 }
