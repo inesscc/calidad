@@ -59,7 +59,7 @@ get_unweighted <- function(table, disenio, var, domains) {
     unweighted_cases <- get_sample_size(disenio$variables, c(domains, var) ) %>%
       dplyr::mutate_at(dplyr::vars(domains), as.character)  %>%
       dplyr::filter(!!rlang::parse_expr(var) == 1 ) %>%
-      dplyr::rename(unweighted = n)
+      dplyr::rename(unweighted = .data$n)
 
 
     unweighted_cases <- table %>%
@@ -84,7 +84,7 @@ get_unweighted <- function(table, disenio, var, domains) {
 
 get_log_cv <- function(data) {
   data <- data %>%
-    dplyr::mutate(log_cv = se / (-log(objetivo)*objetivo))
+    dplyr::mutate(log_cv = .data$se / (-log(.data$objetivo)*.data$objetivo))
   return(data)
 }
 
@@ -141,10 +141,11 @@ filter_design <- function(disenio, subpop) {
 #' Recibe la tabla en estado bruto y la ordena
 #' @param data dataframe con los resultados
 #' @param var variable objetivo
+#' @param denom denominator
 #' @return dataframe con todos los datos ordenados
 
 
-standardize_columns <- function(data, var, denom = denominador) {
+standardize_columns <- function(data, var, denom) {
 
   # If there is not denominator, we use a random character
   if (!is.null(denom)) {
@@ -184,12 +185,6 @@ standardize_columns <- function(data, var, denom = denominador) {
 
 
 #-----------------------------------------------------------------------
-#' Une información de indicadores y genera tabla final
-#'
-#' Recibe los indicadores de calidad calculados previamente y los une en una tabla
-#' @param table objeto creado con survey
-#' @param domains listado de variables para desagregar
-#' @return dataframe con toda la información para estándar INE
 
 create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
 
@@ -260,9 +255,8 @@ get_cv <- function(table, design, domains) {
 #' Cálcula los grados de libertad para cada estimación
 #'
 #' Recibe datos y los dominios. Devuelve un data frame con las upm, varstrat y gl para cada celda
-#' @param var variable objetivo
 #' @param data dataframe
-#' @param domains dominios en formato string
+#' @param domains \code{string} with domains
 #' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return dataframe con grados de libertad
 
@@ -317,9 +311,9 @@ get_df <- function(data, domains,df_type = "cepal"){
 
     gl <- data %>%
       dplyr::filter(!!rlang::parse_expr(estimation_var) == 1) %>%
-      dplyr::summarise(upm = length(unique(varunit)),
-                varstrat = length(unique(varstrat)),
-                df = upm-varstrat) %>%
+      dplyr::summarise(upm = length(unique(.data$varunit)),
+                varstrat = length(unique(.data$varstrat)),
+                df = .data$upm - .data$varstrat) %>%
       dplyr::select(-c(estimation_var,"upm","varstrat"))
 
   #  print(paste("fe",gl))
@@ -331,7 +325,7 @@ get_df <- function(data, domains,df_type = "cepal"){
 
      gl <- calcular_estrato(design$variables,dominios = NULL) %>%
                dplyr::bind_cols(calcular_upm(design$variables,dominios = NULL)) %>%
-               dplyr::mutate(df = upm-varstrat) %>%
+               dplyr::mutate(df = .data$upm - .data$varstrat) %>%
                dplyr::select(-c("upm","varstrat"))
 
      return(gl)
@@ -414,8 +408,8 @@ convert_to_formula <- function(var) {
 #'
 #' Evalúa si la variable es dummy
 #'
-#' @param var sting con el nombre de la variable
-#' @param var disenio complejo
+#' @param subpop string of the subpopulation filter
+#' @param disenio complex design
 #'
 #' @return warning or stop
 
@@ -440,8 +434,9 @@ check_subpop_var <- function(subpop, disenio) {
 #'
 #' Evalúa si la variable es caracter y si es una variable de proporción en caso de que la estimación sea de media
 #'
-#' @param var sting con el nombre de la variable
-#' @param var disenio complejo
+#' @param var string of the objetive variable
+#' @param disenio complex design
+#' @param estimation type of estimation
 #'
 #' @return warning or stop
 
@@ -529,19 +524,21 @@ unificar_variables_factExp = function(disenio){
 
 #-----------------------------------------------------------------------
 
-#' Calcula medias a partir de cierta agregacion
+#' Calculates multiple estimations. Internal wrapper for survey package
 #'
 #' Genera una tabla con estimaciones para una agregacion determinada
 #'
 #' @param var variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~
 #' @param dominios dominios de estimacion separados por signo +. Debe anteponerse ~
 #' @param disenio disenio complejo creado mediante el paquete \code{survey}
-#' @param media \code{boolean} indicating if the mean must be calculated
+#' @param estimation \code{string} indicating if the mean must be calculated
 #' @param env \code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos
+#' @param fun Function required regarding the estimation
+#' @param denom denominator. This parameter works for the ratio estimation
 #' @return \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
 #' @import survey
 
-calcular_tabla <-  function(var, dominios, disenio, estimation = "mean", env = parent.frame(), fun, denom = denominador) {
+calcular_tabla <-  function(var, dominios, disenio, estimation = "mean", env = parent.frame(), fun, denom = NULL) {
 
 
   # El primer if es para dominios
@@ -644,6 +641,7 @@ calcular_tabla_ratio <-  function(var,denominador, dominios = NULL, disenio, env
 #' @param data \code{dataframe} que contiene los datos que se estan evaluando
 #' @param domains vector de caracteres que contiene los dominios a evaluar
 #' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
+#' @param env parent environment
 #' @return \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
 
 get_sample_size <- function(data, domains = NULL, df_type = "cepal", env = parent.frame()) {
@@ -817,8 +815,6 @@ calcular_gl_total <- function(variables, datos) {
 #' Usa la tabla creada para calcular el estandar y le agrega dos columnas con el limite inferior y superior del intervalo de confianza
 #'
 #' @param data \code{dataframe} con todos los datos necesarios para calcular el estandar
-#' @param env \code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos
-#' @param tipo \code{string} que indica cual es el tipo de estimacion que se realiza.
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @return \code{dataframe} que contiene todos los elementos del estandar, junto a tres columnas nuevas que contienen el limite inferior, el limite superior y el valor t
 #'
@@ -826,12 +822,11 @@ calcular_gl_total <- function(variables, datos) {
 
 calcular_ic <-  function(data,  ajuste_ene) {
 
-
   # Se calculan los intervalos de la manera tradicional en la generalidad de los casos
   if (ajuste_ene == F) {
 
     final <- data %>%
-      dplyr::mutate(t = stats::qt(c(.975), df = df),
+      dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
                     li = .data$stat - .data$se*t,
                     ls = .data$stat + .data$se*t)
     # Estos corresponde al ajuste de la ENE: el t se fija en 2
@@ -868,115 +863,6 @@ get_deff <- function(var, design, survey_est) {
 
 
 
-#---------------------------------------------------------------------
-
-#' Calcula medianas con metodo replicado
-#'
-#' Se usa para acortar un poco el codigo de la funcion mediana
-#'
-#' @param disenio disenio complejo creado mediante el paquete \code{survey}
-#' @param var variable a estimar
-#' @param dominios dominios para desagregar
-#' @param sub se usa para filtrar cuando el usuario lo requiere
-#' @param env ambiente en el cual se crean algunas variable relevantes
-#' @return \code{vector} que contiene la variable con los conglomerados.
-#' @import iterators
-
-
-
-calcular_medianas_internal <- function(var, dominios, disenio, sub = F, env = parent.frame()) {
-
-
-  #Si el usuario pone una subpoblacion, se hace un filtro en el disenio para agilizar el calculo
-  if (sub == T) {
-    filtro <-  rlang::parse_expr(get("subpop", env))
-    disenio <- subset(disenio,   rlang::eval_tidy(filtro) == 1)
-
-  }
-
-  # Generar un vector con la desagregacion necesaria
-  doms <- as.character(dominios)
-  doms <- stringr::str_split(doms[[2]], "\\+")
-  doms <- stringr::str_remove_all(doms[[1]], " ")
-
-  # Identificar cuales son las categorias de cada una de las variables de desagregacion
-  categorias <- purrr::map(doms, ~sort(unique(as.character(disenio$variables[[.x]]) )))
-
-  # Generar el iterador, segun el numero de desagregaciones pedidas por el usuario. Ademas, se calcula el numero de combinaciones de celdas.
-  # Se permite hasta 5 desagregaciones. Sobre ese nivel la función se cae.
-  if (length(categorias) == 1) {
-    it <- itertools::ihasNext(itertools::product(categorias[[1]]))
-    combinaciones <- length(categorias[[1]])
-
-  } else if (length(categorias) == 2) {
-    it <- itertools::ihasNext(itertools::product(categorias[[1]], categorias[[2]]))
-    combinaciones <- length(categorias[[1]]) * length(categorias[[2]])
-
-  } else if (length(categorias) == 3) {
-    it <- itertools::ihasNext(itertools::product(categorias[[1]], categorias[[2]], categorias[[3]] ))
-    combinaciones <- length(categorias[[1]]) * length(categorias[[2]]) * length(categorias[[3]])
-
-
-  } else if (length(categorias) == 4) {
-    it <- itertools::ihasNext(itertools::product(categorias[[1]], categorias[[2]], categorias[[3]], categorias[[4]]))
-    combinaciones <- length(categorias[[1]]) * length(categorias[[2]]) * length(categorias[[3]], length(categorias[[4]]))
-
-
-  } else if (length(categorias) == 5) {
-    it <- itertools::ihasNext(itertools::product(categorias[[1]], categorias[[2]], categorias[[3]], categorias[[4]], categorias[[5]] ))
-    combinaciones <- length(categorias[[1]]) * length(categorias[[2]]) * length(categorias[[3]], length(categorias[[4]], length(categorias[[5]])))
-
-  }
-  # Crear una matriz para guardar resultados
-  acumulado <- data.frame(matrix(9999, ncol = 5, nrow = combinaciones))
-
-  type <- get("interval_type", env)
-
-
-  i <- 1
-  # Mientras exista un siguiente, el while sigue operando
-  while (itertools::hasNext(it)) {
-    x <- iterators::nextElem(it)
-
-
-    exp <- rlang::parse_expr(paste(doms, "==",  x , collapse = " & "))
-
-    # Se usa un trycath porque en ciertos casos, la función no puede realizar el cálculo
-    output <- tryCatch(
-      {
-        # No se usa svyby, para evitar perder un tabulado completo cuando alguna de sus celdas no puede ser calculada.
-        median <- svyquantile(var,
-                              design = subset(disenio, rlang::eval_tidy(exp) ),
-                              quantiles = 0.5,
-                              method="constant",
-                              interval.type = type, #  quantile probability
-                              ties="discrete")
-      },
-      error=function(cond) {
-        return(data.frame(X1 = NA, X2 = NA))
-      }
-
-    )
-
-    acumulado[i, ] <- output[[1]] %>%
-      as.data.frame() %>%
-      dplyr::mutate(v = paste(x, collapse = "."))
-
-    i <- i + 1
-
-
-  }
-
-  return(list(output[[1]], acumulado))
-
-  final <- acumulado  %>%
-    tidyr::separate(into = doms, col = .data$X3 , sep = "\\.") %>%
-    dplyr::rename(se = .data$X2,
-                  V1 = .data$X1) %>%
-    dplyr::relocate(.data$V1, .data$se, .after = dplyr::last_col())
-
-  return(final)
-}
 
 #----------------------------------------------------------------------
 
@@ -1011,7 +897,7 @@ get_ess <- function(ess, env = parent.frame() ) {
       warning("to get effective sample size use deff = T")
     } else {
       final <- final %>%
-        dplyr::mutate(ess = n / deff)
+        dplyr::mutate(ess = .data$n / deff)
     }
   }
   return(final)
@@ -1035,9 +921,7 @@ get_ess <- function(ess, env = parent.frame() ) {
 #' @param deff \code{boolean} Design effect
 #' @param ess \code{boolean} Effective sample size
 #' @param rel_error \code{boolean} Relative error
-#'
-#' @param log_cv \code{boolean} logarithmic coefficient of variation
-#'
+#' @param rm.na \code{boolean} indicating if NA values must be removed
 #' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
@@ -1111,7 +995,7 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
   # add relative error, if the user uses this parameter
   if (rel_error == T) {
     final <- final %>%
-      dplyr::mutate(relative_error = stats::qt(c(.975), df = df) * cv)
+      dplyr::mutate(relative_error = stats::qt(c(.975), df = .data$df) * cv)
   }
 
   # add the ess if the user uses this parameter
@@ -1134,11 +1018,11 @@ create_ratio_internal <- function(var,denominador, dominios = NULL, subpop = NUL
 #' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
 #' @param standard_eval \code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.
 #' @param deff \code{boolean} Design effect
+#' @param rm.na \code{boolean} indicating if NA values must be removed
+#' @param env parent environment to get some variables
+#' @param log_cv \code{boolean} indicating if the log cv must be returned
 #' @param ess \code{boolean} Effective sample size
 #' @param rel_error \code{boolean} Relative error
-#'
-#' @param log_cv \code{boolean} logarithmic coefficient of variation
-#'
 #' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
@@ -1205,14 +1089,14 @@ create_prop_internal <- function(var, dominios = NULL, subpop = NULL, disenio, c
   # add relative error, if the user uses this parameter
   if (rel_error == T) {
     final <- final %>%
-      dplyr::mutate(relative_error = stats::qt(c(.975), df = df) * cv)
+      dplyr::mutate(relative_error = stats::qt(c(.975), df = .data$df) * cv)
   }
 
 
   # add log cv, if the user uses this parameter
   if (log_cv) {
     final <- final %>%
-      dplyr::mutate(log_cv = se / (-log(stat)*stat))
+      dplyr::mutate(log_cv = .data$se / (-log(.data$stat)*.data$stat))
   }
 
   # add the ess if the user uses this parameter

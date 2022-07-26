@@ -42,7 +42,7 @@ create_ratio_internal(
 
 \item{rel_error}{\code{boolean} Relative error}
 
-\item{log_cv}{\code{boolean} logarithmic coefficient of variation}
+\item{rm.na}{\code{boolean} indicating if NA values must be removed}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

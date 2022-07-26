@@ -12,6 +12,8 @@ get_sample_size(data, domains = NULL, df_type = "cepal", env = parent.frame())
 \item{domains}{vector de caracteres que contiene los dominios a evaluar}
 
 \item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".}
+
+\item{env}{parent environment}
 }
 \value{
 \code{dataframe} que contiene la frecuencia de todos los dominios a evaluar

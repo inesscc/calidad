@@ -7,7 +7,11 @@
 check_input_var(var, disenio, estimation = "mean")
 }
 \arguments{
-\item{var}{disenio complejo}
+\item{var}{string of the objetive variable}
+
+\item{disenio}{complex design}
+
+\item{estimation}{type of estimation}
 }
 \value{
 warning or stop

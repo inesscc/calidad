@@ -92,6 +92,11 @@ test_that("conteo df diseño complejo", {
 })
 
 
+######################
+# COnfidence intervals
+######################
+
+df <-  create_mean("gastot_hd", dominios =  "zona+sexo", disenio = dc, ci = T)
 
 
 ############################################

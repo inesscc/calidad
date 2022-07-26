@@ -8,10 +8,9 @@
 #' methodology created by INE Chile, which considers sample size, degrees of freedom and
 #' coeficient of variation.
 #'
-#' @param tabulado \code{dataframe} created by \code{crear_insumos_media}
-#' @param publicar \code{boolean} indicating if the evaluation of the complete table
+#' @param table \code{dataframe} created by \code{crear_insumos_media}
+#' @param publish \code{boolean} indicating if the evaluation of the complete table
 #' must be added. If it is TRUE, the function adds a new column to the \code{dataframe}
-#' @param condicion \code{character} with the complete condition to filter the \code{dataframe}
 #' @param scheme string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "cepal" to use the CEPAL protocol
 #' @param ... the list of cepal parameters. The complete list of parameters is
 #'

@@ -7,6 +7,11 @@
 evaluate(table, publish = FALSE, scheme = c("chile", "cepal"), ...)
 }
 \arguments{
+\item{table}{\code{dataframe} created by \code{crear_insumos_media}}
+
+\item{publish}{\code{boolean} indicating if the evaluation of the complete table
+must be added. If it is TRUE, the function adds a new column to the \code{dataframe}}
+
 \item{scheme}{string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "cepal" to use the CEPAL protocol}
 
 \item{...}{the list of cepal parameters. The complete list of parameters is
@@ -30,13 +35,6 @@ evaluate(table, publish = FALSE, scheme = c("chile", "cepal"), ...)
   \item \code{ess} efective sample size. default: 140
   \item \code{unweighted} unweighted count. default: 50
 }}
-
-\item{tabulado}{\code{dataframe} created by \code{crear_insumos_media}}
-
-\item{publicar}{\code{boolean} indicating if the evaluation of the complete table
-must be added. If it is TRUE, the function adds a new column to the \code{dataframe}}
-
-\item{condicion}{\code{character} with the complete condition to filter the \code{dataframe}}
 }
 \value{
 \code{dataframe} with all the columns included in the input table, plus a new column

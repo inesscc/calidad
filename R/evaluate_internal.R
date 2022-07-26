@@ -35,7 +35,7 @@ evaluate_ine <- function(table, params, class = "calidad.mean") {
     evaluacion <- table %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
-                    eval_df = dplyr::if_else(df >= params$df, "sufficient df", "insufficient df"),
+                    eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     eval_cv = dplyr::case_when(
                       .data$cv <= params$cv_lower_ine  &  .data$cv > 0                ~ paste("cv <=", params$cv_lower_ine) ,
                       .data$cv > params$cv_lower_ine & .data$cv <= params$cv_upper_ine ~ paste("cv between", params$cv_lower_ine, "and", params$cv_upper_ine),
@@ -97,8 +97,8 @@ evaluate_cepal <- function(table, params, class = "calidad.mean") {
     evaluation <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
                     eval_ess = dplyr::if_else(.data$ess >= params$ess, "sufficient ess", "insufficient ess"),
-                    eval_df = dplyr::if_else(df >= params$df, "sufficient df", "insufficient df"),
-                    eval_cv = dplyr::if_else(cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
+                    eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::if_else(.data$cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess"  ~ "supress",
         eval_df == "insufficient df"  ~ "review",
@@ -113,9 +113,9 @@ evaluate_cepal <- function(table, params, class = "calidad.mean") {
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
                     eval_ess = dplyr::if_else(.data$ess >= params$ess, "sufficient ess", "insufficient ess"),
                     eval_unweighted = dplyr::if_else(.data$unweighted >= params$unweighted , "sufficient cases", "insufficient cases"),
-                    eval_df = dplyr::if_else(df >= params$df, "sufficient df", "insufficient df"),
-                    eval_log_cv = dplyr::if_else(log_cv <= params$log_cv, "adequate log cv", "non adequate log cv"),
-                    eval_cv = dplyr::if_else(cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
+                    eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
+                    eval_log_cv = dplyr::if_else(.data$log_cv <= params$log_cv, "adequate log cv", "non adequate log cv"),
+                    eval_cv = dplyr::if_else(.data$cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(tag = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
           eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "supress",

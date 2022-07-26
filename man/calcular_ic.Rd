@@ -10,10 +10,6 @@ calcular_ic(data, ajuste_ene)
 \item{data}{\code{dataframe} con todos los datos necesarios para calcular el estandar}
 
 \item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
-
-\item{env}{\code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos}
-
-\item{tipo}{\code{string} que indica cual es el tipo de estimacion que se realiza.}
 }
 \value{
 \code{dataframe} que contiene todos los elementos del estandar, junto a tres columnas nuevas que contienen el limite inferior, el limite superior y el valor t

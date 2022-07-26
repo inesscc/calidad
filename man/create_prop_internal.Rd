@@ -40,11 +40,15 @@ create_prop_internal(
 
 \item{rel_error}{\code{boolean} Relative error}
 
-\item{log_cv}{\code{boolean} logarithmic coefficient of variation}
+\item{log_cv}{\code{boolean} indicating if the log cv must be returned}
 
 \item{unweighted}{\code{boolean} Add non weighted count if it is required}
 
 \item{standard_eval}{\code{boolean} indicating if the function is inside another function, by default it is TRUE, avoid problems with lazy eval.}
+
+\item{rm.na}{\code{boolean} indicating if NA values must be removed}
+
+\item{env}{parent environment to get some variables}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

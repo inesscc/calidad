@@ -1,0 +1,150 @@
+---
+#title: "basic use"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{tutorial}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+# Tutorial package calidad 
+
+The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4) and [ECLAC](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) for the quality evaluation of estimates from household surveys.
+
+This tutorial shows the basic use of the package and includes the main functions to create the necessary inputs to implement both quality standards.  
+
+
+## Data edition
+
+We will use two datasets:
+
+- Encuesta Nacional de Empleo (efm 2020)  
+- VIII Encuesta de Presupuestos Familiares   
+
+Both datasets are loaded into the package and they can be used when the package is loaded in the session [^haven]. The data edition in the case of ENE has the purpuse of creating some subpopulations (work force, unemployed and unemployed). 
+
+[^haven]: The data contained within the package has some editions. It is important to note that haven::labelled objects may have some collision with quality functions. If you want to import a dta file, all variables that are of type haven::labelled must be converted to numeric or character.
+
+
+
+```{r, message=FALSE, warning=FALSE}
+library(survey)
+library(calidad)
+library(dplyr)
+ene <- ene %>% 
+  mutate(fdt = if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0), # labour force
+         ocupado = if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0), # employed
+         desocupado = if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0)) # unemployed
+
+# One row per household
+epf <- epf_personas %>% 
+  group_by(folio) %>% 
+  slice(1) %>% 
+  ungroup()
+
+```
+
+
+
+## Sample design
+Before starting to use the package, it is necessary to declare the sample design of the survey, for which we use the `survey` package. The primary sample unit, the stratum and weights must be declared. We declare the design for the two surveys (EPF and ENE). Additionally, it may be useful to declare an option for strata that only have one PSU
+
+```{r}
+# Complex sample design for ENE
+dc_ene <- svydesign(ids = ~conglomerado , strata = ~estrato_unico, data = ene, weights = ~fact_cal)
+# Complex sample design for EPF
+dc_epf <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
+options(survey.lonely.psu = "certainty")
+```
+
+## Inputs creation 
+
+### National Labour Survey (part 1)
+
+To assess the quality of an estimate, the [INE methodology](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4) establishes differentiated criteria for estimates of proportion (or ratio), on the one hand, and estimates of mean, size and total, on the other. In the case of proportion estimation, it is necessary to have the sample size, the degrees of freedom and the standard error. The other estimates require the sample size, the degrees of freedom, and the coefficient of variation.
+
+The package includes separate functions to create the inputs for estimates of **mean, proportion, totals and size**. The following example shows how the proportion  and size functions are used.
+
+```{r}
+insumos_prop <- create_prop(var = "desocupado", dominios = "sexo", subpop = "fdt", disenio =  dc_ene) # proportion of unemployed people
+insumos_total <-  create_size(var = "desocupado", dominios = "sexo", subpop = "fdt", disenio =  dc_ene) # number of unemployed people
+```
+
+- `var`: variable to be estimated. Must be a dummy variable
+- `dominios`: required domains.
+- `subpop`: reference subpopulation. It is optional and works as a filter (must be a dummy variable)
+- `disenio`: sample design
+
+
+The function returns all the neccesary inputs to implement the standard
+
+
+```{r, include=F}
+insumos_total
+```
+
+
+To get more domains, we can use the "+" symbol as follows:
+
+```{r}
+desagregar <- create_prop(var = "desocupado", dominios = "sexo+region", subpop = "fdt", disenio =  dc_ene)
+```
+
+ 
+
+### Household Budget Survey (part 2)
+
+In some cases it may be of interest to assess the quality of a sum. For example, the sum of all the income of the EPF at the geographical area level (Greater Santiago and other regional capitals). For this, there is the `create_total` function. This function receives a continuous variable such as hours, expense, or income and generates totals at the requested level. The ending "with" of the function alludes to the fact that a continuous variable is being used.
+
+```{r, eval=T, warning=FALSE}
+insumos_suma <-  create_total(var = "gastot_hd", dominios = "zona", disenio =  dc_epf)
+```
+
+f we want to evaluate the estimate of a mean, we have the function `create_mean`. In this case, we will calculate the average expenditure of households, according to geographical area. 
+
+```{r}
+insumos_media <-  create_mean(var = "gastot_hd", dominios = "zona", disenio =  dc_epf)
+```
+
+
+The default usage is not to disaggregate, in which case the functions should be used as follows:
+
+```{r}
+# ENE dataset
+insumos_prop_nacional <- create_prop("desocupado", subpop = "fdt", disenio = dc_ene)
+insumos_total_nacional <-  create_total("desocupado", subpop = "fdt", disenio = dc_ene)
+# EPF dataset
+insumos_suma_nacional <- create_total("gastot_hd", disenio = dc_epf)
+insumos_media_nacional <-  create_mean("gastot_hd", disenio = dc_epf)
+```
+
+
+## Evaluation 
+
+Once the inputs have been generated, we can do the evaluation. To do this, we use the `evaluate` function.
+
+```{r, eval=T, warning=FALSE}
+evaluacion_prop <- evaluate(insumos_prop)
+evaluacion_tot <- evaluate(insumos_total)
+evaluacion_suma <- evaluate(insumos_suma)
+evaluacion_media <- evaluate(insumos_media)
+```
+
+The output is a `dataframe` that, in addition to containing the information already generated, includes a column that indicates whether the estimate is unreliable, less reliable or reliable.
+
+The function `evaluate` has a parameter that allows us to know if the table should be published or not. Following the criteria of the standard, if more than 50% of the estimates of a table are not reliable, it should not be published.
+
+```{r}
+# Desempleo desagregado por region
+desagregar <- create_size(var = "desocupado", dominios = "region", subpop = "fdt", disenio =  dc_ene)
+# Evaluar tabulado
+evaluacion_tot_desagreg <- evaluate(desagregar, publicar = T)
+```
+
