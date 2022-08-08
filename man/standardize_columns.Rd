@@ -4,12 +4,14 @@
 \alias{standardize_columns}
 \title{Ordena nombre de columnas y estandariza el orden}
 \usage{
-standardize_columns(data, var, denom = denominador)
+standardize_columns(data, var, denom)
 }
 \arguments{
 \item{data}{dataframe con los resultados}
 
 \item{var}{variable objetivo}
+
+\item{denom}{denominator}
 }
 \value{
 dataframe con todos los datos ordenados

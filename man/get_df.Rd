@@ -9,13 +9,13 @@ get_df(data, domains, df_type = "cepal")
 \arguments{
 \item{data}{dataframe}
 
-\item{domains}{dominios en formato string}
+\item{domains}{\code{string} with domains}
 
-\item{var}{variable objetivo}
+\item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".}
 }
 \value{
 dataframe con grados de libertad
 }
 \description{
-Recibe datos y los dominios. Devuelve un data frame con las upm, varstrat y gl para cada celda
+Recibe datos y los domains. Devuelve un data frame con las upm, varstrat y gl para cada celda
 }

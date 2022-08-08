@@ -7,7 +7,7 @@
 create_ratio_internal(
   var,
   denominador,
-  dominios = NULL,
+  domains = NULL,
   subpop = NULL,
   disenio,
   ci = F,
@@ -24,7 +24,7 @@ create_ratio_internal(
 
 \item{denominador}{numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated.}
 
-\item{dominios}{domains to be estimated separated by the + character.}
+\item{domains}{domains to be estimated separated by the + character.}
 
 \item{subpop}{integer dummy variable to filter the dataframe}
 
@@ -42,7 +42,7 @@ create_ratio_internal(
 
 \item{rel_error}{\code{boolean} Relative error}
 
-\item{log_cv}{\code{boolean} logarithmic coefficient of variation}
+\item{rm.na}{\code{boolean} indicating if NA values must be removed}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

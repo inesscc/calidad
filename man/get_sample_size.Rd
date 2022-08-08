@@ -9,12 +9,16 @@ get_sample_size(data, domains = NULL, df_type = "cepal", env = parent.frame())
 \arguments{
 \item{data}{\code{dataframe} que contiene los datos que se estan evaluando}
 
-\item{domains}{vector de caracteres que contiene los dominios a evaluar}
+\item{domains}{vector de caracteres que contiene los domains a evaluar}
+
+\item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".}
+
+\item{env}{parent environment}
 }
 \value{
-\code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+\code{dataframe} que contiene la frecuencia de todos los domains a evaluar
 }
 \description{
-Genera una tabla con el conteo de cada cada una de los dominios del tabulado.
+Genera una tabla con el conteo de cada cada una de los domains del tabulado.
 La funcion contempla un caso para proporcion y un caso para promedio
 }

@@ -4,20 +4,20 @@
 \alias{calcular_upm}
 \title{Calcula el numero de UPM}
 \usage{
-calcular_upm(data, dominios, var = NULL)
+calcular_upm(data, domains, var = NULL)
 }
 \arguments{
 \item{data}{\code{dataframe} que contiene los datos que se estan evaluando}
 
-\item{dominios}{vector de caracteres que contiene los dominios a evaluar}
+\item{domains}{vector de caracteres que contiene los domains a evaluar}
 
 \item{var}{string que contiene el nombre de la variable de proporcion que se evalua.}
 }
 \value{
-\code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+\code{dataframe} que contiene la frecuencia de todos los domains a evaluar
 }
 \description{
-Genera una tabla con el conteo de UPM para cada uno de los dominios del tabulado.
+Genera una tabla con el conteo de UPM para cada uno de los domains del tabulado.
 La columna que contiene la informacion de las UPMs debe llamarse varunit
 La funcion contempla un caso para proporcion y un caso para promedio
 }

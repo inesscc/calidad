@@ -35,13 +35,13 @@ evaluate_ine <- function(table, params, class = "calidad.mean") {
     evaluacion <- table %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
-                    eval_df = dplyr::if_else(df >= params$df, "sufficient df", "insufficient df"),
+                    eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     eval_cv = dplyr::case_when(
                       .data$cv <= params$cv_lower_ine  &  .data$cv > 0                ~ paste("cv <=", params$cv_lower_ine) ,
                       .data$cv > params$cv_lower_ine & .data$cv <= params$cv_upper_ine ~ paste("cv between", params$cv_lower_ine, "and", params$cv_upper_ine),
                       .data$cv > params$cv_upper_ine                                        ~ paste("cv >", params$cv_upper_ine)
                     ),
-                    calidad = dplyr::case_when(
+                    label = dplyr::case_when(
                       eval_n == "insufficient sample size" | eval_df == "insufficient df" | eval_cv == paste("cv >", params$cv_upper_ine)      ~ "no fiable",
                       eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_ine)         ~ "fiable",
                       eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv ==  paste("cv between", params$cv_lower_ine, "and", params$cv_upper_ine) ~
@@ -68,7 +68,7 @@ evaluate_ine <- function(table, params, class = "calidad.mean") {
                                                               cv > params$cv_lower_ine & cv <= params$cv_upper_ine ~ paste("cv between", params$cv_lower_ine, "abd", params$cv_upper_ine),
                                                               cv > 0.3                                            ~ paste("cv >", params$cv_upper_ine)
                                              )),
-                    calidad = dplyr::case_when(
+                    label = dplyr::case_when(
                       stat <1 & eval_n == "insufficient sample size" | eval_df == "insufficient df"                                                  ~ "no fiable",
                       stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "<= a 0.5" & eval_se == "admissible SE"  ~ "fiable",
                       stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "<= a 0.5" & eval_se == "high SE"      ~ "poco fiable",
@@ -97,9 +97,9 @@ evaluate_cepal <- function(table, params, class = "calidad.mean") {
     evaluation <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
                     eval_ess = dplyr::if_else(.data$ess >= params$ess, "sufficient ess", "insufficient ess"),
-                    eval_df = dplyr::if_else(df >= params$df, "sufficient df", "insufficient df"),
-                    eval_cv = dplyr::if_else(cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
-      dplyr::mutate(tag = dplyr::case_when(
+                    eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::if_else(.data$cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
+      dplyr::mutate(label = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess"  ~ "supress",
         eval_df == "insufficient df"  ~ "review",
         eval_cv ==  "adequate cv"  ~ "publish"
@@ -113,18 +113,21 @@ evaluate_cepal <- function(table, params, class = "calidad.mean") {
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
                     eval_ess = dplyr::if_else(.data$ess >= params$ess, "sufficient ess", "insufficient ess"),
                     eval_unweighted = dplyr::if_else(.data$unweighted >= params$unweighted , "sufficient cases", "insufficient cases"),
-                    eval_df = dplyr::if_else(df >= params$df, "sufficient df", "insufficient df"),
-                    eval_log_cv = dplyr::if_else(log_cv <= params$log_cv, "adequate log cv", "non adequate log cv"),
-                    eval_cv = dplyr::if_else(cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
-      dplyr::mutate(tag = dplyr::case_when(
+                    eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
+                    eval_log_cv = dplyr::if_else(.data$log_cv <= params$log_cv, "adequate log cv", "non adequate log cv"),
+                    eval_cv = dplyr::if_else(.data$cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
+      dplyr::mutate(label = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
           eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "supress",
         eval_df == "insufficient df"  ~ "review",
         eval_cv ==  "adequate cv"  ~ "publish"
       ))
 
-
   }
+
+  # Add cepal class to the final object
+  evaluation <- add_class(evaluation, "cepal.eval")
+
   return(evaluation)
 
 
@@ -135,10 +138,10 @@ evaluate_cepal <- function(table, params, class = "calidad.mean") {
     evaluation <- evaluation %>%
       dplyr::ungroup() %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(.data$calidad == "fiable", 1, 0)) / nrow(.) * 100,
+      dplyr::mutate(pasa = sum(dplyr::if_else(.data$label == "fiable", 1, 0)) / nrow(.) * 100,
                     pasa = round(.data$pasa, 2),
-                    publicacion = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    aprueba = paste0(.data$pasa, "% de estimaciones fiables")) %>%
+                    publication = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
+                    pass = paste0(.data$pasa, "% de estimaciones fiables")) %>%
       dplyr::select(-.data$pasa)
 
     return(evaluation)

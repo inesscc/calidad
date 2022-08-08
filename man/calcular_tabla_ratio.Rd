@@ -7,7 +7,7 @@
 calcular_tabla_ratio(
   var,
   denominador,
-  dominios = NULL,
+  domains = NULL,
   disenio,
   env = parent.frame()
 )
@@ -17,7 +17,7 @@ calcular_tabla_ratio(
 
 \item{denominador}{variable denominador del ratio a calcular, dentro de un \code{dataframe}. Debe anteponerse ~}
 
-\item{dominios}{dominios de estimacion separados por signo +. Debe anteponerse ~}
+\item{domains}{domains de estimacion separados por signo +. Debe anteponerse ~}
 
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 

@@ -7,7 +7,9 @@
 check_subpop_var(subpop, disenio)
 }
 \arguments{
-\item{var}{disenio complejo}
+\item{subpop}{string of the subpopulation filter}
+
+\item{disenio}{complex design}
 }
 \value{
 warning or stop

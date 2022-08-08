@@ -40,7 +40,7 @@ dc_sin_varunit <- survey::svydesign(ids = ~1,
 # PROBAR NA EN SUBPOP
 #####################
 
-expect_error(create_mean("gastot_hd", dominios =  "sexo", subpop = "metro_na", disenio = dc),
+expect_error(create_mean("gastot_hd", domains =  "sexo", subpop = "metro_na", design = dc),
              "subpop contains NAs!")
 
 
@@ -51,7 +51,7 @@ expect_error(create_mean("gastot_hd", dominios =  "sexo", subpop = "metro_na", d
 
 # Testear la media sin desagregación
 
-test1 <-  create_mean("gastot_hd", disenio = dc)
+test1 <-  create_mean("gastot_hd", design = dc)
 
 test_that("Insumo media", {
   expect_equal(round(test1$stat), 1121925)
@@ -59,7 +59,7 @@ test_that("Insumo media", {
 
 
 # Testear la media con desagregación
-test2 <-  create_mean("gastot_hd", dominios =  "zona", disenio = dc)
+test2 <-  create_mean("gastot_hd", domains =  "zona", design = dc)
 
 test_that("Insumo media zona", {
   expect_equal(round(test2$stat), c(1243155, 969048))
@@ -69,7 +69,7 @@ test_that("Insumo media zona", {
 #################################
 # Testear los grados de libertad
 #################################
-df <-  create_mean("gastot_hd", dominios =  "zona+sexo", disenio = dc)
+df <-  create_mean("gastot_hd", domains =  "zona+sexo", design = dc)
 
 true_upm <- dc$variables %>%
   dplyr::group_by(sexo, zona, varunit) %>%
@@ -92,16 +92,29 @@ test_that("conteo df diseño complejo", {
 })
 
 
+######################
+# COnfidence intervals
+######################
+
+df <-  create_mean("gastot_hd", domains =  "zona+sexo", design = dc, ci = T)
 
 
 ############################################
 # Probar deff y tamaño de muestra efectivo #
 ############################################
 
-test2 <-  create_mean("gastot_hd", disenio = dc)
-test2 <-  create_mean("gastot_hd", dominios =  "zona+sexo", disenio = dc, deff = F, rm.na = F)
+test2 <-  create_mean("gastot_hd", design = dc)
+test2 <-  create_mean("gastot_hd", domains =  "zona+sexo", design = dc, deff = F, rm.na = F)
 
-expect_warning(create_mean("gastot_hd", dominios =  "zona+sexo", disenio = dc, ess = T),
+expect_warning(create_mean("gastot_hd", domains =  "zona+sexo", design = dc, ess = T),
                "to get effective sample size use deff = T")
 
 
+all <- create_mean("gastot_hd", domains = "zona+sexo", design = dc, ci = T, ess = T, deff = T, rm.na = T, unweighted = T, rel_error = T)
+
+# Check column names
+waited_output <- c("stat", "se", "n", "cv", "deff", "lower", "upper", "relative_error", "ess", "unweighted")
+
+test_that("suma del gasto nivel nacional", {
+  expect_equal(sum(names(all) %in% waited_output), length(waited_output))
+})

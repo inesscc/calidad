@@ -63,7 +63,7 @@ dc_enusc <- survey::svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = en
 
 ### sin desagregación
 
-statOwn <- create_size("ocupado", disenio = dc_epf_personas)
+statOwn <- create_size("ocupado", design = dc_epf_personas)
 
 stat <- sum(epf_personas$ocupado * epf_personas$fe)
 
@@ -73,7 +73,7 @@ test_that("verificación estimación sin desagregación", {
 
 ### con desagregación
 
-statOwn <- create_size("ocupado",dominios = "zona" ,disenio = dc_epf_personas)
+statOwn <- create_size("ocupado",domains = "zona" ,design = dc_epf_personas)
 
 stat <- epf_personas %>%
   dplyr::group_by(ocupado,zona) %>%
@@ -90,7 +90,7 @@ test_that("verificación estimación con desagregación", {
 
 # Calcular con el enfoque INE, ya que la opción por defecto es INE, con desagregación
 
-df <-  create_size("ocupado", dominios =  "zona+sexo", disenio = dc_epf_hogar)
+df <-  create_size("ocupado", domains =  "zona+sexo", design = dc_epf_hogar)
 
 true_upm <- dc_epf_hogar$variables %>%
   dplyr::group_by(sexo, zona, ocupado, varunit) %>%
@@ -115,7 +115,7 @@ test_that("conteo df diseño complejo, versión INE, con desagregación", {
 
 # Calcular con el enfoque de CEPAL con desagregación
 
-df <-  create_size("VA_DC", dominios =  "enc_region+rph_sexo", disenio = dc_enusc,df_type = "cepal")
+df <-  create_size("VA_DC", domains =  "enc_region+rph_sexo", design = dc_enusc,df_type = "cepal")
 
 true_upm <- dc_enusc$variables %>%
   dplyr::group_by(rph_sexo, enc_region, Conglomerado) %>%
@@ -137,9 +137,38 @@ test_that("conteo df diseño complejo, versión CEPAL, con desagregación", {
   expect_equal(true_df$df, df$df)
 })
 
+
+# Get df with INE approach
+
+df <-  create_size("VA_DC", domains =  "enc_region+rph_sexo", design = dc_enusc,df_type = "ine")
+
+true_upm <- dc_enusc$variables %>%
+  dplyr::group_by(rph_sexo, enc_region, VA_DC, Conglomerado) %>%
+  dplyr::mutate(upm = dplyr::if_else(dplyr::row_number() == 1, 1, 0 )) %>%
+  dplyr::group_by(rph_sexo, enc_region, VA_DC) %>%
+  dplyr::summarise(upm = sum(upm))
+
+true_strata <- dc_enusc$variables %>%
+  dplyr::group_by(rph_sexo, enc_region, VA_DC, VarStrat) %>%
+  dplyr::mutate(strata = dplyr::if_else(dplyr::row_number() == 1, 1, 0 )) %>%
+  dplyr::group_by(rph_sexo, enc_region, VA_DC) %>%
+  dplyr::summarise(strata = sum(strata))
+
+true_df <- true_upm %>%
+  dplyr::left_join(true_strata, by = c("rph_sexo", "enc_region", "VA_DC")) %>%
+  dplyr::mutate(df = upm - strata) %>%
+  dplyr::filter(VA_DC == 1)
+
+test_that("conteo df diseño complejo, versión CEPAL, con desagregación", {
+  expect_equal(true_df$df, df$df)
+})
+
+
+
+
 # Calcular con el enfoque de INE sin desagregación
 
-  df <- create_size("ocupado", disenio = dc_epf_hogar)
+  df <- create_size("ocupado", design = dc_epf_hogar)
 
 true_df <- dc_epf_hogar$variables %>%
   dplyr::filter(ocupado == 1) %>%
@@ -155,7 +184,7 @@ test_that("conteo df diseño complejo, version INE, sin desagregación", {
 
 # Calcular con el enfoque de INE sin desagregación
 
-df <- create_size("ocupado", disenio = dc_epf_hogar)
+df <- create_size("ocupado", design = dc_epf_hogar)
 
 true_df <- dc_epf_hogar$variables %>%
   dplyr::summarise(strata = unique(varunit)) %>%
