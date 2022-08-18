@@ -1,6 +1,6 @@
 Package: calidad
 Type: Package
-Title: Evalúa la calidad de las estimaciones hechas por encuestas de hogares 
+Title: The Package Assesses the Quality of Estimates Made by Complex Sample Designs
 Version: 0.1.0
 Authors@R: c(
       person(given = "Klaus",
@@ -16,9 +16,9 @@ Authors@R: c(
         family = "Agloni",
         role = c("ctb"))
     )
-Description: El paquete evalúa la calidad de estimaciones hechas por encuestas de hogares, 
-    siguiendo la metodología desarrollada por el Instituto Nacional de Estadísticas. Es
-    posible implementar la evaluación para estimaciones de media y de proporción. 
+Description: Assesses the quality of estimates made by complex sample designs,
+  following the methodology developed by the National Institute of Statistics Chile and by Economic Commission  for Latin America and
+  Caribbean (eclac). 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
@@ -32,15 +32,8 @@ Imports:
     purrr,
     survey,
     kableExtra,
-    tibble,
     stringr,
-    glue,
-    digest,
-    itertools,
-    iterators,
     tidyr,
     haven
-
-
 
 
