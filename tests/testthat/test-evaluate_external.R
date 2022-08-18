@@ -29,7 +29,7 @@ test <- evaluate(test1, publish = T)
 
 
 # INE Chile Standard for proportion
-test2 <-  create_prop("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T, log_cv = T, unweighted = T)
+test2 <-  create_prop("desocupado", domains =  "region+sexo", design = dc_ene, deff = T, ess = T, log_cv = T, unweighted = T)
 test <- evaluate(test2)
 
 # INE Chile Standard for size
@@ -52,6 +52,9 @@ test <- evaluate(test4, scheme = "cepal")
 
 # CEPAL standard with custom parameters
 test <- evaluate(test1, scheme = "cepal", unweighted = 500)
+test <- evaluate(test1, scheme = "cepal", ess  = 200 )
+test <- evaluate(test2, scheme = "cepal", ess  = 200, df = 127 )
+
 
 # html output
 out1 <- create_html(test)

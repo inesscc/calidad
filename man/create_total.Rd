@@ -16,7 +16,8 @@ create_total(
   rm.na = F,
   deff = F,
   rel_error = F,
-  unweighted = F
+  unweighted = F,
+  eclac_input = F
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ create_total(
 \item{rel_error}{\code{boolean} Relative error}
 
 \item{unweighted}{\code{boolean} Add non weighted count if it is required}
+
+\item{eclac_input}{\code{boolean} return eclac inputs}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

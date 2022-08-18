@@ -17,7 +17,8 @@ create_prop(
   rel_error = F,
   log_cv = F,
   unweighted = F,
-  standard_eval = F
+  standard_eval = F,
+  eclac_input = F
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ create_prop(
 \item{unweighted}{\code{boolean} Add non weighted count if it is required}
 
 \item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
+
+\item{eclac_input}{\code{boolean} return eclac inputs}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

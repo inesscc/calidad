@@ -1,5 +1,39 @@
 
 
+
+# Turn on all the indicators needed for the eclac standard
+eclac_standard <- function(eclac,  env = parent.frame(), proportion = F  ) {
+
+  if (eclac == T & proportion == F) {
+    ess <- T
+    unweighted <- T
+    deff <- T
+    eclac_indicators = list("ess" = ess, "unweighted" = unweighted, "deff" = deff)
+
+  } else if (eclac == T & proportion == T) {
+    ess <- T
+    unweighted <- T
+    deff <- T
+    log_cv <- T
+    eclac_indicators = list("ess" = ess, "unweighted" = unweighted, "deff" = deff, "log_cv" = log_cv)
+
+  } else if (eclac == F & proportion == T) {
+    eclac_indicators = list("ess" = get("ess", envir = env),
+                            "unweighted" = get("unweighted", envir = env),
+                            "deff" = get("deff", envir = env),
+                            "log_cv" =  get("log_cv", envir = env))
+
+  } else {
+    eclac_indicators = list("ess" = get("ess", envir = env),
+                            "unweighted" = get("unweighted", envir = env),
+                            "deff" = get("deff", envir = env))
+  }
+
+  return(eclac_indicators)
+}
+
+#--------------------------------
+
 formula_to_string <- function(formula) {
   v <- deparse(formula) %>%
     stringr::str_remove("~")
