@@ -9,7 +9,9 @@ Authors@R: c(
         email = "klehmann@fen.uchile.cl"),
       person(given = "Ricardo",
         family = "Pizarro",
-        role = c("ctb")),
+        role = c("ctb"),
+        email = "rapizarros@ine.gob.cl"
+        ),
       person(given = "Ignacio",
         family = "Agloni",
         role = c("ctb"))
