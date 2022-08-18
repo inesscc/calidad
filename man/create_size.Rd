@@ -17,7 +17,8 @@ create_size(
   deff = F,
   rel_error = F,
   unweighted = F,
-  df_type = "ine"
+  df_type = "ine",
+  eclac_input = F
 )
 }
 \arguments{
@@ -48,6 +49,8 @@ in the domain parameter, the estimation variable must be a dummy variable.}
 \item{unweighted}{\code{boolean} Add non weighted count if it is required}
 
 \item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".}
+
+\item{eclac_input}{\code{boolean} return eclac inputs}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

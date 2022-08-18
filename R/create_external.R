@@ -22,6 +22,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @param deff \code{boolean} Design effect
 #' @param rel_error \code{boolean} Relative error
 #' @param unweighted \code{boolean} Add non weighted count if it is required
+#' @param eclac_input \code{boolean} return eclac inputs
 #' @import survey
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
@@ -31,7 +32,13 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @export
 
 create_mean = function(var, domains = NULL, subpop = NULL, design, ci = F, ess = F, ajuste_ene = F, standard_eval = F,
-                       rm.na = F, deff = F, rel_error = F, unweighted = F) {
+                       rm.na = F, deff = F, rel_error = F, unweighted = F, eclac_input = F) {
+
+  # Turn on eclac indicators if the user wants it
+  eclac_inputs <-  eclac_standard(eclac_input)
+  ess = eclac_inputs$ess
+  unweighted = eclac_inputs$unweighted
+  deff = eclac_inputs$deff
 
 
   # Homologar nombres de variables  del diseño
@@ -127,7 +134,7 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = F, ess =
 #' @param ess \code{boolean} Effective sample size
 #' @param rm.na \code{boolean} Remove NA if it is required
 #' @param rel_error \code{boolean} Relative error
-#'
+#' @param eclac_input \code{boolean} return eclac inputs
 #' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
@@ -137,7 +144,14 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = F, ess =
 #' @export
 
 create_total <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
-                         deff = F, rel_error = F, unweighted = F) {
+                         deff = F, rel_error = F, unweighted = F, eclac_input = F) {
+
+  # Turn on eclac indicators if the user wants it
+  eclac_inputs <-  eclac_standard(eclac_input)
+  ess = eclac_inputs$ess
+  unweighted = eclac_inputs$unweighted
+  deff = eclac_inputs$deff
+
 
   # Homologar nombres de variables  del diseño
   design <- standardize_design_variables(design)
@@ -235,7 +249,7 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess
 #' @param ess \code{boolean} Effective sample size
 #' @param rm.na \code{boolean} Remove NA if it is required
 #' @param rel_error \code{boolean} Relative error
-#'
+#' @param eclac_input \code{boolean} return eclac inputs
 #' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
@@ -246,7 +260,15 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess
 #' @export
 
 create_size <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
-                         deff = F, rel_error = F,  unweighted = F, df_type = "ine") {
+                         deff = F, rel_error = F,  unweighted = F, df_type = "ine", eclac_input = F) {
+
+
+  # Turn on eclac indicators if the user wants it
+  eclac_inputs <-  eclac_standard(eclac_input)
+  ess = eclac_inputs$ess
+  unweighted = eclac_inputs$unweighted
+  deff = eclac_inputs$deff
+
 
   # Homologar nombres de variables  del diseño
   design <- standardize_design_variables(design)
@@ -351,9 +373,8 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess 
 #' @param deff \code{boolean} Design effect
 #' @param ess \code{boolean} Effective sample size
 #' @param rel_error \code{boolean} Relative error
-#'
+#' @param eclac_input \code{boolean} return eclac inputs
 #' @param log_cv \code{boolean} logarithmic coefficient of variation
-#'
 #' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
@@ -376,7 +397,14 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess 
 #'
 
 create_prop = function(var, denominador = NULL, domains = NULL, subpop = NULL, design, ci = F, deff = F, ess = F, ajuste_ene = F,
-                       rel_error = F, log_cv = F, unweighted = F, standard_eval = F){
+                       rel_error = F, log_cv = F, unweighted = F, standard_eval = F, eclac_input = F){
+
+  # Turn on eclac indicators if the user wants it
+  eclac_inputs <-  eclac_standard(eclac_input, proportion = T)
+  ess = eclac_inputs$ess
+  unweighted = eclac_inputs$unweighted
+  deff = eclac_inputs$deff
+  log_cv = eclac_inputs$log_cv
 
 
   if(!is.null(denominador)){

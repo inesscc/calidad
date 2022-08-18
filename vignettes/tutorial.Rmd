@@ -54,7 +54,7 @@ epf <- epf_personas %>%
 
 
 ## Sample design
-Before starting to use the package, it is necessary to declare the sample design of the survey, for which we use the `survey` package. The primary sample unit, the stratum and weights must be declared. We declare the design for the two surveys (EPF and ENE). Additionally, it may be useful to declare an option for strata that only have one PSU
+Before starting to use the package, it is necessary to declare the sample design of the survey, for which we use the `survey` package. The primary sample unit, the stratum and weights must be declared. It is also possible to use a design with only weights, nevertheless in that case the variance will be estimated under simple random sampling assumption. In this case we will declare a complex design for the two surveys (EPF and ENE). Additionally, it may be useful to declare an option for strata that only have one PSU.
 
 ```{r}
 # Complex sample design for ENE
@@ -101,13 +101,13 @@ desagregar <- create_prop(var = "desocupado", domains = "sexo+region", subpop = 
 
 ### Household Budget Survey (part 2)
 
-In some cases it may be of interest to assess the quality of a sum. For example, the sum of all the income of the EPF at the geographical area level (Greater Santiago and other regional capitals). For this, there is the `create_total` function. This function receives a continuous variable such as hours, expense, or income and generates totals at the requested level. The ending "with" of the function alludes to the fact that a continuous variable is being used.
+In some cases it may be of interest to assess the quality of a sum. For example, the sum of all the income of the EPF at the geographical area level (Gran Santiago and other regional capitals). For this, there is the `create_total` function. This function receives a continuous variable such as hours, expense, or income and generates totals at the requested level. The ending "with" of the function alludes to the fact that a continuous variable is being used.
 
 ```{r, eval=T, warning=FALSE}
 insumos_suma <-  create_total(var = "gastot_hd", domains = "zona", design =  dc_epf)
 ```
 
-f we want to evaluate the estimate of a mean, we have the function `create_mean`. In this case, we will calculate the average expenditure of households, according to geographical area. 
+If we want to evaluate the estimate of a mean, we have the function `create_mean`. In this case, we will calculate the average expenditure of households, according to geographical area. 
 
 ```{r}
 insumos_media <-  create_mean(var = "gastot_hd", domains = "zona", design =  dc_epf)
