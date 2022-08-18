@@ -7,9 +7,9 @@
 create_prop(
   var,
   denominador = NULL,
-  dominios = NULL,
+  domains = NULL,
   subpop = NULL,
-  disenio,
+  design,
   ci = F,
   deff = F,
   ess = F,
@@ -17,7 +17,8 @@ create_prop(
   rel_error = F,
   log_cv = F,
   unweighted = F,
-  standard_eval = F
+  standard_eval = F,
+  eclac_input = F
 )
 }
 \arguments{
@@ -25,11 +26,11 @@ create_prop(
 
 \item{denominador}{numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL}
 
-\item{dominios}{domains to be estimated separated by the + character.}
+\item{domains}{domains to be estimated separated by the + character.}
 
 \item{subpop}{integer dummy variable to filter the dataframe}
 
-\item{disenio}{complex design created by \code{survey} package}
+\item{design}{complex design created by \code{survey} package}
 
 \item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
 
@@ -46,6 +47,8 @@ create_prop(
 \item{unweighted}{\code{boolean} Add non weighted count if it is required}
 
 \item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
+
+\item{eclac_input}{\code{boolean} return eclac inputs}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated
@@ -62,12 +65,12 @@ epf <- mutate(epf_personas, gasto_zona1 = if_else(zona == 1, gastot_hd, 0))
 dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
 options(survey.lonely.psu = "certainty")
 
-create_prop(var = gasto_zona1, denominador = gastot_hd, disenio =  dc)
+create_prop(var = "gasto_zona1", denominador = "gastot_hd", design =  dc)
 
 enusc <- filter(enusc, Kish == 1)
 
 dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 options(survey.lonely.psu = "certainty")
-create_prop(var = VP_DC, denominador = hom_insg_taxi, disenio = dc)
+create_prop(var = "VP_DC", denominador = "hom_insg_taxi", design = dc)
 
 }

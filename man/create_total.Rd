@@ -6,9 +6,9 @@
 \usage{
 create_total(
   var,
-  dominios = NULL,
+  domains = NULL,
   subpop = NULL,
-  disenio,
+  design,
   ci = F,
   ess = F,
   ajuste_ene = F,
@@ -16,17 +16,18 @@ create_total(
   rm.na = F,
   deff = F,
   rel_error = F,
-  unweighted = F
+  unweighted = F,
+  eclac_input = F
 )
 }
 \arguments{
 \item{var}{numeric variable within the  \code{dataframe}.}
 
-\item{dominios}{domains to be estimated separated by the + character.}
+\item{domains}{domains to be estimated separated by the + character.}
 
 \item{subpop}{integer dummy variable to filter the dataframe}
 
-\item{disenio}{complex design created by \code{survey} package}
+\item{design}{complex design created by \code{survey} package}
 
 \item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
 
@@ -43,6 +44,8 @@ create_total(
 \item{rel_error}{\code{boolean} Relative error}
 
 \item{unweighted}{\code{boolean} Add non weighted count if it is required}
+
+\item{eclac_input}{\code{boolean} return eclac inputs}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated
@@ -54,5 +57,5 @@ grouping in several domains.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-create_tot_con(gastot_hd, zona+sexo, subpop = ocupado, disenio = dc)
+create_total("gastot_hd", "zona+sexo", subpop = "ocupado", design = dc)
 }

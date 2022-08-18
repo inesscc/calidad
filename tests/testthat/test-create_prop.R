@@ -44,22 +44,13 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
                                             fdt_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, fdt ) ),
                               weights = ~fact_cal)
 
-  #create_prop(var = fdt, dominios = sexo, disenio = dc_ene)
-
-# enusc <- enusc %>%
-#   dplyr::rename(varunit = Conglomerado,
-#          varstrat = VarStrat) %>%
-#   dplyr::mutate_at(.vars =  dplyr::vars(rph_sexo), .funs =  as.numeric)
-
-#dc_enusc <- svydesign(ids = ~varunit, strata = ~varstrat, data = enusc, weights = ~Fact_Pers)
-
 
 #####################
 # PROBAR NA EN SUBPOP
 #####################
 
 
-expect_error(create_prop(desocupado, dominios =  sexo, subpop = fdt_na, disenio = dc_ene),
+expect_error(create_prop("desocupado", domains =  "sexo", subpop = "fdt_na", design = dc_ene),
              "subpop contains NAs!")
 
 
@@ -68,18 +59,18 @@ expect_error(create_prop(desocupado, dominios =  sexo, subpop = fdt_na, disenio 
 ##############################
 
 # Testear la proporción sin desagregación
-test1 <-  create_prop(ocupado, disenio = dc)
+test1 <-  create_prop("ocupado", design = dc)
 test_that("Insumo proporción", {
-  expect_equal(round(test1$objetivo, 3), unname(round(survey::svymean(x = ~ocupado, dc)[1], 3)))
+  expect_equal(round(test1$stat, 3), unname(round(survey::svymean(x = ~ocupado, dc)[1], 3)))
 })
 
 
 # Probar strings
-# anidar <-  function(var,denominador = NULL, dominios = NULL, subpop = NULL, disenio, ci = F){
-#   create_prop(var, denominador, dominios, subpop, disenio,ci, anidar = T)
+# anidar <-  function(var,denominador = NULL, domains = NULL, subpop = NULL, design, ci = F){
+#   create_prop(var, denominador, domains, subpop, design,ci, anidar = T)
 # }
 #
-# anidar(var = "ocupado", disenio = dc, ci = T)
+# anidar(var = "ocupado", design = dc, ci = T)
 
 
 ##############################
@@ -87,18 +78,18 @@ test_that("Insumo proporción", {
 ##############################
 
 # Testear la proporción con desagregación con datos de la ENE
-test <-  create_prop(desocupado, dominios =  fdt+sexo, disenio = dc_ene) %>%
+test <-  create_prop("desocupado", domains =  "fdt+sexo", design = dc_ene) %>%
   dplyr::filter(fdt == 1 & sexo == 1) %>%
-  dplyr::pull(objetivo) * 100
+  dplyr::pull(stat) * 100
 
 test_that("Proporción desagregada", {
   expect_equal(round(test, 1), 7.1)
 })
 
 # Testear grados de libertad con desagregación EPF
-test2 <-  create_prop(ocupado, dominios =   sexo+zona, disenio = dc) %>%
+test2 <-  create_prop("ocupado", domains =   "sexo+zona", design = dc) %>%
   dplyr::filter(sexo == 2 & zona == 1) %>%
-  dplyr::select(gl) %>%
+  dplyr::select(df) %>%
   dplyr::pull()
 
 insumo <- epf_personas %>%
@@ -111,7 +102,7 @@ test_that("gl proporción desagregado", {
 })
 
 # Testear tamaño muestral con desagregación EPF
-test3 <-  create_prop(ocupado, dominios = sexo+zona+ecivil, disenio = dc) %>%
+test3 <-  create_prop("ocupado", domains = "sexo+zona+ecivil", design = dc) %>%
   dplyr::filter(sexo == 1 & zona == 1 & ecivil == 2) %>%
   dplyr::select(n) %>%
   dplyr::pull()
@@ -127,9 +118,9 @@ test_that("tamaño muestral proporción desagregado", {
 
 
 # Testear grados de libertad con desagregación ENE
-test4 <-  create_prop(desocupado, dominios =  sexo+region, disenio = dc_ene) %>%
+test4 <-  create_prop("desocupado", domains =  "sexo+region", design = dc_ene) %>%
   dplyr::filter(sexo == 2 & region == 1) %>%
-  dplyr::select(gl) %>%
+  dplyr::select(df) %>%
   dplyr::pull()
 
 insumo <- ene %>%
@@ -150,16 +141,15 @@ n <- ene %>%
   dplyr::group_by(ocupado) %>%
   dplyr::summarise(n = sum(contar))
 
-test <-  create_prop(var = mujer, denominador = hombre, dominios = ocupado, disenio = dc_ene)
+test <-  create_prop(var = "mujer", denominador = "hombre", domains = "ocupado", design = dc_ene)
 
-nrow(dc_ene$variables)
 test_that("gl proporción desagregado ene", {
-  expect_equal(n[2, 2] %>% dplyr::pull(), test[2, 6])
+  expect_equal(n %>% dplyr::pull(n), test %>% dplyr::pull(n))
 })
 
 # Testear grados de libertad con modalidad ratio invertido
 
-test <-  create_prop(var = mujer, denominador = hombre, dominios = ocupado+metro, disenio = dc_ene)
+test <-  create_prop(var = "mujer", denominador = "hombre", domains = "ocupado+metro", design = dc_ene)
 
 gl <- ene %>%
   dplyr::group_by(ocupado, metro, conglomerado) %>%
@@ -171,16 +161,16 @@ gl <- ene %>%
                    n_varstrat = sum(n_varstrat)) %>%
   dplyr::mutate(gl = n_varunit - n_varstrat) %>%
   dplyr::group_by(ocupado, metro) %>%
-  dplyr::summarise(gl = sum(gl))
+  dplyr::summarise(gl = sum(gl)) %>%
+  dplyr::arrange(ocupado, metro)
 
 test_that("gl proporción desagregado ene", {
-  expect_equal(gl[1, 3] %>% dplyr::pull(), test[1, 6])
+  expect_equal(gl %>% dplyr::pull(gl), test %>% dplyr::arrange(ocupado, metro) %>%  dplyr::pull(df))
 })
 
 
 # Testear grados de libertad con modalidad ratio normal
-
-test <-  create_prop(var = gasto_ocup, denominador = gastot_hd, dominios = zona, disenio = dc)
+test <-  create_prop(var = "gasto_ocup", denominador = "gastot_hd", domains = "zona", design = dc)
 
 gl <- epf_personas %>%
   dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)) %>%
@@ -194,33 +184,35 @@ gl <- epf_personas %>%
   dplyr::mutate(gl = n_varunit - n_varstrat)
 
 test_that("gl proporción desagregado ene", {
-  expect_equal(gl[1, 4] %>% dplyr::pull(), test[1, 5])
+  expect_equal(gl %>% dplyr::pull(gl), test %>% dplyr::pull(df) )
 })
 
 ############################################
 # Probar deff y tamaño de muestra efectivo #
 ############################################
 
-test2 <-  create_prop(desocupado, disenio = dc_ene)
-test2 <-  create_prop(desocupado, dominios =  region, disenio = dc_ene)
-test2 <-  create_prop(desocupado, dominios =  region, subpop = fdt, disenio = dc_ene)
-test2 <-  create_prop(desocupado, dominios =  region+sexo, disenio = dc_ene, ess = T)
+test2 <-  create_prop("desocupado", design = dc_ene)
+test2 <-  create_prop("desocupado", domains =  "region", design = dc_ene)
+test2 <-  create_prop("desocupado", domains =  "region", subpop = "fdt", design = dc_ene)
+
+expect_warning(create_prop("desocupado", domains =  "region+sexo", design = dc_ene, ess = T),
+               "to get effective sample size use deff = T")
 
 
 #########################
 # Probar cv logarítmico #
 #########################
 
-test2 <-  create_prop(desocupado, disenio = dc_ene, log_cv = T)
-test2 <-  create_prop(desocupado, dominios =  region, disenio = dc_ene, log_cv = T)
-test2 <-  create_prop(desocupado, dominios =  region, subpop = fdt, disenio = dc_ene, log_cv = T)
-test2 <-  create_prop(desocupado, dominios =  region+sexo, disenio = dc_ene, log_cv = T)
+test2 <-  create_prop("desocupado", design = dc_ene, log_cv = T)
+test2 <-  create_prop("desocupado", domains =  "region", design = dc_ene, log_cv = T)
+test2 <-  create_prop("desocupado", domains =  "region", subpop = "fdt", design = dc_ene, log_cv = T)
+test2 <-  create_prop("desocupado", domains =  "region+sexo", design = dc_ene, log_cv = T)
 
 ##########################################
 # Probar alcance de nobres entre variables
 ###########################################
 
-create_prop(var = desocupado, dominios = sexo+region, disenio = dc_ene)
+create_prop(var = "desocupado", domains = "sexo+region", design = dc_ene)
 
 
 

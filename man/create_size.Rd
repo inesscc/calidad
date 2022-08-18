@@ -6,9 +6,9 @@
 \usage{
 create_size(
   var,
-  dominios = NULL,
+  domains = NULL,
   subpop = NULL,
-  disenio,
+  design,
   ci = F,
   ess = F,
   ajuste_ene = F,
@@ -16,7 +16,9 @@ create_size(
   rm.na = F,
   deff = F,
   rel_error = F,
-  unweighted = F
+  unweighted = F,
+  df_type = "ine",
+  eclac_input = F
 )
 }
 \arguments{
@@ -24,11 +26,11 @@ create_size(
 it is possible to include more than one variable using the + separator. When a value is introduced
 in the domain parameter, the estimation variable must be a dummy variable.}
 
-\item{dominios}{domains to be estimated separated by the + character.}
+\item{domains}{domains to be estimated separated by the + character.}
 
 \item{subpop}{integer dummy variable to filter the dataframe}
 
-\item{disenio}{complex design created by \code{survey} package}
+\item{design}{complex design created by \code{survey} package}
 
 \item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
 
@@ -45,6 +47,10 @@ in the domain parameter, the estimation variable must be a dummy variable.}
 \item{rel_error}{\code{boolean} Relative error}
 
 \item{unweighted}{\code{boolean} Add non weighted count if it is required}
+
+\item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".}
+
+\item{eclac_input}{\code{boolean} return eclac inputs}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated
@@ -56,5 +62,5 @@ grouping in several domains.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-create_tot(ocupado, zona+sexo, disenio = dc)
+create_size("ocupado", "zona+sexo", design = dc)
 }

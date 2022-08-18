@@ -12,8 +12,8 @@ calcular_gl_total(variables, datos)
 \item{datos}{\code{dataframe} que contiene los datos que se estan evaluando. Se obtiene a partir del disenio muestral}
 }
 \value{
-\code{dataframe} que contiene la frecuencia de todos los dominios a evaluar
+\code{dataframe} que contiene la frecuencia de todos los domains a evaluar
 }
 \description{
-Genera una tabla con el conteo de grados de libertad para cada uno de los dominios del tabulado. Es un wrapper que reune a las funciones calcular_upm y calcular_estrato
+Genera una tabla con el conteo de grados de libertad para cada uno de los domains del tabulado. Es un wrapper que reune a las funciones calcular_upm y calcular_estrato
 }

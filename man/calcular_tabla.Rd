@@ -2,20 +2,32 @@
 % Please edit documentation in R/create_internal.R
 \name{calcular_tabla}
 \alias{calcular_tabla}
-\title{Calcula medias a partir de cierta agregacion}
+\title{Calculates multiple estimations. Internal wrapper for survey package}
 \usage{
-calcular_tabla(var, dominios, disenio, media = T, env = parent.frame())
+calcular_tabla(
+  var,
+  domains,
+  disenio,
+  estimation = "mean",
+  env = parent.frame(),
+  fun,
+  denom = NULL
+)
 }
 \arguments{
 \item{var}{variable objetivo dentro de un \code{dataframe}. Debe anteponerse ~}
 
-\item{dominios}{dominios de estimacion separados por signo +. Debe anteponerse ~}
+\item{domains}{domains de estimacion separados por signo +. Debe anteponerse ~}
 
 \item{disenio}{disenio complejo creado mediante el paquete \code{survey}}
 
-\item{media}{\code{boolean} indicating if the mean must be calculated}
+\item{estimation}{\code{string} indicating if the mean must be calculated}
 
 \item{env}{\code{environment} toma el ambiente de la funcion contenedora, para usar los elementos requeridos}
+
+\item{fun}{Function required regarding the estimation}
+
+\item{denom}{denominator. This parameter works for the ratio estimation}
 }
 \value{
 \code{dataframe} que contiene variables de agregacion, variable objetivo y error estandar
