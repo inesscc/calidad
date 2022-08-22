@@ -17,10 +17,10 @@ Authors@R: c(
         role = c("ctb"))
     )
 Description: Assesses the quality of estimates made by complex sample designs,
-  following the methodology developed by the National Institute of Statistics Chile 
-  (<https://www.ine.cl/docs/default-source/institucionalidad/buenas-pr%C3%A1cticas/clasificaciones-y-estandares/est%C3%A1ndar-evaluaci%C3%B3n-de-calidad-de-estimaciones-publicaci%C3%B3n-27022020.pdf>)
+  following the methodology developed by the National Institute of Statistics Chile
+  (2020, <https://www.ine.cl/docs/default-source/institucionalidad/buenas-pr%C3%A1cticas/clasificaciones-y-estandares/est%C3%A1ndar-evaluaci%C3%B3n-de-calidad-de-estimaciones-publicaci%C3%B3n-27022020.pdf>)
   and by Economic Commission for Latin America and
-  Caribbean (<https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y>). 
+  Caribbean (2020, <https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y>). 
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
