@@ -31,8 +31,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' create_mean("gastot_hd", "zona+sexo",  design = dc)
 #' @export
 
-create_mean = function(var, domains = NULL, subpop = NULL, design, ci = F, ess = F, ajuste_ene = F, standard_eval = F,
-                       rm.na = F, deff = F, rel_error = F, unweighted = F, eclac_input = F) {
+create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE,
+                       rm.na = FALSE, deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = FALSE) {
 
   # Turn on eclac indicators if the user wants it
   eclac_inputs <-  eclac_standard(eclac_input)
@@ -45,7 +45,7 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = F, ess =
   design <- standardize_design_variables(design)
 
   # Sacar los NA si el usuario lo requiere
-  if (rm.na == T) {
+  if (rm.na == TRUE) {
     design <- design[!is.na(design$variables[[var]])]
   }
 
@@ -92,7 +92,7 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = F, ess =
   }
 
   # add relative error, if the user uses this parameter
-  if (rel_error == T) {
+  if (rel_error == TRUE) {
     final <- final %>%
       dplyr::mutate(relative_error = stats::qt(c(.975), df = .data$df) * cv)
   }
@@ -143,8 +143,8 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = F, ess =
 #' create_total("gastot_hd", "zona+sexo", subpop = "ocupado", design = dc)
 #' @export
 
-create_total <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
-                         deff = F, rel_error = F, unweighted = F, eclac_input = F) {
+create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE, rm.na = FALSE,
+                         deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = FALSE) {
 
   # Turn on eclac indicators if the user wants it
   eclac_inputs <-  eclac_standard(eclac_input)
@@ -157,7 +157,7 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess
   design <- standardize_design_variables(design)
 
   # Sacar los NA si el usuario lo requiere
-  if (rm.na == T) {
+  if (rm.na == TRUE) {
     design <- design[!is.na(design$variables[[var]])]
   }
 
@@ -201,12 +201,12 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess
   final <- standardize_columns(final, var, denom = NULL )
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
-  if (ci == T) {
+  if (ci == TRUE) {
     final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
 
   # add relative error, if the user uses this parameter
-  if (rel_error == T) {
+  if (rel_error == TRUE) {
     final <- final %>%
       dplyr::mutate(relative_error = stats::qt(c(.975), df = .data$df) * cv)
   }
@@ -259,8 +259,8 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess
 #' create_size("ocupado", "zona+sexo", design = dc)
 #' @export
 
-create_size <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess = F, ajuste_ene = F, standard_eval = F, rm.na = F,
-                         deff = F, rel_error = F,  unweighted = F, df_type = "ine", eclac_input = F) {
+create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE, rm.na = FALSE,
+                         deff = FALSE, rel_error = FALSE,  unweighted = FALSE, df_type = "ine", eclac_input = FALSE) {
 
 
   # Turn on eclac indicators if the user wants it
@@ -274,7 +274,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess 
   design <- standardize_design_variables(design)
 
   # Sacar los NA si el usuario lo requiere
-  if (rm.na == T) {
+  if (rm.na == TRUE) {
     design <- design[!is.na(design$variables[[var]])]
   }
 
@@ -326,12 +326,12 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess 
   final <- standardize_columns(final, var, denom = NULL)
 
   # Se calculan los intervalos de confianza solo si el usuario lo requiere
-  if (ci == T) {
+  if (ci == TRUE) {
     final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
 
   # add relative error, if the user uses this parameter
-  if (rel_error == T) {
+  if (rel_error == TRUE) {
     final <- final %>%
       dplyr::mutate(relative_error = stats::qt(c(.975), df = .data$df) * cv)
   }
@@ -381,8 +381,10 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess 
 #' @examples
 #' library(survey)
 #' library(dplyr)
+#'
 #' epf <- mutate(epf_personas, gasto_zona1 = if_else(zona == 1, gastot_hd, 0))
 #' dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
+#' old_options <- options()
 #' options(survey.lonely.psu = "certainty")
 #'
 #' create_prop(var = "gasto_zona1", denominador = "gastot_hd", design =  dc)
@@ -392,15 +394,15 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = F, ess 
 #' dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 #' options(survey.lonely.psu = "certainty")
 #' create_prop(var = "VP_DC", denominador = "hom_insg_taxi", design = dc)
-#'
+#' options(old_options)
 #' @export
 #'
 
-create_prop = function(var, denominador = NULL, domains = NULL, subpop = NULL, design, ci = F, deff = F, ess = F, ajuste_ene = F,
-                       rel_error = F, log_cv = F, unweighted = F, standard_eval = F, eclac_input = F){
+create_prop = function(var, denominador = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
+                       rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE, eclac_input = FALSE){
 
   # Turn on eclac indicators if the user wants it
-  eclac_inputs <-  eclac_standard(eclac_input, proportion = T)
+  eclac_inputs <-  eclac_standard(eclac_input, proportion = TRUE)
   ess = eclac_inputs$ess
   unweighted = eclac_inputs$unweighted
   deff = eclac_inputs$deff

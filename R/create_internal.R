@@ -2,22 +2,22 @@
 
 
 # Turn on all the indicators needed for the eclac standard
-eclac_standard <- function(eclac,  env = parent.frame(), proportion = F  ) {
+eclac_standard <- function(eclac,  env = parent.frame(), proportion = FALSE  ) {
 
-  if (eclac == T & proportion == F) {
-    ess <- T
-    unweighted <- T
-    deff <- T
+  if (eclac == TRUE & proportion == FALSE) {
+    ess <- TRUE
+    unweighted <- TRUE
+    deff <- TRUE
     eclac_indicators = list("ess" = ess, "unweighted" = unweighted, "deff" = deff)
 
-  } else if (eclac == T & proportion == T) {
-    ess <- T
-    unweighted <- T
-    deff <- T
-    log_cv <- T
+  } else if (eclac == TRUE & proportion == TRUE) {
+    ess <- TRUE
+    unweighted <- TRUE
+    deff <- TRUE
+    log_cv <- TRUE
     eclac_indicators = list("ess" = ess, "unweighted" = unweighted, "deff" = deff, "log_cv" = log_cv)
 
-  } else if (eclac == F & proportion == T) {
+  } else if (eclac == FALSE & proportion == TRUE) {
     eclac_indicators = list("ess" = get("ess", envir = env),
                             "unweighted" = get("unweighted", envir = env),
                             "deff" = get("deff", envir = env),
@@ -67,7 +67,7 @@ fix_repeated_columns <- function(table, v) {
 
 #--------------------------------------------------
 add_class <-  function(object, new_class) {
-  class(object)  <- append(class(object), new_class, after = F)
+  class(object)  <- append(class(object), new_class, after = FALSE)
   return(object)
   }
 
@@ -857,14 +857,14 @@ calcular_gl_total <- function(variables, datos) {
 get_ci <-  function(data,  ajuste_ene) {
 
   # Se calculan los intervalos de la manera tradicional en la generalidad de los casos
-  if (ajuste_ene == F) {
+  if (ajuste_ene == FALSE) {
 
     final <- data %>%
       dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
                     lower = .data$stat - .data$se*t,
                     upper = .data$stat + .data$se*t)
     # Estos corresponde al ajuste de la ENE: el t se fija en 2
-  } else if (ajuste_ene == T) {
+  } else if (ajuste_ene == TRUE) {
 
     final <- data %>%
       dplyr::mutate(t = 2,
@@ -925,9 +925,9 @@ get_ess <- function(ess, env = parent.frame() ) {
   final <- get("final", env)
   deff <- get("deff", env)
 
-  if (ess == T) {
+  if (ess == TRUE) {
 
-    if (deff == F) {
+    if (deff == FALSE) {
       warning("to get effective sample size use deff = T")
     } else {
       final <- final %>%
@@ -960,8 +960,8 @@ get_ess <- function(ess, env = parent.frame() ) {
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
-create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F,
-                                  ajuste_ene = F, unweighted = F, rel_error = F, rm.na = F) {
+create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE,
+                                  ajuste_ene = FALSE, unweighted = FALSE, rel_error = FALSE, rm.na = FALSE) {
 
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
@@ -976,7 +976,7 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
   disenio <- standardize_design_variables(disenio)
 
   # Sacar los NA si el usuario lo requiere
-  if (rm.na == T) {
+  if (rm.na == TRUE) {
     disenio <- disenio[!is.na(disenio$variables[[var]])]
   }
 
@@ -1020,12 +1020,12 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
   }
 
   # Add confidence intervals
-  if (ci == T) {
+  if (ci == TRUE) {
     final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
 
   # add relative error, if the user uses this parameter
-  if (rel_error == T) {
+  if (rel_error == TRUE) {
     final <- final %>%
       dplyr::mutate(relative_error = stats::qt(c(.975), df = .data$df) * cv)
   }
@@ -1059,8 +1059,8 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
-create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci = F, deff = F, ess = F, ajuste_ene = F,
-                                 rel_error = F, log_cv = F, unweighted = F, standard_eval = T, rm.na = F, env =  parent.frame()) {
+create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
+                                 rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = TRUE, rm.na = FALSE, env =  parent.frame()) {
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
   check_input_var(var, disenio, estimation = "prop")
@@ -1074,7 +1074,7 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   disenio <- standardize_design_variables(disenio)
 
   # Sacar los NA si el usuario lo requiere
-  if (rm.na == T) {
+  if (rm.na == TRUE) {
     disenio <- disenio[!is.na(disenio$variables[[var]])]
   }
 
@@ -1113,13 +1113,13 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   }
 
   # Add confidence intervals
-  if (ci == T) {
+  if (ci == TRUE) {
     final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
 
 
   # add relative error, if the user uses this parameter
-  if (rel_error == T) {
+  if (rel_error == TRUE) {
     final <- final %>%
       dplyr::mutate(relative_error = stats::qt(c(.975), df = .data$df) * cv)
   }

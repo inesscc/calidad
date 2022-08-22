@@ -10,13 +10,13 @@ create_ratio_internal(
   domains = NULL,
   subpop = NULL,
   disenio,
-  ci = F,
-  deff = F,
-  ess = F,
-  ajuste_ene = F,
-  unweighted = F,
-  rel_error = F,
-  rm.na = F
+  ci = FALSE,
+  deff = FALSE,
+  ess = FALSE,
+  ajuste_ene = FALSE,
+  unweighted = FALSE,
+  rel_error = FALSE,
+  rm.na = FALSE
 )
 }
 \arguments{

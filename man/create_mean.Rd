@@ -9,15 +9,15 @@ create_mean(
   domains = NULL,
   subpop = NULL,
   design,
-  ci = F,
-  ess = F,
-  ajuste_ene = F,
-  standard_eval = F,
-  rm.na = F,
-  deff = F,
-  rel_error = F,
-  unweighted = F,
-  eclac_input = F
+  ci = FALSE,
+  ess = FALSE,
+  ajuste_ene = FALSE,
+  standard_eval = FALSE,
+  rm.na = FALSE,
+  deff = FALSE,
+  rel_error = FALSE,
+  unweighted = FALSE,
+  eclac_input = FALSE
 )
 }
 \arguments{

@@ -10,15 +10,15 @@ create_prop(
   domains = NULL,
   subpop = NULL,
   design,
-  ci = F,
-  deff = F,
-  ess = F,
-  ajuste_ene = F,
-  rel_error = F,
-  log_cv = F,
-  unweighted = F,
-  standard_eval = F,
-  eclac_input = F
+  ci = FALSE,
+  deff = FALSE,
+  ess = FALSE,
+  ajuste_ene = FALSE,
+  rel_error = FALSE,
+  log_cv = FALSE,
+  unweighted = FALSE,
+  standard_eval = FALSE,
+  eclac_input = FALSE
 )
 }
 \arguments{
