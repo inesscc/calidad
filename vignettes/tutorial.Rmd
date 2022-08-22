@@ -54,7 +54,14 @@ epf <- epf_personas %>%
 
 
 ## Sample design
-Before starting to use the package, it is necessary to declare the sample design of the survey, for which we use the `survey` package. The primary sample unit, the stratum and weights must be declared. It is also possible to use a design with only weights, nevertheless in that case the variance will be estimated under simple random sampling assumption. In this case we will declare a complex design for the two surveys (EPF and ENE). Additionally, it may be useful to declare an option for strata that only have one PSU.
+Before starting to use the package, it is necessary to declare the sample design of the survey, for which we use the `survey` package. The primary sample unit, the stratum and weights must be declared. It is also possible to use a design with only weights, nevertheless in that case the variance will be estimated under simple random sampling assumption. In this case we will declare a complex design for the two surveys (EPF and ENE). Additionally, it may be useful to declare an option for strata that only have one PSU. 
+
+
+```{r, results='hide'}
+# Store original options
+old_options <-  options()
+```
+
 
 ```{r}
 # Complex sample design for ENE
@@ -146,5 +153,10 @@ The function `evaluate` has a parameter that allows us to know if the table shou
 desagregar <- create_size(var = "desocupado", domains = "region", subpop = "fdt", design =  dc_ene)
 # Evaluar tabulado
 evaluacion_tot_desagreg <- evaluate(desagregar, publicar = T)
+```
+
+```{r}
+# Reset original options
+options(old_options)
 ```
 

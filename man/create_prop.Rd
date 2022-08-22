@@ -10,15 +10,15 @@ create_prop(
   domains = NULL,
   subpop = NULL,
   design,
-  ci = F,
-  deff = F,
-  ess = F,
-  ajuste_ene = F,
-  rel_error = F,
-  log_cv = F,
-  unweighted = F,
-  standard_eval = F,
-  eclac_input = F
+  ci = FALSE,
+  deff = FALSE,
+  ess = FALSE,
+  ajuste_ene = FALSE,
+  rel_error = FALSE,
+  log_cv = FALSE,
+  unweighted = FALSE,
+  standard_eval = FALSE,
+  eclac_input = FALSE
 )
 }
 \arguments{
@@ -61,8 +61,10 @@ grouping in several domains.
 \examples{
 library(survey)
 library(dplyr)
+
 epf <- mutate(epf_personas, gasto_zona1 = if_else(zona == 1, gastot_hd, 0))
 dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
+old_options <- options()
 options(survey.lonely.psu = "certainty")
 
 create_prop(var = "gasto_zona1", denominador = "gastot_hd", design =  dc)
@@ -72,5 +74,5 @@ enusc <- filter(enusc, Kish == 1)
 dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 options(survey.lonely.psu = "certainty")
 create_prop(var = "VP_DC", denominador = "hom_insg_taxi", design = dc)
-
+options(old_options)
 }
