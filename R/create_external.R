@@ -137,7 +137,7 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = F, ess =
 #' @param eclac_input \code{boolean} return eclac inputs
 #' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
-#'
+#' @import haven
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' create_total("gastot_hd", "zona+sexo", subpop = "ocupado", design = dc)
