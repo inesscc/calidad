@@ -264,6 +264,7 @@ create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
 #' @param table objeto creado con survey
 #' @param design diseño complejo creado con survey
 #' @param domains listado de variables para desagregar
+#' @import haven
 #' @return dataframe con la información de cv
 
 get_cv <- function(table, design, domains) {
