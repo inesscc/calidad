@@ -1,5 +1,5 @@
 ---
-title: "basic usage"
+title: "Usage"
 output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{tutorial}
@@ -104,6 +104,13 @@ To get more domains, we can use the "+" symbol as follows:
 desagregar <- create_prop(var = "desocupado", domains = "sexo+region", subpop = "fdt", design =  dc_ene)
 ```
 
+A useful parameter is `eclac_input`. It allows to return the ECLAC inputs. By default this parameter is FALSE and with the option TRUE we can activate it.   
+ 
+```{r, eval=F}
+
+eclac_inputs <-  create_prop(var = "desocupado", domains = "sexo+region", subpop = "fdt", design =  dc_ene, eclac_input = TRUE)
+```
+ 
  
 
 ### Household Budget Survey (part 2)
