@@ -22,6 +22,9 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 # EVALUATE #
 ############
 
+# National level with denominator
+problematic_case <- create_prop(var = "mujer", denominador = "hombre",  design = dc_ene, eclac_input = T)
+evaluate(problematic_case)
 
 # INE Chile Standard for mean
 test1 <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc, deff = T, ess = T)

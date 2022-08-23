@@ -180,17 +180,13 @@ filter_design <- function(disenio, subpop) {
 
 
 standardize_columns <- function(data, var, denom) {
-
   # If there is not denominator, we use a random character
   if (!is.null(denom)) {
     ratio_name <- paste0(var, "/", denom)
   } else {
-    ratio_name <- "perro"
-    denom <- "perro"
+    ratio_name <- "perro123"
+    denom <- "perro123"
   }
-
-  # print(names(data))
-  # print(var)
 
   # # when you have objective variable and est
   if(sum(names(data) %in% c(var,"est")) == 2){
@@ -210,6 +206,14 @@ standardize_columns <- function(data, var, denom) {
     data <- data %>%
       dplyr::relocate(deff, .after = last_col())
 
+  }
+
+  # Special case: National level with denominator. This case is different to the case with domains. Survey returns the following structure for ratio and
+  # se: denom and denom.1
+  if (sum(names(data) %in% c(denom, paste(denom, 1, sep = "."))) == 2 & !is.null(denom)  ) {
+    data = data %>%
+      dplyr::rename(  "stat" = !!rlang::parse_expr(denom)) %>%
+      dplyr::rename(  "se" = !!rlang::parse_expr( paste(denom, 1, sep = ".")))
   }
 
   rownames(data) = NULL
@@ -1015,6 +1019,8 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
   # Ordenar las columnas y estandarizar los nombres de las variables
   final <- standardize_columns(final, var, denominador )
 
+
+
   # Add unweighted counting
   if (unweighted) {
     final <- get_unweighted(final, disenio, var, agrupacion)
@@ -1107,6 +1113,7 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
 
   # Ordenar las columnas y estandarizar los nombres de las variables
   final <- standardize_columns(final, var, denom = get("denominador", env) )
+
 
   # Add unweighted counting
   if (unweighted) {
