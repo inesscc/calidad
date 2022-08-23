@@ -4,6 +4,5 @@
 This package aims to help people to implement quality standard for
 household surveys
 
-This is a project by INE Chile in conjunction with ECLAC
-
-You will find all the documentation in the following site
+You will find all the documentation in the following
+[site](https://inesscc.github.io/calidad/)
