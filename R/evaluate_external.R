@@ -71,15 +71,13 @@ evaluate <- function(table, publish = FALSE, scheme = c("chile", "cepal") , ...)
   } else if (scheme == "cepal") {
 
     # Check that all the inputs are available
-
-    check_cepal_inputs <- function(table, var) {
-      check_ess <- names(table) %>%  stringr::str_detect(pattern =  var) %>% sum()
-      if (check_ess != 1) {stop(paste(var, "must be used!"))}
-    }
-
     check_cepal_inputs(table, "ess")
     check_cepal_inputs(table, "unweighted")
-    check_cepal_inputs(table, "log_cv")
+    if (sum(class(table) %in% c( "calidad.prop")) == 1 ) {
+      check_cepal_inputs(table, "log_cv")
+    }
+
+
 
     # Combine defaults params with user inputs
     params <- combine_params(default_params_cepal, user_params)

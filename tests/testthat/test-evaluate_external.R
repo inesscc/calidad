@@ -27,12 +27,13 @@ expect_error(create_prop(var = "mujer",  denominador = "hombre", design = dc_ene
                "eclac approach is not allowed with denominator")
 
 # INE Chile Standard for mean
-test1 <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc, deff = T, ess = T)
+test1 <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc, deff = T, ess = T, unweighted = T)
 test <- evaluate(test1, publish = T)
 
 
 # INE Chile Standard for proportion
 test2 <-  create_prop("desocupado", domains =  "region+sexo", design = dc_ene, deff = T, ess = T, log_cv = T, unweighted = T)
+test2_sin_log <-  create_prop("desocupado", domains =  "region+sexo", design = dc_ene, deff = T, ess = T, log_cv = F, unweighted = T)
 test <- evaluate(test2)
 
 # INE Chile Standard for size
@@ -51,6 +52,11 @@ test <- evaluate(test1, scheme = "cepal")
 test <- evaluate(test2, scheme = "cepal")
 test <- evaluate(test3, scheme = "cepal")
 test <- evaluate(test4, scheme = "cepal")
+
+# Proportion without log_cv
+expect_error(evaluate(test2_sin_log, scheme = "cepal"),
+             "log_cv must be used!")
+
 
 
 # CEPAL standard with custom parameters

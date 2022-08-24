@@ -1,4 +1,13 @@
 
+# Check that all the inputs are available
+
+check_cepal_inputs <- function(table, var) {
+  check_ess <- names(table) %>%  stringr::str_detect(pattern =  var) %>% sum()
+  if (check_ess != 1) {stop(paste(var, "must be used!"))}
+}
+
+
+
 #---------------------------------------------------------------------
 #'
 #' Calcula el valor de una función cuadrática

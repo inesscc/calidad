@@ -1,4 +1,26 @@
 
+tolower_strings <-  function(x) {
+  if (!is.null(x))  {
+    tolower(x)
+  } else {
+    NULL
+  }
+}
+
+
+
+# get design variables
+
+get_design_vars <- function(design) {
+  if (as.character(design$call$ids)[[2]] != "1") {
+    psu <- unificar_variables_upm(design)
+    strata <-   unificar_variables_estrato(design)
+    vars <- c(psu, strata)
+  } else {
+    vars <- NULL
+  }
+  return(vars)
+}
 
 
 # Turn on all the indicators needed for the eclac standard
@@ -147,11 +169,19 @@ standardize_design_variables <- function(design) {
 
   # Cambiar nombre de UPM y estrato solo si el disenio fue declarado con ellas
   if (as.character(design$call$ids)[[2]] != "1") {
-    design$variables$varunit = design$variables[[unificar_variables_upm(design)]]
-    design$variables$varstrat = design$variables[[unificar_variables_estrato(design)]]
-  }
+    # Create variables only when they dont't already exist
+    if (tolower(unificar_variables_upm(design)) != "varunit") {
+      design$variables$varunit = design$variables[[unificar_variables_upm(design)]]
+    }
+    if (tolower(unificar_variables_estrato(design)) != "varstrat") {
+      design$variables$varstrat = design$variables[[unificar_variables_estrato(design)]]
+    }
 
-  design$variables$fe = design$variables[[unificar_variables_factExp(design)]]
+    if (tolower(unificar_variables_factExp(design)) != "fe" ) {
+      design$variables$fe = design$variables[[unificar_variables_factExp(design)]]
+
+    }
+  }
 
   return(design)
 
@@ -200,7 +230,7 @@ standardize_columns <- function(data, var, denom) {
     stringr::str_replace(pattern =  ratio_name, "stat") %>%
     stringr::str_replace(pattern =  tolower(var), "stat") %>%
     stringr::str_remove(pattern =  "\\.stat"  ) %>%
-    stringr::str_replace(pattern =  "mean|total|est", "stat")
+    stringr::str_replace(pattern =  "mean|total|^est", "stat")
 
   if (!is.null(data$deff) ) {
     data <- data %>%
@@ -968,6 +998,14 @@ get_ess <- function(ess, env = parent.frame() ) {
 create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE,
                                   ajuste_ene = FALSE, unweighted = FALSE, rel_error = FALSE, rm.na = FALSE) {
 
+  # get design variables
+  design_vars <- get_design_vars(disenio )
+
+  # Crear listado de variables que se usan en los dominios
+  agrupacion <- create_groupby_vars(domains)
+
+  # Select relevant columns
+  disenio <- disenio[ ,  c(agrupacion, var, subpop, design_vars, denominador)]
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
   check_input_var(var, disenio, estimation = "ratio")
@@ -976,9 +1014,17 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
   # Lanzar warning del error estándar cuando no se usa el diseño
   se_message(disenio)
 
-
   # Homologar nombres de variables  del diseño
   disenio <- standardize_design_variables(disenio)
+
+  # Convertir everything tolower to avoid problems
+  names(disenio$variables) <- tolower(names(disenio$variables))
+  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains, "denominador" = denominador ), tolower_strings)
+
+  var <- lower_params$var
+  subpop <- lower_params$subpop
+  domains <- lower_params$domains
+  denominador <- lower_params$denominador
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == TRUE) {
@@ -1070,6 +1116,14 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
                                  rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = TRUE, rm.na = FALSE, env =  parent.frame()) {
 
 
+  # get design variables
+  design_vars <- get_design_vars(disenio )
+
+  # Crear listado de variables que se usan en los dominios
+  agrupacion <- create_groupby_vars(domains)
+
+  # Select relevant columns
+  disenio <- disenio[ ,  c(agrupacion,var, subpop, design_vars  ) ]
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
   check_input_var(var, disenio, estimation = "prop")
@@ -1078,9 +1132,17 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   # Lanzar warning del error estándar cuando no se usa el diseño
   se_message(disenio)
 
-
   # Homologar nombres de variables  del diseño
   disenio <- standardize_design_variables(disenio)
+
+
+  # Convertir everithing tolower to avoid problems
+  names(disenio$variables) <- tolower(names(disenio$variables))
+  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
+  var <- lower_params$var
+  subpop <- lower_params$subpop
+  domains <- lower_params$domains
+
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == TRUE) {
@@ -1098,7 +1160,7 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
 
   tabla <- calcular_tabla(var_form, domains_form, disenio, fun = survey::svymean)
 
-  # Crear listado de variables que se usan para el cálculo
+  # Crear listado de variables que se usan en los dominios
   agrupacion <- create_groupby_vars(domains)
 
   #Calcular el tamanio muestral de cada grupo

@@ -41,7 +41,9 @@ dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas 
                           dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)), weights = ~fe)
 dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene %>%
                               dplyr::mutate(desocupado2 = dplyr::if_else(desocupado == 1 & fdt == 1, 1, 0),
-                                            fdt_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, fdt ) ),
+                                            fdt_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, fdt ) ) %>%
+                              dplyr::mutate(SEXO_TEST = sexo)
+                              ,
                               weights = ~fact_cal)
 
 
@@ -71,6 +73,27 @@ test_that("Insumo proporción", {
 # }
 #
 # anidar(var = "ocupado", design = dc, ci = T)
+
+
+##############################
+# PROBAR VARIABLES EN MAYÚSCULA
+##############################
+
+test <-  create_prop("desocupado", domains =  "fdt+SEXO_TEST", design = dc_ene)
+
+test1 <- test %>%
+  dplyr::filter(fdt == 1 & sexo_test == 1) %>%
+  dplyr::pull(stat) * 100
+
+test_that("Proporción desagregada", {
+  expect_equal(round(test1, 1), 7.1)
+})
+
+# probar listado de nombres
+test_that("Proporción desagregada", {
+  expect_equal(names(test), c("fdt", "sexo_test", "stat", "se", "df", "n", "cv"))
+})
+
 
 
 ##############################

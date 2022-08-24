@@ -34,6 +34,18 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE,
                        rm.na = FALSE, deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = FALSE) {
 
+
+  # get design variables
+  design_vars <- get_design_vars(design )
+
+  # Crear listado de variables que se usan en los dominios
+  agrupacion <- create_groupby_vars(domains)
+
+  # Select relevant columns
+  design <- design[ ,  c(agrupacion,var, subpop, design_vars  ) ]
+
+
+
   # Turn on eclac indicators if the user wants it
   eclac_inputs <-  eclac_standard(eclac_input)
   ess = eclac_inputs$ess
@@ -43,6 +55,15 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
 
   # Homologar nombres de variables  del diseño
   design <- standardize_design_variables(design)
+
+
+  # Convertir everithing tolower to avoid problems
+  names(design$variables) <- tolower(names(design$variables))
+  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
+  var <- lower_params$var
+  subpop <- lower_params$subpop
+  domains <- lower_params$domains
+
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == TRUE) {
@@ -146,6 +167,17 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
 create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE, rm.na = FALSE,
                          deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = FALSE) {
 
+
+  # get design variables
+  design_vars <- get_design_vars(design )
+
+  # Crear listado de variables que se usan en los dominios
+  agrupacion <- create_groupby_vars(domains)
+
+  # Select relevant columns
+  design <- design[ ,  c(agrupacion,var, subpop, design_vars  ) ]
+
+
   # Turn on eclac indicators if the user wants it
   eclac_inputs <-  eclac_standard(eclac_input)
   ess = eclac_inputs$ess
@@ -155,6 +187,16 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
 
   # Homologar nombres de variables  del diseño
   design <- standardize_design_variables(design)
+
+  # Convertir everithing tolower to avoid problems
+  names(design$variables) <- tolower(names(design$variables))
+  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
+  var <- lower_params$var
+  subpop <- lower_params$subpop
+  domains <- lower_params$domains
+
+
+
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == TRUE) {
@@ -263,15 +305,31 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
                          deff = FALSE, rel_error = FALSE,  unweighted = FALSE, df_type = "ine", eclac_input = FALSE) {
 
 
+  # get design variables
+  design_vars <- get_design_vars(design )
+
+  # Crear listado de variables que se usan en los dominios
+  agrupacion <- create_groupby_vars(domains)
+
+  # Select relevant columns
+  design <- design[ ,  c(agrupacion,var, subpop, design_vars  ) ]
+
   # Turn on eclac indicators if the user wants it
   eclac_inputs <-  eclac_standard(eclac_input)
   ess = eclac_inputs$ess
   unweighted = eclac_inputs$unweighted
   deff = eclac_inputs$deff
 
-
   # Homologar nombres de variables  del diseño
   design <- standardize_design_variables(design)
+
+  # Convertir everithing tolower to avoid problems
+  names(design$variables) <- tolower(names(design$variables))
+  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
+  var <- lower_params$var
+  subpop <- lower_params$subpop
+  domains <- lower_params$domains
+
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == TRUE) {
@@ -279,6 +337,9 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   }
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
+
+
+
   check_input_var(var, design, estimation = "size")
   check_subpop_var(subpop, design)
 
