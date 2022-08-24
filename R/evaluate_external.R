@@ -70,10 +70,16 @@ evaluate <- function(table, publish = FALSE, scheme = c("chile", "cepal") , ...)
     #  CEPAL Standard
   } else if (scheme == "cepal") {
 
-
     # Check that all the inputs are available
-    check_ess <- names(table) %>%  stringr::str_detect(pattern = "ess") %>% sum()
-    if (check_ess != 1) {stop("ess must be used!")}
+
+    check_cepal_inputs <- function(table, var) {
+      check_ess <- names(table) %>%  stringr::str_detect(pattern =  var) %>% sum()
+      if (check_ess != 1) {stop(paste(var, "must be used!"))}
+    }
+
+    check_cepal_inputs(table, "ess")
+    check_cepal_inputs(table, "unweighted")
+    check_cepal_inputs(table, "log_cv")
 
     # Combine defaults params with user inputs
     params <- combine_params(default_params_cepal, user_params)

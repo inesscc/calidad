@@ -401,12 +401,18 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 create_prop = function(var, denominador = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
                        rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE, eclac_input = FALSE){
 
+  # eclac approach is not allowed with denominator
+  if (!is.null(denominador) & eclac_input == TRUE) {
+    stop("eclac approach is not allowed with denominator")
+  }
+
   # Turn on eclac indicators if the user wants it
   eclac_inputs <-  eclac_standard(eclac_input, proportion = TRUE)
   ess = eclac_inputs$ess
   unweighted = eclac_inputs$unweighted
   deff = eclac_inputs$deff
   log_cv = eclac_inputs$log_cv
+
 
 
   if(!is.null(denominador)){

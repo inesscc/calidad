@@ -1069,6 +1069,8 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
 create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
                                  rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = TRUE, rm.na = FALSE, env =  parent.frame()) {
 
+
+
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
   check_input_var(var, disenio, estimation = "prop")
   check_subpop_var(subpop, disenio)

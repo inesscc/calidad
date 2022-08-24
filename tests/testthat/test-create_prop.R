@@ -133,6 +133,7 @@ test_that("gl proporción desagregado ene", {
 })
 
 
+
 # Testear tamaño muestral con modalidad ratio invertido
 
 n <- ene %>%
