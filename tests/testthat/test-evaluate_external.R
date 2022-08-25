@@ -53,6 +53,8 @@ test <- evaluate(test2, scheme = "cepal")
 test <- evaluate(test3, scheme = "cepal")
 test <- evaluate(test4, scheme = "cepal")
 
+#
+
 # Proportion without log_cv
 expect_error(evaluate(test2_sin_log, scheme = "cepal"),
              "log_cv must be used!")
