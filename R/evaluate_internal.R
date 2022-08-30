@@ -74,7 +74,7 @@ evaluate_ine <- function(table, params, class = "calidad.mean") {
                                                             "admissible SE", "high SE"), NA_character_),
                     eval_cv = dplyr::if_else(.data$stat < 1, NA_character_,
                                              dplyr::case_when(cv <= params$cv_lower_ine                           ~ paste("cv <=", params$cv_lower_ine),
-                                                              cv > params$cv_lower_ine & cv <= params$cv_upper_ine ~ paste("cv between", params$cv_lower_ine, "abd", params$cv_upper_ine),
+                                                              cv > params$cv_lower_ine & cv <= params$cv_upper_ine ~ paste("cv between", params$cv_lower_ine, "and", params$cv_upper_ine),
                                                               cv > 0.3                                            ~ paste("cv >", params$cv_upper_ine)
                                              )),
                     label = dplyr::case_when(
