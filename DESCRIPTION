@@ -1,7 +1,7 @@
 Package: calidad
 Type: Package
 Title: Assesses the Quality of Estimates Made by Complex Sample Designs
-Version: 0.1.0
+Version: 0.2.0
 Authors@R: c(
       person(given = "Klaus",
         family = "Lehmann",
