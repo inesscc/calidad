@@ -1,0 +1,156 @@
+
+/*------------------------------------------
+CSS BODY
+------------------------------------------*/
+body {
+font-family: 'Open Sans', sans-serif !important; 
+letter-spacing: .02rem;
+text-rendering: optimizeLegibility;
+}
+/*------------FIN-CSS-BODY----------------*/
+
+
+/*------------------------------------------
+CSS HEADER
+------------------------------------------*/
+.top-ine {
+width: 100%;
+max-width: 100% !important;
+background: linear-gradient(135deg,rgb(30, 70, 118) 0,rgb(58, 139, 204) 100%);
+margin: 0; 
+padding: 0;
+}
+
+.top-ine .container-fluid .container .menu-ine img {
+max-width: 117px;
+padding: 15px 30px 15px 0;
+float: left;
+}
+
+.btn-xs {
+background-color: transparent;
+font-size: 12px;
+border-radius: 3px;
+border-color: #c0d0dd;
+padding: 4px 8px;
+margin: 21px 0 21px  15px;
+}
+
+.btn-xs:hover,
+.btn-xs:focus {
+background-color: #ffffff !important;
+color:#3988c8 !important;
+border-color: #ffffff;
+}
+/*----------FIN-CSS HEADER----------------*/
+
+
+
+/*------------------------------------------
+CSS CONTENIDO DESCRIPCIÓN
+------------------------------------------*/
+.conten-ine {margin: 4rem 0 0;}
+.conten-ine .container-fluid .container .row .col-md-12 .titu-ine,
+.dash-ine .container-fluid container .row .col-sm-9 .shiny-html-output .titu-ine {
+font-weight: 800 !important;
+font-size: 3rem !important;
+color: #365c8d !important;
+margin: 0 0 2rem !important;
+}
+
+.conten-ine .container-fluid .container .row .col-md-12 .text-ine {
+border: 1px solid #d8d8d8;
+border-left: 5px solid #3ba8b4;
+font-size: 1.5rem;
+margin-bottom: 0;
+padding: 2.5rem;    
+}
+/*------FIN-CSS CONTENIDO DESCRIPCIÓN------*/
+
+
+/*------------------------------------------
+CSS SIDEBAR LAYOUT
+------------------------------------------*/
+.dash-ine .container-fluid .container .row {
+margin: 4rem 0;
+padding: 0;
+border: 1px solid #d8d8d8;
+}
+
+.dash-ine .container-fluid .container .row .col-sm-3,
+.dash-ine .container-fluid .container .row .col-sm-4 {
+border-right: 1px solid #d8d8d8;
+padding:0 !important;
+}
+
+@media (max-width: 992px) {
+.dash-ine .container-fluid .container .row .col-sm-3,
+.dash-ine .container-fluid .container .row .col-sm-4 {
+border-right: 0 none;
+border-bottom: 1px solid #d8d8d8;
+}
+}
+
+.dash-ine .container-fluid .container .row .col-sm-3 .well {
+border:0;
+margin-bottom:0;
+border-radius:0;
+}
+
+/*---------FIN-CSS SIDEBAR LAYOUT----------*/
+
+
+/*------------------------------------------
+CSS FOOTER
+------------------------------------------*/
+.footer {
+width: 100%;
+height: auto;
+background-color: #1057A2;
+color: #ffffff;
+}
+
+.footer .container-fluid .container .row .col-md-4 {padding-bottom:30px;}
+
+.footer .container-fluid .container .row .col-md-4 h4 {
+font-weight: 800;
+margin: 30px 0;
+}
+
+.footer .container-fluid .container .row .col-md-4 a img.facebook, 
+.footer .container-fluid .container .row .col-md-4 a img.twitter, 
+.footer .container-fluid .container .row .col-md-4 a img.youtube, 
+.footer .container-fluid .container .row .col-md-4 a img.instagram {
+height: 27px;
+margin-right: 14px;
+}
+
+.footer .container-fluid .container .row .col-md-4 a {
+color: #fff;
+text-decoration: underline;
+}
+
+.footer .container-fluid .container .row .col-md-4 p {margin: 0 0 5px;}
+/*------------FIN-CSS FOOTER--------------*/
+
+
+
+/*------------------------------------------
+CSS PIE
+------------------------------------------*/
+.pie-ine {
+background: #0d3a5e;
+color: #ffffff;
+font-size: 1.6rem;
+}
+
+.container-fluid .container .text-right {
+padding: 2rem 0;
+}
+/*--------------FIN-CSS PIE---------------*/
+
+@media (min-width: 1200px) {
+.container {
+    width: 1500px;
+}
+}
