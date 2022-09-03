@@ -41,7 +41,7 @@ Esta aplicación permite acercar a las personas usuarias la implementación del 
 
           shiny::div(class="dash-ine",
               shiny::fluidPage(
-                waiter::useWaitress(),
+                waiter::useWaitress("white"),
                 shiny::div(class="container",
                     sidebarLayout(
                       ## Sidebar ####
@@ -212,7 +212,7 @@ tagList(
       ### render tabulado
       tags$div(
         class="my_table", # set to custom class
-        htmlOutput("tabulado") %>% shinycssloaders::withSpinner(color="#0dc5c1"))
+        htmlOutput("tabulado") %>% shinycssloaders::withSpinner(color="white"))
   ))
 )
 

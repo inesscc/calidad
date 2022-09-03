@@ -297,38 +297,42 @@ server <- function(input, output, session) {
   ### RENDER: IN MAIN PANEL -----
   ### Render título tabulado
 
-  wt <- waiter::Waitress$new("#panel_central",theme = "overlay",infinite = TRUE)
+wt <- Waitress$new("#tituloTAB",theme = "overlay",infinite = TRUE)
+  #
+  #   observeEvent(input$Id004,{
+  #   # wt <- waiter::Waitress$new("#panel_central",theme = "overlay",infinite = TRUE)
+  #   #   wt$inc(10)
+  #   #   print(paste("wt exist:",exists("wt")))
+  #   wt$start()
+  #
+  # })
+
+
+output$tituloTAB <- renderUI({
 
   observeEvent(input$Id004,{
-    wt <- waiter::Waitress$new("#panel_central",theme = "overlay",infinite = T)
+    #  wt <- waiter::Waitress$new("#panel_central",theme = "overlay",infinite = T)
     #   wt$inc(10)
-    #   print(paste("wt exist:",exists("wt")))
+    print(paste("wt exist:",exists("wt")))
     wt$start()
   })
 
-  output$tituloTAB <- renderUI({
+#   req(!warning_resum())
+#   req(input$actionTAB,tabuladoOK())
 
-    req(!warning_resum())
-    req(input$actionTAB,tabuladoOK())
+out <- renderUI_main_panel()
 
-    # observeEvent(input$Id004,{
-    #   #  wt <- waiter::Waitress$new("#panel_central",theme = "overlay",infinite = T)
-    #   #   wt$inc(10)
-    #   print(paste("wt exist:",exists("wt")))
-    #   wt$start()
-    # })
+if(input$actionTAB){
+  wt$close()
+}
 
+return(out)
 
-    renderUI_main_panel()
-#  out <- renderUI_main_panel()
-
-   # if(input$actionTAB){
-   #   print(paste("boton:",input$actionTAB))
-   #      wt$close()
-   #  }
-
-# return(out)
   })
+
+
+
+
 
   # DESCARGA: DE TABULADO GENERADO ----
 
