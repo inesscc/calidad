@@ -229,7 +229,6 @@ app_server <- function(input, output, session) {
 
   # ### RENDER: IN SIDE BAR  ####
   output$etiqueta <- renderUI({
-
     req(input$varCRUCE >= 1)
     req(labelled::is.labelled(datos()[[input$varCRUCE[1]]]))
     checkboxInput("ETIQUETAS", "Sus datos poseen etiquetas, ¿Desea agregarlas?",value = F)
@@ -301,7 +300,7 @@ app_server <- function(input, output, session) {
   ### Render título tabulado
   observeEvent(list(input$Id004,
                input$base_web_ine),{
-    print(paste("opciones:",input$Id004))
+    # print(paste("opciones:",input$Id004))
 
 output$tituloTAB <- renderUI({
 
@@ -310,7 +309,7 @@ output$tituloTAB <- renderUI({
 })
 
 observeEvent(input$actionTAB,{
-  print(paste("action :",input$actionTAB))
+  # print(paste("action :",input$actionTAB))
 
     req(!warning_resum())
 
