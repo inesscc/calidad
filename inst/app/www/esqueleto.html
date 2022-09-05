@@ -1,0 +1,169 @@
+<html>
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="">
+<meta name="author" content="">
+<link rel="icon" href="favicon-16x16.png">
+<title>HTML Shiny</title>
+
+<!-- Bootstrap core CSS -->
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha384-HSMxcRTRxnN+Bdg0JdbxYKrThecOKuH5zCYotlSAcp1+c8xmyTe9GYg1l9a69psu" crossorigin="anonymous">
+
+<!----------------------------------------------
+CSS - Plantilla Shiny
+----------------------------------------------->
+<link rel="stylesheet" href="maqueta.css">
+</head>
+<body>
+
+<!----------------------------------------------------------------------------
+HEADER
+
+La idea como conversamos un div clase (top-ine) fuera de fluidPage que es 
+(container-fluid) luego otro div dentro de container-fluid, ese debe llevar la 
+clase (container) y luego pega el html que esta dentro. 
+
+No olvidar, inicio y cierre de etiquetas.
+----------------------------------------------------------------------------->
+<div class="top-ine">
+    <div class="container-fluid">
+        <div class="container">
+            <div class="menu-ine">
+                <img class="logo-ine" src="ine_blanco.svg" alt="INE">
+            </div>
+            <div class="pull-right">
+                <a class="btn btn-xs btn-primary" href="https://www.ine.cl" target="_blank">Volver al home INE</a>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------------------------------------------------------------------
+FIN HEADER
+----------------------------------------------------------------------------->
+
+
+
+<!----------------------------------------------------------------------------
+CONTENIDO DESCRIPCIÓN
+
+Mismo proceder
+----------------------------------------------------------------------------->
+<div class="conten-ine">
+    <div class="container-fluid">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <h3 class="titu-ine">Título</h3>
+                    <p class="text-ine">
+Esta es una aplicación que permite implementar el estándar de calidad para las encuestas de hogares #desarrollado por la institución. De este modo, un usuario puede conocer cuál es la calidad/precisión que tienen las #estimaciones generadas a partir de encuestas producidas por el INE y/u otras encuestas que utilicen muestreo #probabilístico con más de una etapa de selección.
+
+El objetivo fundamental es permitir que usuarios sin conocimientos de programación puedan implementar el estándar de calidad del INE, de modo tal de hacer un uso adecuado de la información publicada por la institución.
+
+La aplicación permite evaluar la calidad de medias, totales, medianas y proporciones en un entorno gráfico que no requiere la utilización de softwares estadísticos ni lenguajes de programación.
+
+Con esto, se espera acercar la institución a los usuarios y promover un correcto uso de los datos publicados.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------------------------------------------------------------------
+FIN CONTENIDO DESCRIPCIÓN
+----------------------------------------------------------------------------->
+
+
+<!----------------------------------------------------------------------------
+SIDEBAR LAYOUT UTILIZADO POR TI
+
+Aqui debes generar el siguiente div (dash-ine) antes de tu fluidPage y luego 
+generar dentro div con la clase (container) y colocar tu sidebar layout
+----------------------------------------------------------------------------->
+<div class="dash-ine">
+    <div class="container-fluid">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-3">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit
+                </div>
+                <div class="col-md-9">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------------------------------------------------------------------------
+FOOTER
+
+Mismo proceder
+----------------------------------------------------------------------------->
+<div class="footer">
+    <div class="container-fluid">
+        <div class="container">
+            <div class="row"> 
+                <div class="col-md-4">
+                    <h4>INE en redes sociales</h4>
+                    <a href="https://www.facebook.com/ChileINE/" target="_blank"><img class="facebook" src="facebook.svg"></a>
+                    <a href="https://twitter.com/ine_chile?lang=es" target="_blank"><img class="twitter" src="twitter.svg"></a>
+                    <a href="https://www.youtube.com/user/inechile" target="_blank"><img class="youtube" src="youtube.svg"></a>
+                    <a href="https://www.instagram.com/chile.ine/" target="_blank"><img class="instagram" src="instagram.svg"></a>
+                    <h4>Consultas</h4>
+                    <p><a href="https://www.portaltransparencia.cl/PortalPdT/ingreso-sai-v2?idOrg=1003" target="_blank">Solicitud de acceso a la información pública</a></p>
+                    <p><a href="https://atencionciudadana.ine.cl/" target="_blank">Atención ciudadana</a></p>
+                </div>
+                <div class="col-md-4">
+                    <h4>Contacto</h4>
+                    <p>
+                        Dirección nacional: Morandé N°801, piso 22, Santiago, Chile<br>
+                        RUT: 60.703.000-6<br>
+                        Código postal: 8340148<br>
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <h4>SIAC / OIRS</h4>
+                    <p>
+                        Horario de atención:<br>
+                        Lunes a viernes 9:00 a 17:00 horas<br>
+                        Fono : <a>232461010</a> - <a>232461018</a><br>
+                        Correo: ine@ine.cl<br>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------------------------------------------------------------------
+FIN FOOTER
+----------------------------------------------------------------------------->
+
+
+
+<!----------------------------------------------------------------------------
+PIE
+
+Mismo proceder
+----------------------------------------------------------------------------->
+<div class="pie-ine">
+    <div class="container-fluid">
+        <div class="container">
+            <div class="text-right">
+                Instituto Nacional de Estadísticas
+            </div>
+        </div>
+    </div>
+</div>
+<!----------------------------------------------------------------------------
+FIN PIE
+----------------------------------------------------------------------------->
+
+
+
+<!-- Bootstrap core JavaScript -->
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha384-nvAa0+6Qg9clwYCGGPpDQLVpLNn0fRaROjHqs13t4Ggj3Ez50XnGQqc/r8MhnRDZ" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha384-aJ21OjlMXNL5UyIl/XNwTMqvzeRMZH2w8c5cRVpzpU8Y5bApTppSuUkhZXN0VxHd" crossorigin="anonymous"></script>
+</body>
+</html>
