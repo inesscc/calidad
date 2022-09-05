@@ -1,8 +1,8 @@
-
+addResourcePath(prefix = "www", directoryPath = "www/")
 # UI ----
 library(shiny)
 
-ui <- shiny::div(shinyFeedback::useShinyFeedback(),
+app_ui <- shiny::div(shinyFeedback::useShinyFeedback(),
           shinyjs::useShinyjs(),
           # tags$head(
           #   tags$link(rel = "stylesheet", type = "text/css", href = "maqueta.css")
@@ -13,7 +13,7 @@ ui <- shiny::div(shinyFeedback::useShinyFeedback(),
               shiny::fluidPage(
                 shiny::div(class="container",
                     shiny::HTML('<div class="menu-ine">
-                <img class="logo-ine" src="/ine_blanco.svg" alt="INE">
+                <img class="logo-ine" src="www/ine_blanco.svg" alt="INE">
             </div>
             <div class="pull-right">
                 <a class="btn btn-xs btn-primary" href="https://www.ine.cl" target="_blank">Volver al home INE</a>
@@ -41,7 +41,7 @@ Esta aplicación permite acercar a las personas usuarias la implementación del 
 
           shiny::div(class="dash-ine",
               shiny::fluidPage(
-                waiter::useWaitress(),
+                waiter::useWaitress("white"),
                 shiny::div(class="container",
                     sidebarLayout(
                       ## Sidebar ####
@@ -82,11 +82,12 @@ Esta aplicación permite acercar a las personas usuarias la implementación del 
                                    selectInput("varCONGLOM", label = h5("Variable para conglomerados"), choices = "", selected = "", multiple = F),
                                    selectInput("varESTRATOS",label = h5("Variable para estratos"), choices = "", selected = "", multiple = F),
                                    shinyjs::disabled(downloadButton("tabla", label = "Descargar tabulado")),
-                                   actionButton("actionTAB", label = "Generar tabulado"),
+                                   shinyjs::disabled(actionButton("actionTAB", label = "Generar tabulado")),
                                    ## render selección variables DC
                                    uiOutput("seleccion2"),
                                    ## botón generación tabulado
                                    uiOutput("botonTAB")
+
                       ),
                       ## Main PANEL ----
                       mainPanel(width = 9,
@@ -104,10 +105,10 @@ Esta aplicación permite acercar a las personas usuarias la implementación del 
                     shiny::HTML('<div class="row">
                 <div class="col-md-4">
                     <h4>INE en redes sociales</h4>
-                    <a href="https://www.facebook.com/ChileINE/" target="_blank"><img class="facebook" src="facebook.svg"></a>
-                    <a href="https://twitter.com/ine_chile?lang=es" target="_blank"><img class="twitter" src="twitter.svg"></a>
-                    <a href="https://www.youtube.com/user/inechile" target="_blank"><img class="youtube" src="youtube.svg"></a>
-                    <a href="https://www.instagram.com/chile.ine/" target="_blank"><img class="instagram" src="instagram.svg"></a>
+                    <a href="https://www.facebook.com/ChileINE/" target="_blank"><img class="facebook" src="www/facebook.svg"></a>
+                    <a href="https://twitter.com/ine_chile?lang=es" target="_blank"><img class="twitter" src="www/twitter.svg"></a>
+                    <a href="https://www.youtube.com/user/inechile" target="_blank"><img class="youtube" src="www/youtube.svg"></a>
+                    <a href="https://www.instagram.com/chile.ine/" target="_blank"><img class="instagram" src="www/instagram.svg"></a>
                     <h4>Consultas</h4>
                     <p><a href="https://www.portaltransparencia.cl/PortalPdT/ingreso-sai-v2?idOrg=1003" target="_blank">Solicitud de acceso a la información pública</a></p>
                     <p><a href="https://atencionciudadana.ine.cl/" target="_blank">Atención ciudadana</a></p>
@@ -212,7 +213,7 @@ tagList(
       ### render tabulado
       tags$div(
         class="my_table", # set to custom class
-        htmlOutput("tabulado") %>% shinycssloaders::withSpinner(color="#0dc5c1"))
+        htmlOutput("tabulado") %>% shinycssloaders::withSpinner(color="white"))
   ))
 )
 

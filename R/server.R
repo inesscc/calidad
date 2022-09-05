@@ -65,11 +65,11 @@ estratos = c("VarStrat", "estrato", "varstrat","varstrat", "estrato",  "varstrat
 debug = F
 show_wrn = T
 
-shiny_calidad <- function(...) {
-# UI ----
+
 
 # SERVER ----
-server <- function(input, output, session) {
+
+app_server <- function(input, output, session) {
   ### trakear error ####
   ## options(shiny.trace = TRUE)
 
@@ -80,14 +80,6 @@ server <- function(input, output, session) {
 #   print(paste("fe",input$Id004b))
 # })
   # ### render UI carga de datos o trabajo con datos del INE
-#
-  # observeEvent(input$Id004b,ignoreInit = T{
-  #
-  #   session$reload()
-  #     return()
-  #     print("session reload")
-  #
-  #   })
 
 
   output$datos_locales <- renderUI({
@@ -178,39 +170,56 @@ server <- function(input, output, session) {
 
   var_select_estrat <- reactive({names(datos())[grep(paste0("^",estratos,"$",collapse = "|"),names(datos()))]})
 
-  observeEvent(datos(),{
+  observeEvent(list(datos(),
+                    input$Id004,
+                    input$base_web_ine),{
     updateSelectInput(session, "varINTERES",
                       choices = variables_int(),
                       selected = "" )})
 
-  observeEvent(any(is.null(datos()),input$tipoCALCULO == "Proporción"),{
+  observeEvent(list(any(is.null(datos()),input$tipoCALCULO == "Proporción"),
+               input$Id004,
+               input$base_web_ine),{
     updateSelectInput(session, "varDENOM",
                       choices = variables_int())
   })
 
-  observeEvent(datos(),{
+  observeEvent(list(datos(),
+                    input$Id004,
+                    input$base_web_ine),{
     updateSelectInput(session, "varCRUCE",
-                      choices = c("",variables_int())
-    )})
+                      choices = c("",variables_int()),
+                      selected = "" )
+    })
 
   ### update inputs ####
 
-  observeEvent(datos(),{
+  observeEvent(list(datos(),
+                    input$Id004,
+                    input$base_web_ine),{
     updateSelectInput(session, "varSUBPOB",
-                      choices = c("",variables_int())
-    )})
+                      choices = c("",variables_int()),
+                      selected = "" )
+                    })
 
-  observeEvent(datos(),{
+  observeEvent(list(datos(),
+                    input$Id004,
+                    input$base_web_ine),{
     updateSelectInput(session, "varFACT1",
                       choices = variables_int(),
                       selected = var_selec_fact()
     )})
-  observeEvent(datos(),{
+
+  observeEvent(list(datos(),
+                    input$Id004,
+                    input$base_web_ine),{
     updateSelectInput(session, "varCONGLOM",
                       choices = variables_int(),
                       selected = var_select_conglom()
     )})
-  observeEvent(datos(),{
+  observeEvent(list(datos(),
+                    input$Id004,
+                    input$base_web_ine),{
     updateSelectInput(session, "varESTRATOS",
                       choices = variables_int(),
                       selected = var_select_estrat()
@@ -239,9 +248,9 @@ server <- function(input, output, session) {
 
   ### CREATE: tabulados  ----
 
-  tabuladoOK <- eventReactive(input$actionTAB,{
+  tabuladoOK <- reactive({
 
-    #req(input$actionTAB)
+    req(input$actionTAB)
 
     # para generarse necesita que no hayan warnings
     req(!warning_resum(), input$varINTERES,input$varCONGLOM, input$varESTRATOS, input$varFACT1)
@@ -265,8 +274,6 @@ server <- function(input, output, session) {
 
 
   ### RENDER: Tabulado ####
-  #wt <- waiter::Waitress$new("#panel_central",theme = "overlay",infinite = TRUE)
-
 
   observeEvent(tabuladoOK(),{
   output$tabulado  <- renderText({
@@ -283,10 +290,6 @@ server <- function(input, output, session) {
 
 })
 
-  # if(exists("wt")){
-  #   wt$close()
-  # }
-
   ### MODAL definiciones ####
 
   observeEvent(input$show, {
@@ -296,41 +299,41 @@ server <- function(input, output, session) {
 
   ### RENDER: IN MAIN PANEL -----
   ### Render título tabulado
+  observeEvent(list(input$Id004,
+               input$base_web_ine),{
+    print(paste("opciones:",input$Id004))
 
-  wt <- waiter::Waitress$new("#panel_central",theme = "overlay",infinite = TRUE)
+output$tituloTAB <- renderUI({
 
-  observeEvent(input$Id004,{
-    wt <- waiter::Waitress$new("#panel_central",theme = "overlay",infinite = T)
-    #   wt$inc(10)
-    #   print(paste("wt exist:",exists("wt")))
-    wt$start()
   })
 
-  output$tituloTAB <- renderUI({
+})
+
+observeEvent(input$actionTAB,{
+  print(paste("action :",input$actionTAB))
 
     req(!warning_resum())
-    req(input$actionTAB,tabuladoOK())
 
-    # observeEvent(input$Id004,{
-    #   #  wt <- waiter::Waitress$new("#panel_central",theme = "overlay",infinite = T)
-    #   #   wt$inc(10)
-    #   print(paste("wt exist:",exists("wt")))
-    #   wt$start()
-    # })
+    output$tituloTAB <- renderUI({
 
+  renderUI_main_panel()
 
-    renderUI_main_panel()
-#  out <- renderUI_main_panel()
+    })
 
-   # if(input$actionTAB){
-   #   print(paste("boton:",input$actionTAB))
-   #      wt$close()
-   #  }
-
-# return(out)
   })
 
+
+
+
   # DESCARGA: DE TABULADO GENERADO ----
+
+  # Habilitar botón de tabulado
+  observeEvent(input$varINTERES,{
+    req(!warning_resum())
+
+    enable("actionTAB")
+  })
+
 
   # Habilitar botón de descarga
   observeEvent(tabuladoOK(),{
@@ -339,11 +342,6 @@ server <- function(input, output, session) {
 
     enable("tabla")
   })
-
-  # observeEvent(is.null(wrn_var_int()), {
-  #   enable("actionTAB")
-  # })
-  #
 
 
   output$tabla <- downloadHandler(
@@ -602,8 +600,3 @@ server <- function(input, output, session) {
   })
 
   }
-
-shinyApp(ui = ui, server = server)
-}
-# Run the application
-#
