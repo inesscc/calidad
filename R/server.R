@@ -302,6 +302,22 @@ app_server <- function(input, output, session) {
     # do something after user confirmation
   })
 
+  ### Nombre de datos utilizado ####
+
+  output$PRUEBAS2 <- renderUI({
+    if(!is.null(input$file)){
+      orig  <- input$file$name
+    }else{
+      orig  <- input$base_web_ine
+    }
+
+    ret <- paste("Datos:",orig)
+
+    h5(ret)
+  })
+
+
+
 
   ### RENDER: IN MAIN PANEL -----
   ### Render título tabulado
@@ -607,17 +623,5 @@ observeEvent(input$actionTAB,{
   # })}
 
   ##### * Pruebas de outputs * ####
+}
 
-  output$PRUEBAS2 <- renderUI({
-    if(!is.null(input$file)){
-      orig  <- input$file$name
-      }else{
-      orig  <- input$base_web_ine
-    }
-
-   ret <- paste("Datos:",orig)
-
-   h5(ret)
-  })
-
-  }

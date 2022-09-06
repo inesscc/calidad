@@ -236,9 +236,7 @@ renderUI_main_panel <- function(){
 tagList(
   div(id="panel_central",class="titu-ine",
       h2("Resultado evaluación de calidad"),
-  actionButton("show", "Definición de indicadores"),
-  br(),
-  uiOutput("PRUEBAS2"),
+  actionButton("show", "Definición de indicadores"),uiOutput("PRUEBAS2"),
   ### render gráfico de resumen
   div(style='width:100%;overflow-x: scroll;',
       div(plotOutput('grafico'),
