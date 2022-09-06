@@ -62,6 +62,7 @@ create_tabulado = function(base, v_interes, v_cruce,  v_subpob, v_fexp1, v_congl
       evaluados = calidad::evaluate(funciones_cal[[num]](var = v_interes,
                                                          design = dc,
                                                          domains = v_cruce_string,
+                                                         ci = ci,
                                                          denominador = denominador,
                                                          eclac_input = eclac_input,
                                                          log_cv= log_cv)
@@ -70,6 +71,7 @@ create_tabulado = function(base, v_interes, v_cruce,  v_subpob, v_fexp1, v_congl
       evaluados = calidad::evaluate(funciones_cal[[num]](var = v_interes,
                                                          design = dc,
                                                          domains = v_cruce_string,
+                                                         ci = ci,
                                                          eclac_input = eclac_input,
                                                          log_cv= log_cv),
                                     scheme = scheme,publish = T)
@@ -79,6 +81,7 @@ create_tabulado = function(base, v_interes, v_cruce,  v_subpob, v_fexp1, v_congl
     evaluados = calidad::evaluate(funciones_cal[[num]](var = v_interes,
                                                        design = dc,
                                                        domains = v_cruce_string,
+                                                       ci = ci,
                                                        eclac_input = eclac_input),
                                   scheme = scheme,publish = T)
   }
@@ -108,7 +111,7 @@ create_tabulado = function(base, v_interes, v_cruce,  v_subpob, v_fexp1, v_congl
 
     ####  al hacer filtros se eliminan categorias, necesitamos sacar etiquetas de base filtrada
 
-    if(!is.null(v_subpob)){
+    if(v_subpob!=""){
       datos2 = base[base[[v_subpob]] == 1,]
     }else{
       datos2 = base
@@ -118,8 +121,8 @@ create_tabulado = function(base, v_interes, v_cruce,  v_subpob, v_fexp1, v_congl
     for(i in v_cruce){
       evaluados = paste_labels(tabla = evaluados, base = datos2, var_cruce = i)
     }
-  }
 
+  }
   evaluados
 }
 

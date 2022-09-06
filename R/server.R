@@ -295,18 +295,16 @@ app_server <- function(input, output, session) {
     modal_indicadores()
   })
 
+  ## Cerrar modal
+
+  observeEvent(input$cerrar_modal, {
+    removeModal()
+    # do something after user confirmation
+  })
+
 
   ### RENDER: IN MAIN PANEL -----
   ### Render título tabulado
-  observeEvent(list(input$Id004,
-               input$base_web_ine),{
-    # print(paste("opciones:",input$Id004))
-
-output$tituloTAB <- renderUI({
-
-  })
-
-})
 
 observeEvent(input$actionTAB,{
   # print(paste("action :",input$actionTAB))
@@ -320,19 +318,34 @@ observeEvent(input$actionTAB,{
     })
 
   })
+  ### anulamos el render UI en caso de cambiar selección
+  observeEvent(list(input$Id004,
+                    input$base_web_ine),{
+                      # print(paste("opciones:",input$Id004))
 
+                      output$tituloTAB <- renderUI({
+
+                      })
+
+                    })
+
+### generamos otro render UI en caso de que se quieran editar datos
+
+
+                      # print(paste("opciones:",input$Id004))
+
+ output$edicion_datos <- renderUI({
+   req(input$edit_data)
+      tagList(
+      div(id="panel_central",class="titu-ine",
+      h2("Creación de variables"),
+      actionButton("show", "Definición de indicadores"))
+      )
+ })
 
 
 
   # DESCARGA: DE TABULADO GENERADO ----
-
-  # Habilitar botón de tabulado
-  observeEvent(input$varINTERES,{
-    req(!warning_resum())
-
-    enable("actionTAB")
-  })
-
 
   # Habilitar botón de descarga
   observeEvent(tabuladoOK(),{
@@ -351,6 +364,8 @@ observeEvent(input$actionTAB,{
       write_xlsx(tabuladoOK(), file)
     }
   )
+
+
 
 
   ### Alertas warnings #####
@@ -593,9 +608,16 @@ observeEvent(input$actionTAB,{
 
   ##### * Pruebas de outputs * ####
 
-  output$tipoCalText <- renderPrint({
-    req(debug == T)
-    list(debug_chunk)
+  output$PRUEBAS2 <- renderUI({
+    if(!is.null(input$file)){
+      orig  <- input$file$name
+      }else{
+      orig  <- input$base_web_ine
+    }
+
+   ret <- paste("Datos:",orig)
+
+   h5(ret)
   })
 
   }
