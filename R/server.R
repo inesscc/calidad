@@ -23,7 +23,8 @@ library(shinyalert)
 library(shinybusy)
 library(stringr)
 library(survey)
-library(waiter)
+library(pkgload)
+
 
 
 ## testeo
