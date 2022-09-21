@@ -2,16 +2,16 @@
 % Please edit documentation in R/create_internal.R
 \name{standardize_design_variables}
 \alias{standardize_design_variables}
-\title{Homologa el nombre de las variables disenio}
+\title{Standardize the name of design variables}
 \usage{
 standardize_design_variables(design)
 }
 \arguments{
-\item{design}{dataframe con los resultados}
+\item{design}{\code{dataframe}}
 }
 \value{
-disenio con los nombres homologados
+design survey
 }
 \description{
-Cambia el nombre de las variables de disenio, para poder utilizarlas más adelante
+Rename design variables, so we can use the later
 }

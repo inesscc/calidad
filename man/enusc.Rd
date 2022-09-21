@@ -5,29 +5,29 @@
 \alias{enusc}
 \title{Encuesta Nacional Urbana de Seguridad ciudadana 2019 - ENUSC 2019}
 \format{
-dataframe compuesto por 24.465 observaciones y 22 variables
+dataframe with 24.465 rows y 22 columns
 \describe{
- \item{rph_sexo}{sexo: 1 = hombre; 2 = mujer}
- \item{region}{16 regiones del país}
- \item{Fact_Pers}{factor de expansión para personas}
- \item{Fact_Hog}{factor de expansión para hogares}
- \item{Conglomerado}{unidad de primera etapa}
- \item{VarStrat}{estrato}
- \item{VP_DC}{victimización Personas, utiliza Fact_Pers}
- \item{VA_DC}{victimización Agregada Hogares, utiliza Fact_Hog}
- \item{rph_edad}{edad del entrevistado}
- \item{P3_1_1}{Percepción aumento de la delincuencia en el país, utiliza Fact_Pers}
- \item{P8_1_1}{Causa aumento delincuencia en el barrio, utiliza Fact_Pers}
- \item{muj_insg_taxi}{Percepción inseguridad en taxis de mujeres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
- \item{hom_insg_taxi}{Percepción inseguridad en taxis de hombres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
- \item{muj_insg_micro}{Percepción inseguridad en microbuses de mujeres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
- \item{hom_insg_micro}{Percepción inseguridad en microbuses de hombres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
- \item{muj_insg_centr.com}{Percepción inseguridad en centros comerciales de mujeres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
- \item{hom_insg_centr.com}{Percepción inseguridad en centros comerciales de hombres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
- \item{muj_insg_loc.col}{Percepción inseguridad en locomoción colectiva de mujeres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
- \item{hom_insg_loc.col}{Percepción inseguridad en locomoción colectiva de hombres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
- \item{muj_insg_barrio}{Percepción inseguridad en el barrio de mujeres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
- \item{hom_insg_barrio}{Percepción inseguridad en el barrio de hombres, variable elaborada con varaibles P9 y sexo, utiliza Fact_Pers}
+ \item{rph_sexo}{1 = man; 2 = woman}
+ \item{region}{16 regions}
+ \item{Fact_Pers}{person sample weights}
+ \item{Fact_Hog}{household sample weights}
+ \item{Conglomerado}{PSU}
+ \item{VarStrat}{strata}
+ \item{VP_DC}{Individual victimization. It works combined with Fact_Pers}
+ \item{VA_DC}{Household victimization. It works combined  with Fact_Hog}
+ \item{rph_edad}{age}
+ \item{P3_1_1}{ Perception of increased crime in the country. It works combined with Fact_Pers}
+ \item{P8_1_1}{Cause of increased crime in the neighborhood. It works combined with Fact_Pers}
+ \item{muj_insg_taxi}{Female perception of insecurity inside taxis. Variable elaborated with variables P9 and rph_sexo . It works combined with Fact_Pers}
+ \item{hom_insg_taxi}{Male perception of insecurity inside taxis. Variable elaborated with variables P9 and rph_sexo. It works combined with Fact_Pers}
+ \item{muj_insg_micro}{Female perception of insecurity inside buses. Variable elaborated with variables P9 and rph_sexo. It works combined with Fact_Pers}
+ \item{hom_insg_micro}{Male perception of insecurity inside buses. Variable elaborated with variables P9 and rph_sexo. It works combined with Fact_Pers}
+ \item{muj_insg_centr.com}{Female perception of insecurity inside malls. Variable elaborated with variables P9 and rph_sexo. It works combined with Fact_Pers}
+ \item{hom_insg_centr.com}{Male perception of insecurity inside malls. Variable elaborated with variables P9 and rph_sexo. It works combined with Fact_Pers}
+ \item{muj_insg_loc.col}{Female perception of insecurity public transport. Variable elaborated with variables P9 and rph_sexo. It works combined with Fact_Pers}
+ \item{hom_insg_loc.col}{Male perception of insecurity public transport. Variable elaborated with variables P9 and rph_sexo. It works combined with Fact_Pers}
+ \item{muj_insg_barrio}{Female perception of insecurity neighborhood. Variable elaborated with variables P9 and rph_sexo. It works combined with Fact_Pers}
+ \item{hom_insg_barrio}{Male perception of insecurity neighborhood. Variable elaborated with variables P9 and rph_sexo. It works combined with Fact_Pers}
  }
 }
 \source{
@@ -37,7 +37,7 @@ dataframe compuesto por 24.465 observaciones y 22 variables
 enusc
 }
 \description{
-Datos de la ENUSC para el año 2019. Contiene solo algunas variables.
+ENUSC data for the year 2019. Contains only a few variables.
 }
 \examples{
 data(enusc)

@@ -5,17 +5,17 @@
 \alias{ene}
 \title{Encuesta Nacional de Empleo - ENE. 2020-efm}
 \format{
-dataframe compuesto por 87.842 observaciones y 7 variables
+dataframe with 87.842 rows y 7 columns
 \describe{
- \item{sexo}{sexo: 1 = hombre; 2 = mujer }
- \item{region}{region del pais}
- \item{cae_especifico}{condición de actividad económica}
- \item{fe}{factor de expansión}
- \item{varunit}{unidad de primera etapa}
- \item{varstrat}{estrato}
- \item{fdt}{indica si la persona pertenece a la fuerza de trabajo: 1 = pertenece; 0 = no pertenece}
- \item{ocupado}{indica de la persona está ocupada o no: 1 = ocupado; 0 = no ocupado}
- \item{desocupado}{indica de la persona está desocupada o no: 1 = desocupada; 0 = ocupada}
+ \item{sexo}{1 = man; 2 = woman }
+ \item{region}{region}
+ \item{cae_especifico}{Economic activity status}
+ \item{fe}{sample weights}
+ \item{varunit}{PSU}
+ \item{varstrat}{strata}
+ \item{fdt}{It shows if the person belongs to labour force: 1 = yes; 0 = no}
+ \item{ocupado}{1 = employed; 0 = non-employed}
+ \item{desocupado}{1 = non-employed; 0 = employed}
 }
 }
 \source{
@@ -25,9 +25,9 @@ dataframe compuesto por 87.842 observaciones y 7 variables
 ene
 }
 \description{
-Versión reducida de la base de datos de la ENE. Contiene
-algunas variables sociodemográficas y la información necesaria
-para trabajar con el diseño complejo.
+Reduced version of the ENE database. Contains
+some sociodemographic variables and the necessary information
+to work with complex design
 }
 \examples{
 data(ene)

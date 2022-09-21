@@ -7,14 +7,14 @@
 \format{
 dataframe compuesto por 48.308 observaciones y 8 variables
 \describe{
- \item{sexo}{sexo: 1 = hombre; 2 = mujer}
- \item{zona}{área de estimación: 1 = región metropolitana; 2 = resto de capitales regionales}
- \item{ecivil}{estado civil}
- \item{fe}{factor de expansión}
- \item{varunit}{unidad de primera etapa}
- \item{varstrat}{estrato}
- \item{gastot_hd}{gasto promedio por hogar}
- \item{ocupado}{indica de la persona está ocupada o no: 1 = ocupado; 0 = no ocupado}
+ \item{sexo}{1 = male; 2 = female}
+ \item{zona}{1 = metropolitan area; 2 = rest of the regional capitals}
+ \item{ecivil}{marital status}
+ \item{fe}{sample weights}
+ \item{varunit}{PSU}
+ \item{varstrat}{strata}
+ \item{gastot_hd}{household expenditure}
+ \item{ocupado}{1 = employed; 0 = non-employed}
 }
 }
 \source{
@@ -24,9 +24,9 @@ dataframe compuesto por 48.308 observaciones y 8 variables
 epf_personas
 }
 \description{
-Versión reducida de la base de datos de la VIII EPF. Contiene
-algunas variables sociodemográficas y la información necesaria
-para trabajar con el diseño complejo.
+Reduced version of the VIII EPF database. Contains
+some sociodemographic variables and the necessary information
+to work with complex design.
 }
 \examples{
 data(epf_personas)

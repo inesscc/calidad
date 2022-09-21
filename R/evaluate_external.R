@@ -62,7 +62,7 @@ evaluate <- function(table, publish = FALSE, scheme = c("chile", "cepal") , ...)
     evaluation <- evaluate_ine(table, params, class(table))
 
 
-    # Criterio general para la publicación del tabulado INE
+    # General criteria for the publication of the INE table
     if (publish == TRUE) {
       evaluation <- publish_table(evaluation)
     }

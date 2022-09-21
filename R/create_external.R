@@ -38,7 +38,7 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
   # get design variables
   design_vars <- get_design_vars(design )
 
-  # Crear listado de variables que se usan en los dominios
+  # Create list of variables included in domains
   agrupacion <- create_groupby_vars(domains)
 
   # Select relevant columns
@@ -53,11 +53,11 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
   deff = eclac_inputs$deff
 
 
-  # Homologar nombres de variables  del diseño
+  # Standardize design variable names
   design <- standardize_design_variables(design)
 
 
-  # Convertir everithing tolower to avoid problems
+  # Convert everything to lowercase  to avoid problems in next steps
   names(design$variables) <- tolower(names(design$variables))
   lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
   var <- lower_params$var
@@ -65,49 +65,47 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
   domains <- lower_params$domains
 
 
-  # Sacar los NA si el usuario lo requiere
+  # Remove NA values
   if (rm.na == TRUE) {
     design <- design[!is.na(design$variables[[var]])]
   }
 
-  # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
+  # Checking for the objective variable and subpop
   check_input_var(var, design)
   check_subpop_var(subpop, design)
 
-  # Lanzar warning del error estándar cuando no se usa el diseño
+  # warning if the standard error is not obtained from the complex design
   se_message(design)
 
-  # Filtrar diseño, si el usuario agrega el parámetro subpop
+  # FIlter if the user add subpop parameter
   design <- filter_design(design, subpop)
 
-  #Convertir los inputs en formulas para adecuarlos a survey
+  #COnvert inputs to formula in order to get an easier manipulation with survey
   var_form <- convert_to_formula(var)
-
-  # Convertir en formula para survey
   domains_form <- convert_to_formula(domains)
 
-  #Generar la tabla con los calculos
-  tabla <- calcular_tabla(var_form, domains_form, design, fun = survey::svymean)
+  # Get main results using survey
+  tabla <- get_survey_table(var_form, domains_form, design, fun = survey::svymean)
 
-  # Crear listado de variables que se usan para el cálculo
+  # Create list of variables used during the calculation
   agrupacion <- create_groupby_vars(domains)
 
-  #Calcular el tamanio muestral de cada grupo
+  # get sample size for each group
   n <- get_sample_size(design$variables, agrupacion)
 
-  #Calcular los grados de libertad de todos los cruces
+  #Get degrees of freedom
   gl <- get_df(design, agrupacion)
 
-  #Extrear el coeficiente de variacion
+  #Get coefficient of variation
   cv <- get_cv(tabla, design, agrupacion)
 
-  #Unir toda la informacion en una tabla final
+  # Combine all the information in one single table
   final <- create_output(tabla, agrupacion,  gl, n, cv)
 
-  # Ordenar las columnas y estandarizar los nombres de las variables
+  # Order columns and standardize variable names
   final <- standardize_columns(final, var, denom = NULL )
 
-  # Se calculan los intervalos de confianza solo si el usuario lo requiere
+  # Get confidence intervals if the user includes this parameter
   if (ci == T) {
     final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
@@ -171,7 +169,7 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
   # get design variables
   design_vars <- get_design_vars(design )
 
-  # Crear listado de variables que se usan en los dominios
+  # Create list of variables included in domains
   agrupacion <- create_groupby_vars(domains)
 
   # Select relevant columns
@@ -184,11 +182,10 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
   unweighted = eclac_inputs$unweighted
   deff = eclac_inputs$deff
 
-
-  # Homologar nombres de variables  del diseño
+  # Standardize design variable names
   design <- standardize_design_variables(design)
 
-  # Convertir everithing tolower to avoid problems
+  # Convert everything to lowercase  to avoid problems in next steps
   names(design$variables) <- tolower(names(design$variables))
   lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
   var <- lower_params$var
@@ -196,53 +193,48 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
   domains <- lower_params$domains
 
 
-
-
-  # Sacar los NA si el usuario lo requiere
+  # Remove NA values
   if (rm.na == TRUE) {
     design <- design[!is.na(design$variables[[var]])]
   }
 
-  # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
+  # Checking for the objective variable and subpop
   check_input_var(var, design, estimation = "total")
   check_subpop_var(subpop, design)
 
-  # Lanzar warning del error estándar cuando no se usa el diseño
+  # warning if the standard error is not obtained from the complex design
   se_message(design)
 
-  # Filtrar diseño, si el usuario agrega el parámetro subpop
+  # FIlter if the user add subpop parameter
   design <- filter_design(design, subpop)
 
 
-  #Convertir los inputs en formulas para adecuarlos a survey
+  #COnvert inputs to formula in order to get an easier manipulation with survey
   var_form <- convert_to_formula(var)
-
-  # Convertir en formula para survey
   domains_form <- convert_to_formula(domains)
 
-  #Generar la tabla con los calculos
-  tabla <- calcular_tabla(var_form, domains_form, design, fun = survey::svytotal)
+  # Get main results using survey
+  tabla <- get_survey_table(var_form, domains_form, design, fun = survey::svytotal)
 
-  # Crear listado de variables que se usan para el cálculo
+  # Create list of variables used during the calculation
   agrupacion <- create_groupby_vars(domains)
 
-  #Calcular el tamanio muestral de cada grupo
+  # get sample size for each group
   n <- get_sample_size(design$variables, agrupacion)
 
-
-  #Calcular los grados de libertad de todos los cruces
+  #Get degrees of freedom
   gl <- get_df(design, agrupacion)
 
-  #Extrear el coeficiente de variacion
+  #Get coefficient of variation
   cv <- get_cv(tabla, design, agrupacion)
 
-  #Unir toda la informacion en una tabla final
+  # Combine all the information in one single table
   final <- create_output(tabla, agrupacion,  gl, n, cv)
 
-  # Ordenar las columnas y estandarizar los nombres de las variables
+  # Order columns and standardize variable names
   final <- standardize_columns(final, var, denom = NULL )
 
-  # Se calculan los intervalos de confianza solo si el usuario lo requiere
+  # Get confidence intervals if the user includes this parameter
   if (ci == TRUE) {
     final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }
@@ -308,7 +300,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   # get design variables
   design_vars <- get_design_vars(design )
 
-  # Crear listado de variables que se usan en los dominios
+  # Create list of variables included in domains
   agrupacion <- create_groupby_vars(domains)
 
   # Select relevant columns
@@ -320,10 +312,10 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   unweighted = eclac_inputs$unweighted
   deff = eclac_inputs$deff
 
-  # Homologar nombres de variables  del diseño
+  # Standardize design variable names
   design <- standardize_design_variables(design)
 
-  # Convertir everithing tolower to avoid problems
+  # Convert everything to lowercase to avoid problems
   names(design$variables) <- tolower(names(design$variables))
   lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
   var <- lower_params$var
@@ -331,31 +323,26 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   domains <- lower_params$domains
 
 
-  # Sacar los NA si el usuario lo requiere
+  # Remove NA values
   if (rm.na == TRUE) {
     design <- design[!is.na(design$variables[[var]])]
   }
 
-  # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
-
-
-
+  # Checking for the objective variable and subpop
   check_input_var(var, design, estimation = "size")
   check_subpop_var(subpop, design)
 
-  # Lanzar warning del error estándar cuando no se usa el diseño
+  # warning if the standard error is not obtained from the complex design
   se_message(design)
 
-  # Filtrar diseño, si el usuario agrega el parámetro subpop
+  # FIlter if the user add subpop parameter
   design <- filter_design(design, subpop)
 
   #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- convert_to_formula(var)
 
-  # Convertir en formula para survey
+  #COnvert inputs to formula in order to get an easier manipulation with survey
   domains_form <- convert_to_formula(domains)
-
-  # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(domains)
 
   # Add estimation variable for the case ine-size
@@ -364,29 +351,29 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
     domains_form <- convert_to_formula(paste0(domains, "+", var))
   }
 
-  #Generar la tabla con los calculos
-  tabla <- calcular_tabla(var_form, domains_form, design, fun = survey::svytotal)
+  # Get main results using survey
+  tabla <- get_survey_table(var_form, domains_form, design, fun = survey::svytotal)
 
-    #Calcular el tamanio muestral de cada grupo
+  # get sample size for each group
   n <- get_sample_size(design$variables, agrupacion, df_type)
 
-  #Calcular los grados de libertad de todos los cruces
+  #Get degrees of freedom
   gl <- get_df(design,agrupacion,df_type)
 
-  #Extrear el coeficiente de variacion
+  #Get coefficient of variation
   cv <- get_cv(tabla, design, agrupacion)
 
   if(df_type == "ine" & is.null(domains)){
     cv <- cv[2]
   }
 
-  #Unir toda la informacion en una tabla final
+  # Combine all the information in one single table
   final <- create_output(tabla, agrupacion,  gl, n, cv)
 
-  # Ordenar las columnas y estandarizar los nombres de las variables
+  # Order columns and standardize variable names
   final <- standardize_columns(final, var, denom = NULL)
 
-  # Se calculan los intervalos de confianza solo si el usuario lo requiere
+  # Get confidence intervals if the user includes this parameter
   if (ci == TRUE) {
     final <- get_ci(final,  ajuste_ene = ajuste_ene)
   }

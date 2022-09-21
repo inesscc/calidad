@@ -2,20 +2,20 @@
 % Please edit documentation in R/create_internal.R
 \name{get_df}
 \alias{get_df}
-\title{Cálcula los grados de libertad para cada estimación}
+\title{Get degrees of freedom}
 \usage{
 get_df(data, domains, df_type = "cepal")
 }
 \arguments{
-\item{data}{dataframe}
+\item{data}{\code{dataframe}}
 
 \item{domains}{\code{string} with domains}
 
 \item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".}
 }
 \value{
-dataframe con grados de libertad
+\code{dataframe} with results including degrees of freedom
 }
 \description{
-Recibe datos y los domains. Devuelve un data frame con las upm, varstrat y gl para cada celda
+Receive data and domains. Returns a data frame with the psu, strata and df for each cell
 }

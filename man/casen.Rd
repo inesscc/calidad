@@ -5,17 +5,17 @@
 \alias{casen}
 \title{Encuesta de Caracterización Socioeconómica Nacional 2020 - CASEN en Pandemia 2020}
 \format{
-dataframe compuesto por 185.437 observaciones y 6 variables
+dataframe with 185.437 rows y 6 columns
 \describe{
- \item{folio}{identificador del hogar}
- \item{sexo}{sexo: 1 = hombre; 2 = mujer}
- \item{edad}{edad}
- \item{activ}{Condición de actividad económica}
- \item{ing_aut_hog}{Ingreso autónomo del hogar}
- \item{pobreza}{pobreza por ingresos: 1 = pobres extremos, 2 = pobres no extremos, 3 = no pobres}
- \item{expr}{factor de expansión regional}
- \item{estrato}{estrato de muestro}
- \item{cod_upm}{unidad primaria de muestreo}
+ \item{folio}{household id}
+ \item{sexo}{1 = man; 2 = woman}
+ \item{edad}{age}
+ \item{activ}{Economic activity status}
+ \item{ing_aut_hog}{Household Income}
+ \item{pobreza}{poverty status: 1 = extreme poverty, 2 = non-extreme poverty, 3 = non-poverty}
+ \item{expr}{regional sample weights}
+ \item{estrato}{strata}
+ \item{cod_upm}{PSU}
  }
 }
 \source{
@@ -25,7 +25,7 @@ dataframe compuesto por 185.437 observaciones y 6 variables
 casen
 }
 \description{
-Datos de CASEN para el año 2020 Contiene solo algunas variables.
+CASEN data for the year 2020. Contains only a few variables.
 }
 \examples{
 data(casen)

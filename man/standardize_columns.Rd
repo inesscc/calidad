@@ -2,20 +2,20 @@
 % Please edit documentation in R/create_internal.R
 \name{standardize_columns}
 \alias{standardize_columns}
-\title{Ordena nombre de columnas y estandariza el orden}
+\title{standardize and sort column names}
 \usage{
 standardize_columns(data, var, denom)
 }
 \arguments{
-\item{data}{dataframe con los resultados}
+\item{data}{\code{dataframe} with results}
 
-\item{var}{variable objetivo}
+\item{var}{\code{string} with the objective variable}
 
 \item{denom}{denominator}
 }
 \value{
-dataframe con todos los datos ordenados
+\code{dataframe} with standardized data
 }
 \description{
-Recibe la tabla en estado bruto y la ordena
+Receive the survey table in raw state and sort it
 }

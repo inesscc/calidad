@@ -2,20 +2,20 @@
 % Please edit documentation in R/create_internal.R
 \name{get_cv}
 \alias{get_cv}
-\title{Calcula el coeficiente de variación}
+\title{Get the coefficient of variation}
 \usage{
 get_cv(table, design, domains)
 }
 \arguments{
-\item{table}{objeto creado con survey}
+\item{table}{\code{dataframe} with results}
 
-\item{design}{diseño complejo creado con survey}
+\item{design}{design}
 
-\item{domains}{listado de variables para desagregar}
+\item{domains}{\code{vector} with domains}
 }
 \value{
-dataframe con la información de cv
+\code{dataframe} with results including including CV
 }
 \description{
-Recibe una tabla creada con survey y devuelve el coeficiente de variación para cada celda
+Receive a table created with survey and return the coefficient of variation for each cell
 }

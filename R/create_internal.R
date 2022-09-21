@@ -538,7 +538,7 @@ unificar_variables_factExp = function(disenio){
 #'
 #' @param var \code{string} objective variable
 #' @param domains \code{domains}
-#' @param disenio design from \code{survey}
+#' @param complex_design design from \code{survey}
 #' @param estimation \code{string} indicating if the mean must be calculated
 #' @param env \code{environment} parent frame
 #' @param fun function required regarding the estimation
@@ -546,7 +546,7 @@ unificar_variables_factExp = function(disenio){
 #' @return \code{dataframe} containing  main results from survey
 #' @import survey
 
-calcular_tabla <-  function(var, domains, disenio, estimation = "mean", env = parent.frame(), fun, denom = NULL) {
+get_survey_table <-  function(var, domains, complex_design, estimation = "mean", env = parent.frame(), fun, denom = NULL) {
 
 
   # El primer if es para domains
@@ -556,7 +556,7 @@ calcular_tabla <-  function(var, domains, disenio, estimation = "mean", env = pa
 
       estimacion <-  survey::svyby(formula = var,
                                    by = domains,
-                                   design = disenio,
+                                   design = complex_design,
                                    FUN = fun,
                                    deff = get("deff", env))
       # sometimes survey outputs two coluns with the same name. In those cases we keep the first occurrence and the second one is modified
@@ -572,7 +572,7 @@ calcular_tabla <-  function(var, domains, disenio, estimation = "mean", env = pa
     } else if (estimation == "ratio")  {
 
       estimacion <- survey::svyby(var, denominator = denom,
-                                  design =  disenio,
+                                  design =  complex_design,
                                   by = domains ,
                                   FUN = fun,
                                   deff = get("deff", env))
@@ -584,7 +584,7 @@ calcular_tabla <-  function(var, domains, disenio, estimation = "mean", env = pa
       estimacion <- survey::svyby(var,
                                   by = domains,
                                   FUN = survey::svyquantile,
-                                  design = disenio,
+                                  design = complex_design,
                                   quantiles = 0.5,
                                   method="constant",
                                   interval.type = "quantile",
@@ -594,17 +594,17 @@ calcular_tabla <-  function(var, domains, disenio, estimation = "mean", env = pa
   } else {
     if (estimation == "mean") { # para calcular la media
 
-        estimacion <- fun(var, disenio, deff = get("deff", env))
+        estimacion <- fun(var, complex_design, deff = get("deff", env))
 
     } else if (estimation == "ratio") {
 
-        estimacion <- survey::svyratio(var, denominator = denom, design = disenio, deff = get("deff", env))
+        estimacion <- survey::svyratio(var, denominator = denom, design = complex_design, deff = get("deff", env))
 
 
     } else { # para calcular la mediana
 
       estimacion <-  svyquantile(var,
-                                 design = disenio,
+                                 design = complex_design,
                                  quantiles = 0.5,
                                  method="constant",
                                  interval.type = "quantile",
@@ -618,23 +618,12 @@ calcular_tabla <-  function(var, domains, disenio, estimation = "mean", env = pa
 
 #-----------------------------------------------------------------------
 
-#' Get ratio
-#'
-#' Generates a table with estimates for a given aggregation
-#'
-#' @param var numerator
-#' @param denominador denominator
-#' @param domains \code{string vector} indicating domains
-#' @param disenio design from \code{survey}
-#' @param env \code{environment} parent frame
-#' @return \code{dataframe} containing  main results from survey
-#' @import survey
 
-calcular_tabla_ratio <-  function(var,denominador, domains = NULL, disenio, env = parent.frame()) {
+calcular_tabla_ratio <-  function(var,denominador, domains = NULL, complex_design, env = parent.frame()) {
   if (!is.null(domains)) {
-    estimacion <- survey::svyby(var, denominator = denominador,design =  disenio, by = domains , FUN = svyratio, deff = get("deff", env))
+    estimacion <- survey::svyby(var, denominator = denominador,design =  complex_design, by = domains , FUN = svyratio, deff = get("deff", env))
   } else {
-    estimacion <- survey::svyratio(var, denominator = denominador, design = disenio, deff = get("deff", env))
+    estimacion <- survey::svyratio(var, denominator = denominador, design = complex_design, deff = get("deff", env))
   }
   return(estimacion)
 }
@@ -927,7 +916,7 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
   domains_form <- convert_to_formula(domains)
   denominador_form <- convert_to_formula(denominador)
 
-  tabla <- calcular_tabla(var_form, domains_form, disenio, fun = survey::svyratio, estimation = "ratio", denom = denominador_form)
+  tabla <- get_survey_table(var_form, domains_form, disenio, fun = survey::svyratio, estimation = "ratio", denom = denominador_form)
 
   # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(domains)
@@ -1046,7 +1035,7 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   # Convertir en formula para survey
   domains_form <- convert_to_formula(domains)
 
-  tabla <- calcular_tabla(var_form, domains_form, disenio, fun = survey::svymean)
+  tabla <- get_survey_table(var_form, domains_form, disenio, fun = survey::svymean)
 
   # Crear listado de variables que se usan en los dominios
   agrupacion <- create_groupby_vars(domains)
