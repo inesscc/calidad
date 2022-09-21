@@ -55,7 +55,10 @@ ene <- ene %>%
 dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene, weights = ~fact_cal)
 
 # Diseño enusc
-dc_enusc <- survey::svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
+dc_enusc <- survey::svydesign(ids = ~Conglomerado,
+                              strata = ~VarStrat,
+                              data = enusc %>% dplyr::mutate(enc_region = as.character(enc_region)),
+                              weights = ~Fact_Pers)
 
 ##########################
 # Testear las estimaciones
