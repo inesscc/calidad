@@ -869,6 +869,9 @@ get_ess <- function(ess, env = parent.frame() ) {
 #' @param rel_error \code{boolean} Relative error
 #' @param rm.na \code{boolean} indicating if NA values must be removed
 #' @param unweighted \code{boolean} Add non weighted count if it is required
+#' @importFrom rlang :=
+#' @importFrom rlang .data
+#'
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
