@@ -9,12 +9,14 @@ Authors@R: c(
         email = "klehmann@fen.uchile.cl"),
       person(given = "Ricardo",
         family = "Pizarro",
-        role = c("ctb"),
+        role = c("ctb", "cre"),
         email = "rapizarros@ine.gob.cl"
         ),
       person(given = "Ignacio",
         family = "Agloni",
-        role = c("ctb"))
+        role = c("ctb"),
+        email = "ifaglonij@ine.gob.cl"
+        )
     )
 Description: Assesses the quality of estimates made by complex sample designs,
   following the methodology developed by the National Institute of Statistics Chile (2020, <https://www.ine.cl/docs/default-source/institucionalidad/buenas-pr%C3%A1cticas/clasificaciones-y-estandares/est%C3%A1ndar-evaluaci%C3%B3n-de-calidad-de-estimaciones-publicaci%C3%B3n-27022020.pdf>)
