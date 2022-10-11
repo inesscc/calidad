@@ -267,7 +267,6 @@ create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
                        by = domains) %>%
       dplyr::left_join(cv %>% dplyr::select(c(domains, "cv")),
                        by = domains)
-
   } else {
 
     var <- get("var",envir = env)
@@ -326,11 +325,11 @@ get_cv <- function(table, design, domains) {
 #' Receive data and domains. Returns a data frame with the psu, strata and df for each cell
 #' @param data \code{dataframe}
 #' @param domains \code{string} with domains
-#' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
+#' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or eclac, by default "ine".
 #' @return \code{dataframe} with results including degrees of freedom
 
 
-get_df <- function(data, domains,df_type = "cepal"){
+get_df <- function(data, domains, df_type = "eclac"){
   design <- data
   data <- data$variables
 
@@ -362,7 +361,7 @@ get_df <- function(data, domains,df_type = "cepal"){
         dplyr::ungroup()   %>%
         dplyr::select(-c("upm","varstrat"))
 
-    } else if(df_type == "cepal"){
+    } else if(df_type == "eclac"){
       gl <- calcular_upm(design$variables, domains) %>%
         dplyr::left_join(calcular_estrato(design$variables, domains), by = domains) %>%
         dplyr::mutate(df = .data$upm - .data$varstrat)  %>%
@@ -387,7 +386,7 @@ get_df <- function(data, domains,df_type = "cepal"){
 
   #  print(paste("fe",gl))
 
-    } else if(df_type == "cepal"){
+    } else if(df_type == "eclac"){
        # varstrat <- length(unique(design$variables$varstrat))
        # varunit <- length(unique(design$variables$varunit))
        # gl <- varunit - varstrat
@@ -559,6 +558,7 @@ get_survey_table <-  function(var, domains, complex_design, estimation = "mean",
                                    design = complex_design,
                                    FUN = fun,
                                    deff = get("deff", env))
+
       # sometimes survey outputs two coluns with the same name. In those cases we keep the first occurrence and the second one is modified
       estimacion <- fix_repeated_columns(estimacion, v = var)
 
@@ -619,11 +619,11 @@ get_survey_table <-  function(var, domains, complex_design, estimation = "mean",
 #-----------------------------------------------------------------------
 
 
-calcular_tabla_ratio <-  function(var,denominador, domains = NULL, complex_design, env = parent.frame()) {
+calcular_tabla_ratio <-  function(var,denominator, domains = NULL, complex_design, env = parent.frame()) {
   if (!is.null(domains)) {
-    estimacion <- survey::svyby(var, denominator = denominador,design =  complex_design, by = domains , FUN = svyratio, deff = get("deff", env))
+    estimacion <- survey::svyby(var, denominator = denominator,design =  complex_design, by = domains , FUN = svyratio, deff = get("deff", env))
   } else {
-    estimacion <- survey::svyratio(var, denominator = denominador, design = complex_design, deff = get("deff", env))
+    estimacion <- survey::svyratio(var, denominator = denominator, design = complex_design, deff = get("deff", env))
   }
   return(estimacion)
 }
@@ -633,7 +633,7 @@ calcular_tabla_ratio <-  function(var,denominador, domains = NULL, complex_desig
 
 
 
-get_sample_size <- function(data, domains = NULL, df_type = "cepal", env = parent.frame()) {
+get_sample_size <- function(data, domains = NULL, df_type = "eclac", env = parent.frame()) {
 
   if(df_type == "ine"){
 
@@ -646,7 +646,7 @@ get_sample_size <- function(data, domains = NULL, df_type = "cepal", env = paren
       dplyr::filter(!!rlang::parse_expr(estimation_var) == 1) %>%
       dplyr::mutate_at(domains, as.character)
 
-  }else if(df_type == "cepal"){
+  }else if(df_type == "eclac"){
 
     data %>%
       dplyr::group_by_at(.vars = domains) %>%
@@ -858,7 +858,7 @@ get_ess <- function(ess, env = parent.frame() ) {
 #' internal function to calculate ratios estimations
 #'
 #' @param var numeric variable within the \code{dataframe}, is the numerator of the ratio to be calculated.
-#' @param denominador numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated.
+#' @param denominator numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated.
 #' @param domains domains to be estimated separated by the + character.
 #' @param disenio complex design created by \code{survey} package
 #' @param subpop integer dummy variable to filter the dataframe
@@ -875,7 +875,7 @@ get_ess <- function(ess, env = parent.frame() ) {
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
-create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE,
+create_ratio_internal <- function(var,denominator, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE,
                                   ajuste_ene = FALSE, unweighted = FALSE, rel_error = FALSE, rm.na = FALSE) {
 
   # get design variables
@@ -885,7 +885,7 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
   agrupacion <- create_groupby_vars(domains)
 
   # Select relevant columns
-  disenio <- disenio[ ,  c(agrupacion, var, subpop, design_vars, denominador)]
+  disenio <- disenio[ ,  c(agrupacion, var, subpop, design_vars, denominator)]
 
   # Chequear que la variable objetivo y la variable subpop cumplan con ciertas condiciones
   check_input_var(var, disenio, estimation = "ratio")
@@ -899,12 +899,12 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
 
   # Convertir everything tolower to avoid problems
   names(disenio$variables) <- tolower(names(disenio$variables))
-  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains, "denominador" = denominador ), tolower_strings)
+  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains, "denominator" = denominator ), tolower_strings)
 
   var <- lower_params$var
   subpop <- lower_params$subpop
   domains <- lower_params$domains
-  denominador <- lower_params$denominador
+  denominator <- lower_params$denominator
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == TRUE) {
@@ -917,9 +917,9 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
   #Convertir los inputs en formulas para adecuarlos a survey
   var_form <- convert_to_formula(var)
   domains_form <- convert_to_formula(domains)
-  denominador_form <- convert_to_formula(denominador)
+  denominator_form <- convert_to_formula(denominator)
 
-  tabla <- get_survey_table(var_form, domains_form, disenio, fun = survey::svyratio, estimation = "ratio", denom = denominador_form)
+  tabla <- get_survey_table(var_form, domains_form, disenio, fun = survey::svyratio, estimation = "ratio", denom = denominator_form)
 
   # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(domains)
@@ -943,7 +943,7 @@ create_ratio_internal <- function(var,denominador, domains = NULL, subpop = NULL
   final <- create_output(tabla, agrupacion,  gl, n, cv)
 
   # Ordenar las columnas y estandarizar los nombres de las variables
-  final <- standardize_columns(final, var, denominador )
+  final <- standardize_columns(final, var, denominator )
 
 
 
@@ -1056,7 +1056,7 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   final <- create_output(tabla, agrupacion,  gl, n, cv)
 
   # Ordenar las columnas y estandarizar los nombres de las variables
-  final <- standardize_columns(final, var, denom = get("denominador", env) )
+  final <- standardize_columns(final, var, denom = get("denominator", env) )
 
 
   # Add unweighted counting

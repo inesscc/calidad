@@ -29,9 +29,9 @@ create_html <- function(table) {
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
         label = kableExtra::cell_spec(.data$label, background  = dplyr::case_when(
-          .data$label == "fiable" ~ "green",
-          .data$label == "poco fiable" ~ "yellow",
-          .data$label == "no fiable" ~ "red"
+          .data$label == "reliable" ~ "green",
+          .data$label == "weakly reliable" ~ "yellow",
+          .data$label == "non-reliable" ~ "red"
         ),
         color = "black")) %>%
       dplyr::mutate(

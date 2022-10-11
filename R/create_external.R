@@ -6,7 +6,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 
 #' Create the inputs to evaluate the quality of mean estimations
 #'
-#' \code{create_mean} generates a \code{dataframe} with the following elements: mean,
+#' \code{create_mean} generates ano \code{dataframe} with the following elements: mean,
 #' degrees of freedom, sample size and coefficient of variation. The function allows
 #' grouping in several domains.
 #'
@@ -294,8 +294,9 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
 #' @export
 
 create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE, rm.na = FALSE,
-                         deff = FALSE, rel_error = FALSE,  unweighted = FALSE, df_type = "ine", eclac_input = FALSE) {
+                         deff = FALSE, rel_error = FALSE,  unweighted = FALSE, df_type = c("ine", "eclac"), eclac_input = FALSE) {
 
+  df_type <- match.arg(df_type)
 
   # get design variables
   design_vars <- get_design_vars(design )
@@ -338,7 +339,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   # FIlter if the user add subpop parameter
   design <- filter_design(design, subpop)
 
-  #Convertir los inputs en formulas para adecuarlos a survey
+  #Convert inputs to formulas to get an easier manipulation with survey
   var_form <- convert_to_formula(var)
 
   #COnvert inputs to formula in order to get an easier manipulation with survey
@@ -368,7 +369,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   }
 
   # Combine all the information in one single table
-  final <- create_output(tabla, agrupacion,  gl, n, cv)
+  final <- create_output(tabla, agrupacion,  gl = gl, n, cv)
 
   # Order columns and standardize variable names
   final <- standardize_columns(final, var, denom = NULL)
@@ -411,7 +412,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' grouping in several domains.
 #'
 #' @param var numeric variable within the \code{dataframe}, is the numerator of the ratio to be calculated.
-#' @param denominador numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL
+#' @param denominator numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL
 #' @param domains domains to be estimated separated by the + character.
 #' @param design complex design created by \code{survey} package
 #' @param subpop integer dummy variable to filter the dataframe
@@ -435,22 +436,22 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' old_options <- options()
 #' options(survey.lonely.psu = "certainty")
 #'
-#' create_prop(var = "gasto_zona1", denominador = "gastot_hd", design =  dc)
+#' create_prop(var = "gasto_zona1", denominator = "gastot_hd", design =  dc)
 #'
 #' enusc <- filter(enusc, Kish == 1)
 #'
 #' dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 #' options(survey.lonely.psu = "certainty")
-#' create_prop(var = "VP_DC", denominador = "hom_insg_taxi", design = dc)
+#' create_prop(var = "VP_DC", denominator = "hom_insg_taxi", design = dc)
 #' options(old_options)
 #' @export
 #'
 
-create_prop = function(var, denominador = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
+create_prop = function(var, denominator = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
                        rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE, eclac_input = FALSE){
 
   # eclac approach is not allowed with denominator
-  if (!is.null(denominador) & eclac_input == TRUE) {
+  if (!is.null(denominator) & eclac_input == TRUE) {
     stop("eclac approach is not allowed with denominator")
   }
 
@@ -463,11 +464,11 @@ create_prop = function(var, denominador = NULL, domains = NULL, subpop = NULL, d
 
 
 
-  if(!is.null(denominador)){
-    final = create_ratio_internal(var,denominador, domains, subpop, design, ci, deff, ess,  ajuste_ene, rel_error )
+  if(!is.null(denominator)){
+    final = create_ratio_internal(var, denominator, domains, subpop, design, ci, deff, ess,  ajuste_ene, rel_error )
   }
 
-  if(is.null(denominador)) {
+  if(is.null(denominator)) {
     final = create_prop_internal(var,  domains, subpop, design, ci, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted)
   }
 

@@ -35,6 +35,7 @@ quadratic <- function(p) {
 #---------------------------------------------------------------------
 
 
+
 evaluate_ine <- function(table, params, class = "calidad.mean") {
 
   # General case
@@ -51,10 +52,10 @@ evaluate_ine <- function(table, params, class = "calidad.mean") {
                       .data$cv > params$cv_upper_ine                                        ~ paste("cv >", params$cv_upper_ine)
                     ),
                     label = dplyr::case_when(
-                      eval_n == "insufficient sample size" | eval_df == "insufficient df" | eval_cv == paste("cv >", params$cv_upper_ine)      ~ "no fiable",
-                      eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_ine)         ~ "fiable",
+                      eval_n == "insufficient sample size" | eval_df == "insufficient df" | eval_cv == paste("cv >", params$cv_upper_ine)      ~ "non-reliable",
+                      eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_ine)         ~ "reliable",
                       eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv ==  paste("cv between", params$cv_lower_ine, "and", params$cv_upper_ine) ~
-                        "poco fiable"
+                        "weakly reliable"
                     )
       )
 
@@ -68,9 +69,9 @@ evaluate_ine <- function(table, params, class = "calidad.mean") {
                                                 .data$stat < 1 & .data$stat > 0.5 ~ "> a 0.5",
                                                 .data$stat >= 1                        ~ ">= a 1"),
                     tipo_eval = dplyr::if_else(.data$stat < 1, "Eval SE", "Eval CV"),
-                    cuadratica = dplyr::if_else(.data$stat < 1, quadratic(.data$stat), NA_real_),
+                    quadratic = dplyr::if_else(.data$stat < 1, quadratic(.data$stat), NA_real_),
                     eval_se = dplyr::if_else(.data$stat < 1,
-                                             dplyr::if_else(.data$se <= .data$cuadratica,
+                                             dplyr::if_else(.data$se <= .data$quadratic,
                                                             "admissible SE", "high SE"), NA_character_),
                     eval_cv = dplyr::if_else(.data$stat < 1, NA_character_,
                                              dplyr::case_when(cv <= params$cv_lower_ine                           ~ paste("cv <=", params$cv_lower_ine),
@@ -78,14 +79,14 @@ evaluate_ine <- function(table, params, class = "calidad.mean") {
                                                               cv > 0.3                                            ~ paste("cv >", params$cv_upper_ine)
                                              )),
                     label = dplyr::case_when(
-                      stat <1 & eval_n == "insufficient sample size" | eval_df == "insufficient df"                                                  ~ "no fiable",
-                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "<= a 0.5" & eval_se == "admissible SE"  ~ "fiable",
-                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "<= a 0.5" & eval_se == "high SE"      ~ "poco fiable",
-                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "> a 0.5" & eval_se == "admissible SE"   ~ "fiable",
-                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "> a 0.5" & eval_se == "high SE"       ~ "poco fiable",
-                      stat >= 1 & eval_n == "insufficient sample size" | eval_df == "insufficient df" | eval_cv == paste("cv >", params$cv_upper_ine) ~ "no fiable",
-                      stat >= 1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_ine)    ~ "fiable",
-                      stat >= 1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv between", params$cv_lower_ine, "and", params$cv_upper_ine) ~ "poco fiable"))
+                      stat <1 & eval_n == "insufficient sample size" | eval_df == "insufficient df"                                                  ~ "non-reliable",
+                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "<= a 0.5" & eval_se == "admissible SE"  ~ "reliable",
+                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "<= a 0.5" & eval_se == "high SE"      ~ "weakly reliable",
+                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "> a 0.5" & eval_se == "admissible SE"   ~ "reliable",
+                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "> a 0.5" & eval_se == "high SE"       ~ "weakly reliable",
+                      stat >= 1 & eval_n == "insufficient sample size" | eval_df == "insufficient df" | eval_cv == paste("cv >", params$cv_upper_ine) ~ "non-reliable",
+                      stat >= 1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_ine)    ~ "reliable",
+                      stat >= 1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv between", params$cv_lower_ine, "and", params$cv_upper_ine) ~ "weakly reliable"))
 
 
 
@@ -147,10 +148,10 @@ evaluate_cepal <- function(table, params, class = "calidad.mean") {
     evaluation <- evaluation %>%
       dplyr::ungroup() %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(.data$label == "fiable", 1, 0)) / nrow(.) * 100,
+      dplyr::mutate(pasa = sum(dplyr::if_else(.data$label == "reliable", 1, 0)) / nrow(.) * 100,
                     pasa = round(.data$pasa, 2),
-                    publication = dplyr::if_else(.data$pasa >= 50, "publicar tabulado", "no publicar tabulado"),
-                    pass = paste0(.data$pasa, "% de estimaciones fiables")) %>%
+                    publication = dplyr::if_else(.data$pasa >= 50, "publish", "do not publish"),
+                    pass = paste0(.data$pasa, "% reliable estimates")) %>%
       dplyr::select(-.data$pasa)
 
     return(evaluation)

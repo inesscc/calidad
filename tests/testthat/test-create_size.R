@@ -118,7 +118,7 @@ test_that("conteo df diseño complejo, versión INE, con desagregación", {
 
 # Calcular con el enfoque de CEPAL con desagregación
 
-df <-  create_size("VA_DC", domains =  "enc_region+rph_sexo", design = dc_enusc, df_type = "cepal")
+df <-  create_size("VA_DC", domains =  "enc_region+rph_sexo", design = dc_enusc, df_type = "eclac")
 
 true_upm <- dc_enusc$variables %>%
   dplyr::group_by(rph_sexo, enc_region, Conglomerado) %>%

@@ -68,8 +68,8 @@ test_that("Insumo proporción", {
 
 
 # Probar strings
-# anidar <-  function(var,denominador = NULL, domains = NULL, subpop = NULL, design, ci = F){
-#   create_prop(var, denominador, domains, subpop, design,ci, anidar = T)
+# anidar <-  function(var,denominator = NULL, domains = NULL, subpop = NULL, design, ci = F){
+#   create_prop(var, denominator, domains, subpop, design,ci, anidar = T)
 # }
 #
 # anidar(var = "ocupado", design = dc, ci = T)
@@ -165,7 +165,7 @@ n <- ene %>%
   dplyr::group_by(ocupado) %>%
   dplyr::summarise(n = sum(contar))
 
-test <-  create_prop(var = "mujer", denominador = "hombre", domains = "ocupado", design = dc_ene)
+test <-  create_prop(var = "mujer", denominator = "hombre", domains = "ocupado", design = dc_ene)
 
 test_that("gl proporción desagregado ene", {
   expect_equal(n %>% dplyr::pull(n), test %>% dplyr::pull(n))
@@ -173,7 +173,7 @@ test_that("gl proporción desagregado ene", {
 
 # Testear grados de libertad con modalidad ratio invertido
 
-test <-  create_prop(var = "mujer", denominador = "hombre", domains = "ocupado+metro", design = dc_ene)
+test <-  create_prop(var = "mujer", denominator = "hombre", domains = "ocupado+metro", design = dc_ene)
 
 gl <- ene %>%
   dplyr::group_by(ocupado, metro, conglomerado) %>%
@@ -194,7 +194,7 @@ test_that("gl proporción desagregado ene", {
 
 
 # Testear grados de libertad con modalidad ratio normal
-test <-  create_prop(var = "gasto_ocup", denominador = "gastot_hd", domains = "zona", design = dc)
+test <-  create_prop(var = "gasto_ocup", denominator = "gastot_hd", domains = "zona", design = dc)
 
 gl <- epf_personas %>%
   dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)) %>%

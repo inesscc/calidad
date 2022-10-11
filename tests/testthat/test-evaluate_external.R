@@ -23,7 +23,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 ############
 
 # National level with denominator
-expect_error(create_prop(var = "mujer",  denominador = "hombre", design = dc_ene, eclac_input = T),
+expect_error(create_prop(var = "mujer",  denominator = "hombre", design = dc_ene, eclac_input = T),
                "eclac approach is not allowed with denominator")
 
 # INE Chile Standard for mean
@@ -39,6 +39,13 @@ test <- evaluate(test2)
 # INE Chile Standard for size
 test3 <-  create_size("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T, unweighted = T)
 test <- evaluate(test3, publish = T)
+
+
+estimacion <-  survey::svyby(formula = ~desocupado,
+                             by = ~region,
+                             design = dc_ene,
+                             FUN = svytotal,
+                             deff = T)
 
 
 # INE Chile Standard for total
