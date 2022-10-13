@@ -6,7 +6,7 @@
 \usage{
 create_ratio_internal(
   var,
-  denominador,
+  denominator,
   domains = NULL,
   subpop = NULL,
   disenio,
@@ -22,7 +22,7 @@ create_ratio_internal(
 \arguments{
 \item{var}{numeric variable within the \code{dataframe}, is the numerator of the ratio to be calculated.}
 
-\item{denominador}{numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated.}
+\item{denominator}{numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated.}
 
 \item{domains}{domains to be estimated separated by the + character.}
 

@@ -4,7 +4,7 @@
 \alias{get_cv}
 \title{Get the coefficient of variation}
 \usage{
-get_cv(table, design, domains)
+get_cv(table, design, domains, type_est = "all", env = parent.frame())
 }
 \arguments{
 \item{table}{\code{dataframe} with results}

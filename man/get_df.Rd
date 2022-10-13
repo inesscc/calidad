@@ -4,14 +4,14 @@
 \alias{get_df}
 \title{Get degrees of freedom}
 \usage{
-get_df(data, domains, df_type = "cepal")
+get_df(data, domains, df_type = "eclac")
 }
 \arguments{
 \item{data}{\code{dataframe}}
 
 \item{domains}{\code{string} with domains}
 
-\item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".}
+\item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or eclac, by default "ine".}
 }
 \value{
 \code{dataframe} with results including degrees of freedom

@@ -17,7 +17,7 @@ create_size(
   deff = FALSE,
   rel_error = FALSE,
   unweighted = FALSE,
-  df_type = "ine",
+  df_type = c("ine", "eclac"),
   eclac_input = FALSE
 )
 }

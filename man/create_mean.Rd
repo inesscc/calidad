@@ -51,7 +51,7 @@ create_mean(
 \code{dataframe} that contains the inputs and all domains to be evaluated
 }
 \description{
-\code{create_mean} generates a \code{dataframe} with the following elements: mean,
+\code{create_mean} generates ano \code{dataframe} with the following elements: mean,
 degrees of freedom, sample size and coefficient of variation. The function allows
 grouping in several domains.
 }

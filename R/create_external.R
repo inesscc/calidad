@@ -349,11 +349,11 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   # Add estimation variable for the case ine-size
   if (df_type == "ine") {
     agrupacion <- c(agrupacion, var)
-    domains_form <- convert_to_formula(paste0(domains, "+", var))
+    #domains_form <- convert_to_formula(paste0(domains, "+", var))
   }
 
   # Get main results using survey
-  tabla <- get_survey_table(var_form, domains_form, design, fun = survey::svytotal)
+  tabla <- get_survey_table(var_form, domains_form, design, fun = survey::svytotal, type_est = "size")
 
   # get sample size for each group
   n <- get_sample_size(design$variables, agrupacion, df_type)
@@ -362,14 +362,15 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   gl <- get_df(design,agrupacion,df_type)
 
   #Get coefficient of variation
-  cv <- get_cv(tabla, design, agrupacion)
+  cv <- get_cv(tabla, design, agrupacion, type_est = "size")
 
-  if(df_type == "ine" & is.null(domains)){
-    cv <- cv[2]
-  }
+  # if(df_type == "ine" & is.null(domains)){
+  #   cv <- cv[2]
+  # }
 
   # Combine all the information in one single table
   final <- create_output(tabla, agrupacion,  gl = gl, n, cv)
+
 
   # Order columns and standardize variable names
   final <- standardize_columns(final, var, denom = NULL)

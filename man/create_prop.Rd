@@ -6,7 +6,7 @@
 \usage{
 create_prop(
   var,
-  denominador = NULL,
+  denominator = NULL,
   domains = NULL,
   subpop = NULL,
   design,
@@ -24,7 +24,7 @@ create_prop(
 \arguments{
 \item{var}{numeric variable within the \code{dataframe}, is the numerator of the ratio to be calculated.}
 
-\item{denominador}{numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL}
+\item{denominator}{numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL}
 
 \item{domains}{domains to be estimated separated by the + character.}
 
@@ -67,12 +67,12 @@ dc <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
 old_options <- options()
 options(survey.lonely.psu = "certainty")
 
-create_prop(var = "gasto_zona1", denominador = "gastot_hd", design =  dc)
+create_prop(var = "gasto_zona1", denominator = "gastot_hd", design =  dc)
 
 enusc <- filter(enusc, Kish == 1)
 
 dc <- svydesign(ids = ~Conglomerado, strata = ~VarStrat, data = enusc, weights = ~Fact_Pers)
 options(survey.lonely.psu = "certainty")
-create_prop(var = "VP_DC", denominador = "hom_insg_taxi", design = dc)
+create_prop(var = "VP_DC", denominator = "hom_insg_taxi", design = dc)
 options(old_options)
 }

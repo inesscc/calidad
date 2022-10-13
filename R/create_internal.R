@@ -300,9 +300,14 @@ create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
 #' @import haven
 #' @return \code{dataframe} with results including including CV
 
-get_cv <- function(table, design, domains) {
+get_cv <- function(table, design, domains, type_est = "all", env = parent.frame()) {
 
-  if (!is.null(domains)) {
+  # weird case: national estimations for ine df-approach. In this case there is one element inside domains, but that is
+  # because the strategy used before this function
+  if (length(domains) == 1 && type_est == "size" && get("df_type", env) == "ine") {
+    cv <- cv(table, design = design)
+
+  } else if (!is.null(domains)) { # it considers domains
     cv <- cv(table, design = design)
 
     cv <- table %>%
@@ -310,9 +315,11 @@ get_cv <- function(table, design, domains) {
       dplyr::bind_cols(cv = cv) %>%
       dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
 
-  } else {
+  } else { # national level for all kind of estimations
     cv <- cv(table, design = design)
   }
+
+
 
   return(cv)
 }
@@ -542,10 +549,11 @@ unificar_variables_factExp = function(disenio){
 #' @param env \code{environment} parent frame
 #' @param fun function required regarding the estimation
 #' @param denom denominator. This parameter works for the ratio estimation
+#' @param env parent environment
 #' @return \code{dataframe} containing  main results from survey
 #' @import survey
 
-get_survey_table <-  function(var, domains, complex_design, estimation = "mean", env = parent.frame(), fun, denom = NULL) {
+get_survey_table <-  function(var, domains, complex_design, estimation = "mean", env = parent.frame(), fun, denom = NULL, type_est = "all") {
 
 
   # El primer if es para domains
@@ -553,13 +561,25 @@ get_survey_table <-  function(var, domains, complex_design, estimation = "mean",
 
     if (estimation == "mean") { # para estimaciones de media, proporción y tamaños
 
-      estimacion <-  survey::svyby(formula = var,
+      estimacion <-  survey::svyby(formula =  var,
                                    by = domains,
                                    design = complex_design,
                                    FUN = fun,
                                    deff = get("deff", env))
 
-      # sometimes survey outputs two coluns with the same name. In those cases we keep the first occurrence and the second one is modified
+
+      # This is a patch because a problem with df_type = INE. We needed to add the var to domains in order to get the DF and sample size according to
+      # INE approach. This decision  produces an error in the deff calculation. So we implement here a specific procedure for the size function. The idea is
+      # to avoid any modification in the rest of the code.
+      if (type_est == "size" &&  get("df_type", env) == "ine" ) {
+
+        names(estimacion)[names(estimacion) == formula_to_string(var) ] <- "est"
+        estimacion[formula_to_string(var)] <- 1
+
+      }
+
+
+      # sometimes survey outputs two columns with the same name. In those cases we keep the first occurrence and the second one is modified
       estimacion <- fix_repeated_columns(estimacion, v = var)
 
       # drop rows with zero values

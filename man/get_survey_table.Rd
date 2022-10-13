@@ -11,7 +11,8 @@ get_survey_table(
   estimation = "mean",
   env = parent.frame(),
   fun,
-  denom = NULL
+  denom = NULL,
+  type_est = "all"
 )
 }
 \arguments{

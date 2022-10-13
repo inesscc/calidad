@@ -40,12 +40,10 @@ test <- evaluate(test2)
 test3 <-  create_size("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T, unweighted = T)
 test <- evaluate(test3, publish = T)
 
+test_that("Ningún valor de deff es infinito", {
+  expect_equal(sum(test3$deff == Inf) , 0)
+})
 
-estimacion <-  survey::svyby(formula = ~desocupado,
-                             by = ~region,
-                             design = dc_ene,
-                             FUN = svytotal,
-                             deff = T)
 
 
 # INE Chile Standard for total
