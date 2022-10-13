@@ -107,10 +107,11 @@ evaluate_cepal <- function(table, params, class = "calidad.mean") {
     evaluation <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
                     eval_ess = dplyr::if_else(.data$ess >= params$ess, "sufficient ess", "insufficient ess"),
+                    eval_unweighted = dplyr::if_else(.data$unweighted >= params$unweighted , "sufficient cases", "insufficient cases"),
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     eval_cv = dplyr::if_else(.data$cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(label = dplyr::case_when(
-        eval_n == "insufficient sample size" | eval_ess == "insufficient ess"  ~ "supress",
+        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" | eval_unweighted == "insufficient cases" ~ "supress",
         eval_df == "insufficient df"  ~ "review",
         eval_cv ==  "adequate cv"  ~ "publish"
 

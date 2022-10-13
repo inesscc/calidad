@@ -37,7 +37,7 @@ evaluation <- evaluate_ine(test, params = default_params_ine, class(test))
 # EVALUATE CEPAL
 #################
 default_params_cepal = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50, log_cv = 0.175)
-test <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc, deff = T, ess = T)
+test <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc, deff = T, ess = T, unweighted = T)
 evaluation <- evaluate_cepal(test, params = default_params_cepal, class = class(test))
 
 

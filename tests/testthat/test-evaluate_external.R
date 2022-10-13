@@ -74,6 +74,17 @@ expect_error(evaluate(test2_sin_log, scheme = "eclac"),
              "log_cv must be used!")
 
 
+eclac <-  create_size("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T,
+                      unweighted = T, df_type = "eclac")
+
+test <- evaluate(eclac, scheme = "eclac", unweighted = 150 )
+
+test_that("se caigan estimaciones por conteo no ponerado en size", {
+  expect_equal(sum(test$label == "supress") , 9)
+
+})
+
+
 
 # CEPAL standard with custom parameters
 test <- evaluate(test1, scheme = "eclac", unweighted = 500)
