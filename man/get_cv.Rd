@@ -13,6 +13,8 @@ get_cv(table, design, domains, type_est = "all", env = parent.frame())
 
 \item{domains}{\code{vector} with domains}
 
+\item{type_est}{type of estimation: all or size.}
+
 \item{env}{parent environment}
 }
 \value{
