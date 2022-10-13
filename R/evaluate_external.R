@@ -11,7 +11,7 @@
 #' @param table \code{dataframe} created by \code{crear_insumos_media}
 #' @param publish \code{boolean} indicating if the evaluation of the complete table
 #' must be added. If it is TRUE, the function adds a new column to the \code{dataframe}
-#' @param scheme string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "cepal" to use the CEPAL protocol
+#' @param scheme string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "eclac" to use the eclac protocol
 #' @param ... the list of cepal parameters. The complete list of parameters is
 #'
 #' 1. General Parameters
@@ -43,7 +43,7 @@
 #' @export
 
 
-evaluate <- function(table, publish = FALSE, scheme = c("chile", "cepal") , ...) {
+evaluate <- function(table, publish = FALSE, scheme = c("chile", "eclac") , ...) {
 
   # check if the scheme has the correct input
   scheme <- match.arg(scheme)
@@ -68,7 +68,7 @@ evaluate <- function(table, publish = FALSE, scheme = c("chile", "cepal") , ...)
     }
 
     #  CEPAL Standard
-  } else if (scheme == "cepal") {
+  } else if (scheme == "eclac") {
 
     # Check that all the inputs are available
     check_cepal_inputs(table, "ess")
