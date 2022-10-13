@@ -53,23 +53,23 @@ test_ine <- evaluate(test4, publish = T)
 
 
 # CEPAL standard with default parameters
-test <- evaluate(test1, scheme = "cepal")
-test <- evaluate(test2, scheme = "cepal")
-test <- evaluate(test3, scheme = "cepal")
-test <- evaluate(test4, scheme = "cepal")
+test <- evaluate(test1, scheme = "eclac")
+test <- evaluate(test2, scheme = "eclac")
+test <- evaluate(test3, scheme = "eclac")
+test <- evaluate(test4, scheme = "eclac")
 
 #
 
 # Proportion without log_cv
-expect_error(evaluate(test2_sin_log, scheme = "cepal"),
+expect_error(evaluate(test2_sin_log, scheme = "eclac"),
              "log_cv must be used!")
 
 
 
 # CEPAL standard with custom parameters
-test <- evaluate(test1, scheme = "cepal", unweighted = 500)
-test <- evaluate(test1, scheme = "cepal", ess  = 200 )
-test <- evaluate(test2, scheme = "cepal", ess  = 200, df = 127 )
+test <- evaluate(test1, scheme = "eclac", unweighted = 500)
+test <- evaluate(test1, scheme = "eclac", ess  = 200 )
+test <- evaluate(test2, scheme = "eclac", ess  = 200, df = 127 )
 
 
 # html output
