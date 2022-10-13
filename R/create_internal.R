@@ -297,6 +297,7 @@ create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
 #' @param table \code{dataframe} with results
 #' @param design design
 #' @param domains \code{vector} with domains
+#' @param env parent environment
 #' @import haven
 #' @return \code{dataframe} with results including including CV
 

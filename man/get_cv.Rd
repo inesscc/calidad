@@ -12,6 +12,8 @@ get_cv(table, design, domains, type_est = "all", env = parent.frame())
 \item{design}{design}
 
 \item{domains}{\code{vector} with domains}
+
+\item{env}{parent environment}
 }
 \value{
 \code{dataframe} with results including including CV
