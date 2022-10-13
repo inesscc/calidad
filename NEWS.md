@@ -1,9 +1,11 @@
 
-# calidad 0.2.0
+# calidad 0.3.0
 
 
-- Problem solved in evaluate() for the INE approach 
+- All parameters translated to english 
 
-- create_mean(), create_prop(), create_total() and create_size() are working correctly with uppercase letters in domains variables  
+- Unweighted indicator is now availible for all eclac evaluations (size, mean, total, prop)
 
+- Problem solved in create_size() related to deff calculation 
 
+ 
