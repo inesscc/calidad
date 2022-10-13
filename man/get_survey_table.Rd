@@ -24,7 +24,7 @@ get_survey_table(
 
 \item{estimation}{\code{string} indicating if the mean must be calculated}
 
-\item{env}{\code{environment} parent frame}
+\item{env}{parent environment}
 
 \item{fun}{function required regarding the estimation}
 
