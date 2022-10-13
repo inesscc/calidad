@@ -364,9 +364,6 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   #Get coefficient of variation
   cv <- get_cv(tabla, design, agrupacion, type_est = "size")
 
-  # if(df_type == "ine" & is.null(domains)){
-  #   cv <- cv[2]
-  # }
 
   # Combine all the information in one single table
   final <- create_output(tabla, agrupacion,  gl = gl, n, cv)
@@ -389,10 +386,12 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   # add the ess if the user uses this parameter
   final <- get_ess(ess)
 
+
   # add non weighted count if it is required
   if (unweighted) {
-    final <- final %>%
-      dplyr::mutate(unweighted = n)
+    final <- get_unweighted(table =  final, domains =  domains, var = var,
+                            disenio = design)
+
   }
 
   final <- add_class(final, "calidad.size")

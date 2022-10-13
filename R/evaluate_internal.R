@@ -129,7 +129,7 @@ evaluate_cepal <- function(table, params, class = "calidad.mean") {
       dplyr::mutate(label = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
           eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "supress",
-        eval_df == "insufficient df"  ~ "review",
+        eval_df == "insufficient df" | eval_cv == "non adequate cv" ~ "review",
         eval_cv ==  "adequate cv"  ~ "publish"
       ))
 

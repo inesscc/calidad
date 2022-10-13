@@ -33,6 +33,15 @@ test <- evaluate(test1, publish = T)
 
 # INE Chile Standard for proportion
 test2 <-  create_prop("desocupado", domains =  "region+sexo", design = dc_ene, deff = T, ess = T, log_cv = T, unweighted = T)
+
+x <- survey::svyby(~desocupado, by = ~region+sexo, design = dc_ene, FUN = survey::svymean)
+test_cv <- survey::cv(x)
+
+test_that("cv calculado correctamente", {
+  expect_equal(sum(test2$cv == test_cv), length(test_cv) )
+})
+
+
 test2_sin_log <-  create_prop("desocupado", domains =  "region+sexo", design = dc_ene, deff = T, ess = T, log_cv = F, unweighted = T)
 test <- evaluate(test2)
 
@@ -70,6 +79,12 @@ expect_error(evaluate(test2_sin_log, scheme = "eclac"),
 test <- evaluate(test1, scheme = "eclac", unweighted = 500)
 test <- evaluate(test1, scheme = "eclac", ess  = 200 )
 test <- evaluate(test2, scheme = "eclac", ess  = 200, df = 127 )
+
+test_that("NA in label variable", {
+  expect_equal( sum(is.na(test$label) == FALSE), dim(test)[1] )
+})
+
+
 
 
 # html output

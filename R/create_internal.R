@@ -109,7 +109,10 @@ convert_ratio_to_df <- function(table, domains) {
 
 #--------------------------------------------------------------
 
+
 get_unweighted <- function(table, disenio, var, domains) {
+
+  domains <- create_groupby_vars(domains)
 
   if (!is.null(domains)) {
     unweighted_cases <- get_sample_size(disenio$variables, c(domains, var) ) %>%
@@ -136,6 +139,23 @@ get_unweighted <- function(table, disenio, var, domains) {
 
 }
 
+
+
+#--------------------------------------------------------------
+
+get_unweighted2 <- function(table, domains, var, variables) {
+  agrup <- create_groupby_vars(domains)
+  agrup2 <- c(agrup, var)
+
+  unw <- get_sample_size(variables, agrup2, df_type = "ine") %>%
+    dplyr::rename(unweighted = n) %>%
+    dplyr::select(-var)
+
+  final <- table %>%
+    dplyr::left_join(unw, by = agrup)
+
+  return(final)
+}
 #-----------------------------------------------------------------------
 
 get_log_cv <- function(data) {
