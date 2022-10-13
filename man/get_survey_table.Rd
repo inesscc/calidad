@@ -29,6 +29,8 @@ get_survey_table(
 \item{fun}{function required regarding the estimation}
 
 \item{denom}{denominator. This parameter works for the ratio estimation}
+
+\item{type_est}{type of estimation: all or size}
 }
 \value{
 \code{dataframe} containing  main results from survey

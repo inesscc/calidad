@@ -552,6 +552,7 @@ unificar_variables_factExp = function(disenio){
 #' @param fun function required regarding the estimation
 #' @param denom denominator. This parameter works for the ratio estimation
 #' @param env parent environment
+#' @param type_est type of estimation: all or size
 #' @return \code{dataframe} containing  main results from survey
 #' @import survey
 
