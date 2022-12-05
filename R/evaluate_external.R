@@ -2,9 +2,9 @@
 
 
 #---------------------------------------------------------------------
-#' Evaluate the quality of mean estimations
+#' asses the quality of mean estimations
 #'
-#' \code{evaluate} evauates the quality of mean estimation using the
+#' \code{asses} asses the quality of mean estimation using the
 #' methodology created by INE Chile, which considers sample size, degrees of freedom and
 #' coeficient of variation.
 #'
@@ -39,11 +39,11 @@
 #'
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' evaluate(create_mean("gastot_hd", domains = "zona+sexo", design = dc))
+#' asses(create_mean("gastot_hd", domains = "zona+sexo", design = dc))
 #' @export
 
 
-evaluate <- function(table, publish = FALSE, scheme = c("chile", "eclac") , ...) {
+asses <- function(table, publish = FALSE, scheme = c("chile", "eclac") , ...) {
 
   # check if the scheme has the correct input
   scheme <- match.arg(scheme)
@@ -59,7 +59,7 @@ evaluate <- function(table, publish = FALSE, scheme = c("chile", "eclac") , ...)
   if (scheme == "chile") {
 
     params <- combine_params(default_params_ine, user_params)
-    evaluation <- evaluate_ine(table, params, class(table))
+    evaluation <- asses_ine(table, params, class(table))
 
 
     # General criteria for the publication of the INE table
@@ -83,7 +83,7 @@ evaluate <- function(table, publish = FALSE, scheme = c("chile", "eclac") , ...)
     params <- combine_params(default_params_cepal, user_params)
 
     # Apply standard
-    evaluation <- evaluate_cepal(table, params, class(table))
+    evaluation <- asses_cepal(table, params, class(table))
 
   }
 

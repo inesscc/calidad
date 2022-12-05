@@ -1,5 +1,5 @@
 
-context("test-evaluate_external")
+context("test-asses_external")
 
 
 # Diseños muestrales
@@ -19,7 +19,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 
 
 ############
-# EVALUATE #
+# asses #
 ############
 
 # National level with denominator
@@ -28,7 +28,7 @@ expect_error(create_prop(var = "mujer",  denominator = "hombre", design = dc_ene
 
 # INE Chile Standard for mean
 test1 <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc, deff = T, ess = T, unweighted = T)
-test <- evaluate(test1, publish = T)
+test <- asses(test1, publish = T)
 
 
 # INE Chile Standard for proportion
@@ -43,11 +43,11 @@ test_that("cv calculado correctamente", {
 
 
 test2_sin_log <-  create_prop("desocupado", domains =  "region+sexo", design = dc_ene, deff = T, ess = T, log_cv = F, unweighted = T)
-test <- evaluate(test2)
+test <- asses(test2)
 
 # INE Chile Standard for size
 test3 <-  create_size("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T, unweighted = T)
-test <- evaluate(test3, publish = T)
+test <- asses(test3, publish = T)
 
 test_that("Ningún valor de deff es infinito", {
   expect_equal(sum(test3$deff == Inf) , 0)
@@ -57,27 +57,27 @@ test_that("Ningún valor de deff es infinito", {
 
 # INE Chile Standard for total
 test4 <-  create_total("gastot_hd", domains =  "zona", design = dc, deff = T, ess = T, unweighted = T)
-test_ine <- evaluate(test4, publish = T)
+test_ine <- asses(test4, publish = T)
 
 
 
 # CEPAL standard with default parameters
-test <- evaluate(test1, scheme = "eclac")
-test <- evaluate(test2, scheme = "eclac")
-test <- evaluate(test3, scheme = "eclac")
-test <- evaluate(test4, scheme = "eclac")
+test <- asses(test1, scheme = "eclac")
+test <- asses(test2, scheme = "eclac")
+test <- asses(test3, scheme = "eclac")
+test <- asses(test4, scheme = "eclac")
 
 #
 
 # Proportion without log_cv
-expect_error(evaluate(test2_sin_log, scheme = "eclac"),
+expect_error(asses(test2_sin_log, scheme = "eclac"),
              "log_cv must be used!")
 
 
 eclac <-  create_size("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T,
                       unweighted = T, df_type = "eclac")
 
-test <- evaluate(eclac, scheme = "eclac", unweighted = 150 )
+test <- asses(eclac, scheme = "eclac", unweighted = 150 )
 
 test_that("se caigan estimaciones por conteo no ponerado en size", {
   expect_equal(sum(test$label == "supress") , 9)
@@ -87,9 +87,9 @@ test_that("se caigan estimaciones por conteo no ponerado en size", {
 
 
 # CEPAL standard with custom parameters
-test <- evaluate(test1, scheme = "eclac", unweighted = 500)
-test <- evaluate(test1, scheme = "eclac", ess  = 200 )
-test <- evaluate(test2, scheme = "eclac", ess  = 200, df = 127 )
+test <- asses(test1, scheme = "eclac", unweighted = 500)
+test <- asses(test1, scheme = "eclac", ess  = 200 )
+test <- asses(test2, scheme = "eclac", ess  = 200, df = 127 )
 
 test_that("NA in label variable", {
   expect_equal( sum(is.na(test$label) == FALSE), dim(test)[1] )

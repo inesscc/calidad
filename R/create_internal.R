@@ -116,13 +116,13 @@ get_unweighted <- function(table, disenio, var, domains) {
 
   if (!is.null(domains)) {
     unweighted_cases <- get_sample_size(disenio$variables, c(domains, var) ) %>%
-      dplyr::mutate_at(dplyr::vars(domains), as.character)  %>%
+      dplyr::mutate_at(dplyr::vars(all_of(domains)), as.character)  %>%
       dplyr::filter(!!rlang::parse_expr(var) == 1 ) %>%
-      dplyr::rename(unweighted = .data$n)
+      dplyr::rename(unweighted = "n")
 
 
     unweighted_cases <- table %>%
-      dplyr::left_join(unweighted_cases %>% dplyr::select(c(domains, "unweighted" )),
+      dplyr::left_join(unweighted_cases %>% dplyr::select(c(all_of(domains), "unweighted" )),
                        by = domains)
 
   } else {
@@ -265,12 +265,12 @@ create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
   if (nrow(data.frame(table)) > 1 ) {
 
     final <- table %>%
-      dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character) %>%
-      dplyr::left_join(gl %>% dplyr::select(c(domains, "df")),
+      dplyr::mutate_at(.vars = dplyr::vars(all_of(domains) ), .funs = as.character) %>%
+      dplyr::left_join(gl %>% dplyr::select(c(all_of(domains), "df")),
                        by = domains) %>%
-      dplyr::left_join(n %>% dplyr::select(c(domains, "n")),
+      dplyr::left_join(n %>% dplyr::select(c(all_of(domains), "n")),
                        by = domains) %>%
-      dplyr::left_join(cv %>% dplyr::select(c(domains, "cv")),
+      dplyr::left_join(cv %>% dplyr::select(c(all_of(domains), "cv")),
                        by = domains)
   } else {
 
@@ -318,9 +318,9 @@ get_cv <- function(table, design, domains, type_est = "all", env = parent.frame(
     cv <- cv(table, design = design)
 
     cv <- table %>%
-      dplyr::select(domains) %>%
+      dplyr::select(all_of(domains)) %>%
       dplyr::bind_cols(cv = cv) %>%
-      dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
+      dplyr::mutate_at(.vars = dplyr::vars(all_of(domains) ), .funs = as.character)
 
   } else { # national level for all kind of estimations
     cv <- cv(table, design = design)
@@ -355,7 +355,7 @@ get_df <- function(data, domains, df_type = "eclac"){
                        vartstrat = NA,
                        df = NA
       ) %>%
-      dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)
+      dplyr::mutate_at(.vars = dplyr::vars(all_of(domains) ), .funs = as.character)
 
     return(gl)
   }
@@ -371,7 +371,7 @@ get_df <- function(data, domains, df_type = "eclac"){
         dplyr::left_join(calcular_estrato(design$variables, domains), by = domains)  %>%
         dplyr::mutate(df = .data$upm - .data$varstrat)   %>%
         dplyr::filter(!!rlang::parse_expr(estimation_var) == 1)   %>% # the zero cases are deleted
-        dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character) %>%
+        dplyr::mutate_at(.vars = dplyr::vars(all_of(domains) ), .funs = as.character) %>%
         dplyr::ungroup()   %>%
         dplyr::select(-c("upm","varstrat"))
 
@@ -379,7 +379,7 @@ get_df <- function(data, domains, df_type = "eclac"){
       gl <- calcular_upm(design$variables, domains) %>%
         dplyr::left_join(calcular_estrato(design$variables, domains), by = domains) %>%
         dplyr::mutate(df = .data$upm - .data$varstrat)  %>%
-        dplyr::mutate_at(.vars = dplyr::vars(domains), .funs = as.character)  %>%
+        dplyr::mutate_at(.vars = dplyr::vars(all_of(domains) ), .funs = as.character)  %>%
         dplyr::ungroup() %>%
         dplyr::select(-c("upm","varstrat"))
     }
