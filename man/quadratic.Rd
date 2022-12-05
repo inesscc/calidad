@@ -14,7 +14,7 @@ numeric vector
 }
 \description{
 \code{quadratic} returns the output of a particular function created by INE Chile, which
-is evaluated at the value of the estimated proportion from a sample. If the output of the
+is assesed at the value of the estimated proportion from a sample. If the output of the
 function is  higher than the standard error, it is interpreted as a signal that the
 estimation is not reliable.
 }
