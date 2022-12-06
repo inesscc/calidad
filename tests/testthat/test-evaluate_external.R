@@ -42,6 +42,7 @@ test_that("cv calculado correctamente", {
 })
 
 
+
 test2_sin_log <-  create_prop("desocupado", domains =  "region+sexo", design = dc_ene, deff = T, ess = T, log_cv = F, unweighted = T)
 test <- assess(test2)
 
