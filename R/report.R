@@ -16,7 +16,7 @@
 #'   group_by(folio) %>%
 #'   slice(1)
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = hogar, weights = ~fe)
-#' table <- asses(create_prop("ocupado", domains = "zona+sexo", design = dc))
+#' table <- assess(create_prop("ocupado", domains = "zona+sexo", design = dc))
 #' @export
 
 

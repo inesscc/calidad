@@ -121,7 +121,7 @@ In some cases it may be of interest to assess the quality of a sum. For example,
 insumos_suma <-  create_total(var = "gastot_hd", domains = "zona", design =  dc_epf)
 ```
 
-If we want to asses the estimate of a mean, we have the function `create_mean`. In this case, we will calculate the average expenditure of households, according to geographical area. 
+If we want to assess the estimate of a mean, we have the function `create_mean`. In this case, we will calculate the average expenditure of households, according to geographical area. 
 
 ```{r}
 insumos_media <-  create_mean(var = "gastot_hd", domains = "zona", design =  dc_epf)
@@ -142,24 +142,24 @@ insumos_media_nacional <-  create_mean("gastot_hd", design = dc_epf)
 
 ## Evaluation 
 
-Once the inputs have been generated, we can do the evaluation. To do this, we use the `asses` function.
+Once the inputs have been generated, we can do the evaluation. To do this, we use the `assess` function.
 
 ```{r, eval=T, warning=FALSE}
-evaluacion_prop <- asses(insumos_prop)
-evaluacion_tot <- asses(insumos_total)
-evaluacion_suma <- asses(insumos_suma)
-evaluacion_media <- asses(insumos_media)
+evaluacion_prop <- assess(insumos_prop)
+evaluacion_tot <- assess(insumos_total)
+evaluacion_suma <- assess(insumos_suma)
+evaluacion_media <- assess(insumos_media)
 ```
 
 The output is a `dataframe` that, in addition to containing the information already generated, includes a column that indicates whether the estimate is unreliable, less reliable or reliable.
 
-The function `asses` has a parameter that allows us to know if the table should be published or not. Following the criteria of the standard, if more than 50% of the estimates of a table are not reliable, it should not be published.
+The function `assess` has a parameter that allows us to know if the table should be published or not. Following the criteria of the standard, if more than 50% of the estimates of a table are not reliable, it should not be published.
 
 ```{r}
 # Desempleo desagregado por region
 desagregar <- create_size(var = "desocupado", domains = "region", subpop = "fdt", design =  dc_ene)
 # Evaluar tabulado
-evaluacion_tot_desagreg <- asses(desagregar, publicar = T)
+evaluacion_tot_desagreg <- assess(desagregar, publicar = T)
 ```
 
 ```{r}

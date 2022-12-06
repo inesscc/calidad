@@ -1,4 +1,4 @@
-context("test-asses_internal")
+context("test-assess_internal")
 
 # Diseños muestrales
 options(survey.lonely.psu = "certainty")
@@ -18,32 +18,32 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 
 
 ##############
-# asses INE
+# assess INE
 ##############
 
 
 # Defaults params for INE Chile for mean
 default_params_ine = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
 test <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc)
-evaluation <- asses_ine(test, params = default_params_ine, class(test))
+evaluation <- assess_ine(test, params = default_params_ine, class(test))
 
 
 # Defaults params for INE Chile for proportion
 test <-  create_prop("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T)
-evaluation <- asses_ine(test, params = default_params_ine, class(test))
+evaluation <- assess_ine(test, params = default_params_ine, class(test))
 
 
 #################
-# asses CEPAL
+# assess CEPAL
 #################
 default_params_cepal = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50, log_cv = 0.175)
 test <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc, deff = T, ess = T, unweighted = T)
-evaluation <- asses_cepal(test, params = default_params_cepal, class = class(test))
+evaluation <- assess_cepal(test, params = default_params_cepal, class = class(test))
 
 
 # Defaults params for cepal: proportion case
 test <-  create_prop("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T, unweighted = T, log_cv = T)
-evaluation <- asses_cepal(test, params = default_params_cepal, class(test))
+evaluation <- assess_cepal(test, params = default_params_cepal, class(test))
 
 
 

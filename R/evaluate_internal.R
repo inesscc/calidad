@@ -13,7 +13,7 @@ check_cepal_inputs <- function(table, var) {
 #' Calcula el valor de una función cuadrática
 #'
 #' \code{quadratic} returns the output of a particular function created by INE Chile, which
-#' is assesed at the value of the estimated proportion from a sample. If the output of the
+#' is assessed at the value of the estimated proportion from a sample. If the output of the
 #' function is  higher than the standard error, it is interpreted as a signal that the
 #' estimation is not reliable.
 #'
@@ -36,7 +36,7 @@ quadratic <- function(p) {
 
 
 
-asses_ine <- function(table, params, class = "calidad.mean") {
+assess_ine <- function(table, params, class = "calidad.mean") {
 
   # General case
   if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 ) {
@@ -99,7 +99,7 @@ asses_ine <- function(table, params, class = "calidad.mean") {
 
 
 #-------------------------------------------------
-asses_cepal <- function(table, params, class = "calidad.mean") {
+assess_cepal <- function(table, params, class = "calidad.mean") {
 
   # General case
   if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 ) {
