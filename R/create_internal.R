@@ -98,7 +98,16 @@ add_class <-  function(object, new_class) {
 #------------------------------------------
 convert_ratio_to_df <- function(table, domains) {
   if (is.null(domains)) {
-    table <- data.frame(table[1], table[2])
+
+    stat = table[[1]][1]
+
+    names(stat) = "stat"
+
+    se = survey::SE(table)[[1]]
+
+    names(se) = "se"
+
+    table <- data.frame(stat, se)
     rownames(table) <- NULL
   } else {
     table <- table
@@ -261,8 +270,12 @@ standardize_columns <- function(data, var, denom) {
 
 create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
 
+  domains_original <- get("domains",envir = env)
+
+ # return(domains_original)
+
   # tabla con desagregación
-  if (nrow(data.frame(table)) > 1 ) {
+  if (nrow(data.frame(table)) > 1 | !is.null(domains_original)) {
 
     final <- table %>%
       dplyr::mutate_at(.vars = dplyr::vars(all_of(domains) ), .funs = as.character) %>%

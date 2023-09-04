@@ -366,8 +366,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 
 
   # Combine all the information in one single table
-  final <- create_output(tabla, agrupacion,  gl = gl, n, cv)
-
+  final <- create_output(tabla, agrupacion,  gl = gl, n, cv,)
 
   # Order columns and standardize variable names
   final <- standardize_columns(final, var, denom = NULL)

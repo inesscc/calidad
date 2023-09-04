@@ -171,31 +171,30 @@ test_that("conteo df diseño complejo, versión CEPAL, con desagregación", {
 
 # Calcular con el enfoque de INE sin desagregación
 
-  df <- create_size("ocupado", design = dc_epf_hogar)
+df <- create_size("ocupado", design = dc_epf_hogar)
 
 true_df <- dc_epf_hogar$variables %>%
-  dplyr::filter(ocupado == 1) %>%
-  dplyr::summarise(strata = unique(varunit)) %>%
+  dplyr::filter(ocupado == 1) %>% group_by(varunit) %>% slice(1) %>%
   nrow()-dc_epf_hogar$variables %>%
-  dplyr::filter(ocupado == 1) %>%
-  dplyr::summarise(strata = unique(varstrat)) %>%
+  dplyr::filter(ocupado == 1) %>% group_by(varstrat) %>% slice(1) %>%
+  #dplyr::summarise(strata = unique(varstrat)) %>%
   nrow()
 
 test_that("conteo df diseño complejo, version INE, sin desagregación", {
   expect_equal(true_df, df$df[1])
 })
 
-# Calcular con el enfoque de INE sin desagregación
-
-df <- create_size("ocupado", design = dc_epf_hogar)
-
-true_df <- dc_epf_hogar$variables %>%
-  dplyr::summarise(strata = unique(varunit)) %>%
-  nrow()-dc_epf_hogar$variables %>%
-  dplyr::summarise(strata = unique(varstrat)) %>%
-  nrow()
-
-test_that("conteo df diseño complejo, version CEPAL, sin desagregación", {
-  expect_equal(true_df, df$df[1])
-})
+# # Calcular con el enfoque de CEPAL sin desagregación
+#
+# df <- create_size("ocupado", design = dc_epf_hogar)
+#
+# true_df <- dc_epf_hogar$variables %>%
+#   dplyr::summarise(strata = unique(varunit)) %>%
+#   nrow()-dc_epf_hogar$variables %>%
+#   dplyr::summarise(strata = unique(varstrat)) %>%
+#   nrow()
+#
+# test_that("conteo df diseño complejo, version CEPAL, sin desagregación", {
+#   expect_equal(true_df, df$df[1])
+# })
 

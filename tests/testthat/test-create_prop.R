@@ -3,7 +3,6 @@ context("test-create_prop")
 
 options(survey.lonely.psu = "certainty")
 
-
 # Diseños muestrales
 
 ene <- ene %>%
@@ -35,16 +34,23 @@ ene <- ene %>%
          region2 = haven::labelled(region2)) %>%
   dplyr::mutate(desocup = region)
 
+### generamos una variable falsa para probar error específico
+ene$ext = 0
+ene$ext[1:round(nrow(calidad::ene)*0.01)] = 1
 
+ene = ene %>%
+  mutate(fdtx = case_when(ext == 1 ~ fdt, TRUE ~ 0))
 
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas %>%
                           dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)), weights = ~fe)
+
 dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene %>%
                               dplyr::mutate(desocupado2 = dplyr::if_else(desocupado == 1 & fdt == 1, 1, 0),
                                             fdt_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, fdt ) ) %>%
                               dplyr::mutate(SEXO_TEST = sexo)
                               ,
                               weights = ~fact_cal)
+
 
 
 #####################
@@ -238,5 +244,42 @@ test2 <-  create_prop("desocupado", domains =  "region+sexo", design = dc_ene, l
 
 create_prop(var = "desocupado", domains = "sexo+region", design = dc_ene)
 
+######################################################
+# comparamos valores entre create_prop y create_mean #
+######################################################
+
+test_prop <- create_prop("desocupado", design = dc_ene)
+test_media <- suppressWarnings({create_mean("desocupado", design = dc_ene)})
+
+
+test_that("estadisticos similares entre prop y mean", {
+  expect_equal(test_prop %>% select(stat) %>% pull, test_media %>% select(stat) %>% pull)
+  expect_equal(test_prop %>% select(se) %>% pull, test_media %>% select(se) %>% pull)
+  expect_equal(test_prop %>% select(df) %>% pull, test_media %>% select(df) %>% pull)
+  expect_equal(test_prop %>% select(n) %>% pull, test_media %>% select(n) %>% pull)
+  expect_equal(test_prop %>% select(cv) %>% pull, test_media %>% select(cv) %>% pull)
+})
+
+#######################################################
+##### testing outputs names                       #####
+#######################################################
+
+nombre_error <- create_prop(var = "desocup",
+                            denominator = "fdt",
+                            domains = "ext",
+                            subpop = "fdtx",
+                            design = dc_ene) %>% names()
+
+nombre_error
+
+nombre_bien <- create_prop(var = "desocup",
+                           denominator = "fdt",
+                           #domains = "ext",
+                           subpop = "ext",
+                           design = dc_ene) %>% names
+
+test_that("comparando nombres", {
+  expect_equal(all(nombre_bien %in% nombre_error), T)
+})
 
 
