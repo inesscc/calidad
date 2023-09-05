@@ -10,7 +10,6 @@ tolower_strings <-  function(x) {
 
 
 # get design variables
-
 get_design_vars <- function(design) {
   if (as.character(design$call$ids)[[2]] != "1") {
     psu <- unificar_variables_upm(design)
