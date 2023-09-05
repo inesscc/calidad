@@ -39,7 +39,7 @@ ene$ext = 0
 ene$ext[1:round(nrow(calidad::ene)*0.01)] = 1
 
 ene = ene %>%
-  mutate(fdtx = case_when(ext == 1 ~ fdt, TRUE ~ 0))
+  dplyr::mutate(fdtx = dplyr::case_when(ext == 1 ~ fdt, TRUE ~ 0))
 
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas %>%
                           dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)), weights = ~fe)
@@ -253,11 +253,11 @@ test_media <- suppressWarnings({create_mean("desocupado", design = dc_ene)})
 
 
 test_that("estadisticos similares entre prop y mean", {
-  expect_equal(test_prop %>% select(stat) %>% pull, test_media %>% select(stat) %>% pull)
-  expect_equal(test_prop %>% select(se) %>% pull, test_media %>% select(se) %>% pull)
-  expect_equal(test_prop %>% select(df) %>% pull, test_media %>% select(df) %>% pull)
-  expect_equal(test_prop %>% select(n) %>% pull, test_media %>% select(n) %>% pull)
-  expect_equal(test_prop %>% select(cv) %>% pull, test_media %>% select(cv) %>% pull)
+  expect_equal(test_prop %>% dplyr::select(stat) %>% dplyr::pull(), test_media %>% dplyr::select(stat) %>% dplyr::pull())
+  expect_equal(test_prop %>% dplyr::select(se) %>% dplyr::pull(), test_media %>% dplyr::select(se) %>% dplyr::pull())
+  expect_equal(test_prop %>% dplyr::select(df) %>% dplyr::pull(), test_media %>% dplyr::select(df) %>% dplyr::pull())
+  expect_equal(test_prop %>% dplyr::select(n) %>% dplyr::pull(), test_media %>% dplyr::select(n) %>% dplyr::pull())
+  expect_equal(test_prop %>% dplyr::select(cv) %>% dplyr::pull(), test_media %>% dplyr::select(cv) %>% dplyr::pull())
 })
 
 #######################################################

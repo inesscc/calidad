@@ -174,9 +174,9 @@ test_that("conteo df diseño complejo, versión CEPAL, con desagregación", {
 df <- create_size("ocupado", design = dc_epf_hogar)
 
 true_df <- dc_epf_hogar$variables %>%
-  dplyr::filter(ocupado == 1) %>% group_by(varunit) %>% slice(1) %>%
+  dplyr::filter(ocupado == 1) %>% dplyr::group_by(varunit) %>% dplyr::slice(1) %>%
   nrow()-dc_epf_hogar$variables %>%
-  dplyr::filter(ocupado == 1) %>% group_by(varstrat) %>% slice(1) %>%
+  dplyr::filter(ocupado == 1) %>% dplyr::group_by(varstrat) %>% dplyr::slice(1) %>%
   #dplyr::summarise(strata = unique(varstrat)) %>%
   nrow()
 
