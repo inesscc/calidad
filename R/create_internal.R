@@ -587,7 +587,6 @@ get_survey_table <-  function(var, domains, complex_design, estimation = "mean",
                                    FUN = fun,
                                    deff = get("deff", env))
 
-
       # This is a patch because a problem with df_type = INE. We needed to add the var to domains in order to get the DF and sample size according to
       # INE approach. This decision  produces an error in the deff calculation. So we implement here a specific procedure for the size function. The idea is
       # to avoid any modification in the rest of the code.
@@ -605,9 +604,8 @@ get_survey_table <-  function(var, domains, complex_design, estimation = "mean",
       # drop rows with zero values
       string_var <- formula_to_string(var)
 
-      estimacion <- estimacion %>%
-        dplyr::filter(!!rlang::parse_expr(string_var)  != 0)
-
+      #estimacion <- estimacion %>%
+      #  dplyr::filter(!!rlang::parse_expr(string_var)  != 0)
 
     } else if (estimation == "ratio")  {
 
@@ -1055,14 +1053,12 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   # Homologar nombres de variables  del diseño
   disenio <- standardize_design_variables(disenio)
 
-
   # Convertir everithing tolower to avoid problems
   names(disenio$variables) <- tolower(names(disenio$variables))
   lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
   var <- lower_params$var
   subpop <- lower_params$subpop
   domains <- lower_params$domains
-
 
   # Sacar los NA si el usuario lo requiere
   if (rm.na == TRUE) {
