@@ -464,7 +464,7 @@ create_prop = function(var, denominator = NULL, domains = NULL, subpop = NULL, d
 
 
   if(!is.null(denominator)){
-    final = create_ratio_internal(var, denominator, domains, subpop, design, ci, deff, ess,  ajuste_ene, rel_error )
+    final = create_ratio_internal(var, denominator, domains, subpop, design, ci, deff, ess,  ajuste_ene, rel_error)
   }
 
   if(is.null(denominator)) {

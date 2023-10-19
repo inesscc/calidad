@@ -44,12 +44,14 @@ ene = ene %>%
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas %>%
                           dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)), weights = ~fe)
 
-dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene %>%
+dc_ene <- survey::svydesign(ids = ~conglomerado,
+                            strata = ~estrato_unico,
+                            data = ene %>%
                               dplyr::mutate(desocupado2 = dplyr::if_else(desocupado == 1 & fdt == 1, 1, 0),
                                             fdt_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, fdt ) ) %>%
                               dplyr::mutate(SEXO_TEST = sexo)
                               ,
-                              weights = ~fact_cal)
+                            weights = ~fact_cal)
 
 
 
@@ -71,7 +73,6 @@ test1 <-  create_prop("ocupado", design = dc)
 test_that("Insumo proporción", {
   expect_equal(round(test1$stat, 3), unname(round(survey::svymean(x = ~ocupado, dc)[1], 3)))
 })
-
 
 # Probar strings
 # anidar <-  function(var,denominator = NULL, domains = NULL, subpop = NULL, design, ci = F){
@@ -281,5 +282,26 @@ nombre_bien <- create_prop(var = "desocup",
 test_that("comparando nombres", {
   expect_equal(all(nombre_bien %in% nombre_error), T)
 })
+
+
+######################################################
+# create_prop para variables con valores igual a 0   #
+######################################################
+
+
+test_that("comparando estimaciones con filas igual a 0", {
+  expect_equal(create_prop(var = "fdtx",
+                           domains = "desocup",
+                           subpop = "fdt",
+                           design = dc_ene),
+
+               create_prop(var = "fdtx",
+                           denominator = "fdt",
+                           domains = "desocup",
+                           subpop = "fdt",
+                           design = dc_ene))
+})
+
+
 
 
