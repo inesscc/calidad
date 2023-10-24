@@ -2,7 +2,7 @@
 title: "Usage"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{tutorial}
+  %\VignetteIndexEntry{Usage}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 # Tutorial package calidad 
 
-The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4) and [ECLAC](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) for the quality evaluation of estimates from household surveys.
+The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4) and [ECLAC](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) for the quality assessment of estimates from household surveys.
 
 This tutorial shows the basic use of the package and includes the main functions to create the necessary inputs to implement both quality standards.  
 
@@ -140,9 +140,9 @@ insumos_media_nacional <-  create_mean("gastot_hd", design = dc_epf)
 ```
 
 
-## Evaluation 
+## Assessment 
 
-Once the inputs have been generated, we can do the evaluation. To do this, we use the `assess` function.
+Once the inputs have been generated, we can do the assessment To do this, we use the `assess` function.
 
 ```{r, eval=T, warning=FALSE}
 evaluacion_prop <- assess(insumos_prop)
