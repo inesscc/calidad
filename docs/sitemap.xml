@@ -16,6 +16,12 @@
     <loc>/index.html</loc>
   </url>
   <url>
+    <loc>/news/index.html</loc>
+  </url>
+  <url>
+    <loc>/reference/assess.html</loc>
+  </url>
+  <url>
     <loc>/reference/calcular_estrato.html</loc>
   </url>
   <url>
@@ -95,6 +101,9 @@
   </url>
   <url>
     <loc>/reference/get_sample_size.html</loc>
+  </url>
+  <url>
+    <loc>/reference/get_survey_table.html</loc>
   </url>
   <url>
     <loc>/reference/index.html</loc>
