@@ -22,40 +22,7 @@
     <loc>/reference/assess.html</loc>
   </url>
   <url>
-    <loc>/reference/calcular_estrato.html</loc>
-  </url>
-  <url>
-    <loc>/reference/calcular_gl_total.html</loc>
-  </url>
-  <url>
-    <loc>/reference/calcular_tabla.html</loc>
-  </url>
-  <url>
-    <loc>/reference/calcular_tabla_ratio.html</loc>
-  </url>
-  <url>
-    <loc>/reference/calcular_upm.html</loc>
-  </url>
-  <url>
     <loc>/reference/casen.html</loc>
-  </url>
-  <url>
-    <loc>/reference/check_input_var.html</loc>
-  </url>
-  <url>
-    <loc>/reference/check_subpop_var.html</loc>
-  </url>
-  <url>
-    <loc>/reference/chequear_var_disenio.html</loc>
-  </url>
-  <url>
-    <loc>/reference/concat_domains.html</loc>
-  </url>
-  <url>
-    <loc>/reference/convert_to_formula.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_groupby_vars.html</loc>
   </url>
   <url>
     <loc>/reference/create_html.html</loc>
@@ -88,19 +55,10 @@
     <loc>/reference/epf_personas.html</loc>
   </url>
   <url>
-    <loc>/reference/evaluate.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_ci.html</loc>
-  </url>
-  <url>
     <loc>/reference/get_cv.html</loc>
   </url>
   <url>
     <loc>/reference/get_df.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_sample_size.html</loc>
   </url>
   <url>
     <loc>/reference/get_survey_table.html</loc>
@@ -116,14 +74,5 @@
   </url>
   <url>
     <loc>/reference/standardize_design_variables.html</loc>
-  </url>
-  <url>
-    <loc>/reference/unificar_variables_estrato.html</loc>
-  </url>
-  <url>
-    <loc>/reference/unificar_variables_factExp.html</loc>
-  </url>
-  <url>
-    <loc>/reference/unificar_variables_upm.html</loc>
   </url>
 </urlset>

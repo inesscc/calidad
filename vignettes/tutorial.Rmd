@@ -156,10 +156,12 @@ The output is a `dataframe` that, in addition to containing the information alre
 The function `assess` has a parameter that allows us to know if the table should be published or not. Following the criteria of the standard, if more than 50% of the estimates of a table are not reliable, it should not be published.
 
 ```{r}
-# Desempleo desagregado por region
+# Unemployment by region
 desagregar <- create_size(var = "desocupado", domains = "region", subpop = "fdt", design =  dc_ene)
-# Evaluar tabulado
-evaluacion_tot_desagreg <- assess(desagregar, publicar = T)
+
+# assess output
+evaluacion_tot_desagreg <- assess(desagregar, publish = T)
+evaluacion_tot_desagreg
 ```
 
 ```{r}

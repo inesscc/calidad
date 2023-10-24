@@ -226,10 +226,63 @@ know if the table should be published or not. Following the criteria of
 the standard, if more than 50% of the estimates of a table are not
 reliable, it should not be published.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Desempleo desagregado por region</span></span>
+<code class="sourceCode R"><span><span class="co"># Unemployment by region</span></span>
 <span><span class="va">desagregar</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_size.html">create_size</a></span><span class="op">(</span>var <span class="op">=</span> <span class="st">"desocupado"</span>, domains <span class="op">=</span> <span class="st">"region"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span>  <span class="va">dc_ene</span><span class="op">)</span></span>
-<span><span class="co"># Evaluar tabulado</span></span>
-<span><span class="va">evaluacion_tot_desagreg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess.html">assess</a></span><span class="op">(</span><span class="va">desagregar</span>, publicar <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span></code></pre></div>
+<span></span>
+<span><span class="co"># assess output</span></span>
+<span><span class="va">evaluacion_tot_desagreg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess.html">assess</a></span><span class="op">(</span><span class="va">desagregar</span>, publish <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
+<span><span class="va">evaluacion_tot_desagreg</span></span>
+<span><span class="co">#&gt;    region       stat         se  df   n         cv                   eval_n</span></span>
+<span><span class="co">#&gt; 1       1  13830.218  2105.8402  40  79 0.15226370   sufficient sample size</span></span>
+<span><span class="co">#&gt; 2       2  33899.555  3457.3783  72 153 0.10198890   sufficient sample size</span></span>
+<span><span class="co">#&gt; 3       3  13181.473  1288.0572  67 125 0.09771725   sufficient sample size</span></span>
+<span><span class="co">#&gt; 4       4  38572.642  3502.4280  97 195 0.09080083   sufficient sample size</span></span>
+<span><span class="co">#&gt; 5       5  87670.219  5253.3214 229 473 0.05992139   sufficient sample size</span></span>
+<span><span class="co">#&gt; 6       6  41307.341  4015.1321  94 193 0.09720142   sufficient sample size</span></span>
+<span><span class="co">#&gt; 7       7  35142.800  3171.1718  85 189 0.09023674   sufficient sample size</span></span>
+<span><span class="co">#&gt; 8       8  65956.207  4167.7798 204 401 0.06319011   sufficient sample size</span></span>
+<span><span class="co">#&gt; 9       9  34223.136  3409.5040  81 149 0.09962570   sufficient sample size</span></span>
+<span><span class="co">#&gt; 10     10  20843.453  2212.3500  68 127 0.10614124   sufficient sample size</span></span>
+<span><span class="co">#&gt; 11     11   3128.436   496.9203  37  59 0.15883985 insufficient sample size</span></span>
+<span><span class="co">#&gt; 12     12   4560.165   806.3695  28  44 0.17682901 insufficient sample size</span></span>
+<span><span class="co">#&gt; 13     13 369743.430 19615.0415 318 681 0.05305041   sufficient sample size</span></span>
+<span><span class="co">#&gt; 14     14  12991.098  1533.0491  61 112 0.11800766   sufficient sample size</span></span>
+<span><span class="co">#&gt; 15     15   7869.593  1081.7453  52  85 0.13745886   sufficient sample size</span></span>
+<span><span class="co">#&gt; 16     16  18885.030  2039.7704  66 128 0.10800991   sufficient sample size</span></span>
+<span><span class="co">#&gt;          eval_df                 eval_cv           label publication</span></span>
+<span><span class="co">#&gt; 1  sufficient df cv between 0.15 and 0.3 weakly reliable     publish</span></span>
+<span><span class="co">#&gt; 2  sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 3  sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 4  sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 5  sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 6  sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 7  sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 8  sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 9  sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 10 sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 11 sufficient df cv between 0.15 and 0.3    non-reliable     publish</span></span>
+<span><span class="co">#&gt; 12 sufficient df cv between 0.15 and 0.3    non-reliable     publish</span></span>
+<span><span class="co">#&gt; 13 sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 14 sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 15 sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt; 16 sufficient df              cv &lt;= 0.15        reliable     publish</span></span>
+<span><span class="co">#&gt;                         pass</span></span>
+<span><span class="co">#&gt; 1  81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 2  81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 3  81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 4  81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 5  81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 6  81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 7  81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 8  81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 9  81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 10 81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 11 81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 12 81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 13 81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 14 81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 15 81.25% reliable estimates</span></span>
+<span><span class="co">#&gt; 16 81.25% reliable estimates</span></span></code></pre></div>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Reset original options</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old_options</span><span class="op">)</span></span></code></pre></div>
