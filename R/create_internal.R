@@ -801,25 +801,75 @@ calcular_gl_total <- function(variables, datos) {
 
 #------------------------------
 
+# Wald interval binary
+
+ci_waldbi<- function(p,n,confidence=0.95) {
+  z_critical<-qnorm(confidence - (confidence-1)/2)
+  IC_l<- mapply(FUN = function(p,n) p-((z_critical/sqrt(n))*sqrt(p*(1-p))),p,n)
+  IC_u<- mapply(FUN = function(p,n) p+((z_critical/sqrt(n))*sqrt(p*(1-p))),p,n)
+  return(cbind(IC_l,IC_u))
+}
+
+#------------------------------
+
+# Wilson score interval
+
+ci_wilsonbi<- function(p,n,confidence=0.95) {
+  z_critical<-qnorm(confidence - (confidence-1)/2)
+  IC_l<- mapply(FUN = function(p,n) (1/(1 + (z_critical^2/n)))*(p + ((z_critical^2)/(2*n))-((z_critical/(2*n))*sqrt(4*n*p*(1-p)+z_critical^2))),p,n)
+  IC_u<- mapply(FUN = function(p,n) (1/(1 + (z_critical^2/n)))*(p + ((z_critical^2)/(2*n))+((z_critical/(2*n))*sqrt(4*n*p*(1-p)+z_critical^2))),p,n)
+  return(cbind(IC_l,IC_u))
+}
+
+#------------------------------
 
 
 
-get_ci <-  function(data,  ajuste_ene) {
+get_ci <-  function(data,  ajuste_ene, proportion=FALSE,wilson=FALSE) {
 
   # Se calculan los intervalos de la manera tradicional en la generalidad de los casos
   if (ajuste_ene == FALSE) {
+    if(proportion){
+      if(wilson){
+        final <- data %>%
+          dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
+                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,confidence = 0.95)[,1],
+                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,confidence = 0.95)[,2])
+      } else {
+        final <- data %>%
+          dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
+                        lower = ci_waldbi(p = .data$stat,n =.data$n,confidence = 0.95)[,1],
+                        upper = ci_waldbi(p = .data$stat,n =.data$n,confidence = 0.95)[,2])
+      }
+    } else {
+      final <- data %>%
+        dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
+                      lower = .data$stat - .data$se*t,
+                      upper = .data$stat + .data$se*t)
+    }
 
-    final <- data %>%
-      dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
-                    lower = .data$stat - .data$se*t,
-                    upper = .data$stat + .data$se*t)
+
     # Estos corresponde al ajuste de la ENE: el t se fija en 2
   } else if (ajuste_ene == TRUE) {
 
-    final <- data %>%
-      dplyr::mutate(t = 2,
-                    lower = .data$stat - .data$se*t,
-                    upper = .data$stat + .data$se*t)
+    if(proportion){
+      if(wilson){
+        final <- data %>%
+          dplyr::mutate(t = 2,
+                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,confidence = 0.95)[,1],
+                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,confidence = 0.95)[,2])
+      } else {
+        final <- data %>%
+          dplyr::mutate(t = 2,
+                        lower = ci_waldbi(p = .data$stat,n =.data$n,confidence = 0.95)[,1],
+                        upper = ci_waldbi(p = .data$stat,n =.data$n,confidence = 0.95)[,2])
+      }
+    } else {
+      final <- data %>%
+        dplyr::mutate(t = 2,
+                      lower = .data$stat - .data$se*t,
+                      upper = .data$stat + .data$se*t)
+    }
   }
 
   return(final)
@@ -843,8 +893,6 @@ get_deff <- function(var, design, survey_est) {
   deff <- complex_variance / random_variance
 
 }
-
-
 
 
 
@@ -1030,7 +1078,7 @@ create_ratio_internal <- function(var,denominator, domains = NULL, subpop = NULL
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
-create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
+create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci = FALSE, wilson = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
                                  rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = TRUE, rm.na = FALSE, env =  parent.frame()) {
 
 
@@ -1102,7 +1150,7 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
 
   # Add confidence intervals
   if (ci == TRUE) {
-    final <- get_ci(final,  ajuste_ene = ajuste_ene)
+    final <- get_ci(final,  ajuste_ene = ajuste_ene, proportion = TRUE, wilson = wilson)
   }
 
 
