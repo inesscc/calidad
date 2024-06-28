@@ -143,6 +143,58 @@ assess_cepal <- function(table, params, class = "calidad.mean") {
 
 
 }
+#-------------------------------------------------
+###################
+
+assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE) {
+
+  evaluation <- table %>%
+    dplyr::mutate(eval_deff = dplyr::if_else(.data$deff < 1 & !domain_info, "non-reliable", "phase2"),
+                  eval_deff = dplyr::if_else(.data$deff < 1 & domain_info, "phase2", .data$eval_deff),
+                  eval_deff = dplyr::if_else(.data$deff >= 1, "phase2", .data$eval_deff)) %>%
+    dplyr::mutate(
+      eval_ess = dplyr::if_else(eval_deff == "phase2" & .data$ess >= params$ess, "phase3", "non-reliable"),
+      eval_df = dplyr::if_else(eval_ess == "phase3" & .data$df >= params$df, "phase4",
+                               dplyr::if_else(eval_ess == "phase3" & .data$df < params$df & !domain_info, "non-reliable",
+                                              dplyr::if_else(eval_ess == "phase3" & .data$df < params$df & domain_info, "phase4", .data$eval_df)))
+    )
+
+  if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1) {
+
+    evaluation <- evaluation %>%
+      dplyr::mutate(label = dplyr::case_when(
+        eval_df == "phase4" & .data$cv > params$cv_upper_cepal ~ "non-reliable",
+        eval_df == "phase4" & .data$cv > params$cv_lower_cepal & .data$cv <= params$cv_upper_cepal & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "phase4" & .data$cv > params$cv_lower_cepal & .data$cv <= params$cv_upper_cepal & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "phase4" & .data$cv <= params$cv_lower_cepal & .data$unweighted >= params$CCNP_b ~ "reliable",
+        eval_df == "phase4" & .data$cv <= params$cv_lower_cepal & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "phase4" & .data$cv <= params$cv_lower_cepal & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        TRUE ~ "non-reliable"
+      ))
+
+    #proporción
+  } else {
+
+    evaluation <- evaluation %>%
+      dplyr::mutate(label = dplyr::case_when(
+        eval_df == "phase4" & .data$prop < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
+        eval_df == "phase4" & .data$prop < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "phase4" & .data$prop < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "phase4" & .data$prop >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
+        eval_df == "phase4" & .data$prop >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "phase4" & .data$prop >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "phase4" & .data$prop >= 0.5 & .data$log_cv > params$cvlog_max & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "phase4" & .data$prop >= 0.5 & .data$log_cv > params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        TRUE ~ "non-reliable"
+      ))
+
+  }
+
+  evaluation <- add_class(evaluation, "cepal2023.eval")
+
+  return(evaluation)
+}
+
 
 #-------------------------------------------------
   publish_table <- function(evaluation) {
@@ -168,3 +220,4 @@ combine_params <- function(deafult_params, user_params) {
   return(final_params)
 
 }
+

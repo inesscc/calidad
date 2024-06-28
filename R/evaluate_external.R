@@ -1,6 +1,3 @@
-
-
-
 #---------------------------------------------------------------------
 #' assess the quality of mean estimations
 #'
@@ -42,16 +39,17 @@
 #' assess(create_mean("gastot_hd", domains = "zona+sexo", design = dc))
 #' @export
 
-
-assess <- function(table, publish = FALSE, scheme = c("chile", "eclac") , ...) {
+assess <- function(table, publish = FALSE, scheme = c("chile", "eclac", "clac_2023"), ...) {
 
   # check if the scheme has the correct input
   scheme <- match.arg(scheme)
 
   # Defaults params for cepal and INE Chile
   user_params <- list(...)
+
   default_params_ine = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
   default_params_cepal = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50, log_cv = 0.175)
+  default_params_cepal2023 <- list(df = 9, n = 100, cv_lower_cepal = 0.2, cv_upper_cepal = 0.3, ess = 60, cvlog_max = 0.175, CCNP_b = 50, CCNP_a = 30)
 
 
 
@@ -77,14 +75,27 @@ assess <- function(table, publish = FALSE, scheme = c("chile", "eclac") , ...) {
       check_cepal_inputs(table, "log_cv")
     }
 
-
-
     # Combine defaults params with user inputs
     params <- combine_params(default_params_cepal, user_params)
 
     # Apply standard
     evaluation <- assess_cepal(table, params, class(table))
 
+
+    # CLAC 2023 Standard
+  } else if (scheme == "cepal_2023") {
+    # Check that all the inputs are available for CEPAL 2023
+    check_cepal_inputs(table, "ess")
+    check_cepal_inputs(table, "unweighted")
+
+    # Combine defaults params with user inputs for CEPAL 2023
+    params <- combine_params(default_params_cepal2023, user_params)
+
+    # Apply CEPAL 2023 standard
+    evaluation <- assess_cepal2023(table, params, class(table), domain_info = FALSE)  # Assuming default domain_info is FALSE
+
+  } else {
+    stop("Unsupported evaluation scheme. Supported schemes are 'chile', 'eclac', and 'cepal_2023'.")
   }
 
   return(evaluation)
