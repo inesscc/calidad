@@ -801,29 +801,17 @@ calcular_gl_total <- function(variables, datos) {
 
 #------------------------------
 
-# Wald interval binary
-
-ci_waldbi<- function(p,n,confidence=0.95) {
-  z_critical<-qnorm(confidence - (confidence-1)/2)
-  IC_l<- mapply(FUN = function(p,n) p-((z_critical/sqrt(n))*sqrt(p*(1-p))),p,n)
-  IC_u<- mapply(FUN = function(p,n) p+((z_critical/sqrt(n))*sqrt(p*(1-p))),p,n)
-  return(cbind(IC_l,IC_u))
-}
-
-#------------------------------
-
 # Wilson score interval
 
-ci_wilsonbi<- function(p,n,confidence=0.95) {
-  z_critical<-qnorm(confidence - (confidence-1)/2)
-  IC_l<- mapply(FUN = function(p,n) (1/(1 + (z_critical^2/n)))*(p + ((z_critical^2)/(2*n))-((z_critical/(2*n))*sqrt(4*n*p*(1-p)+z_critical^2))),p,n)
-  IC_u<- mapply(FUN = function(p,n) (1/(1 + (z_critical^2/n)))*(p + ((z_critical^2)/(2*n))+((z_critical/(2*n))*sqrt(4*n*p*(1-p)+z_critical^2))),p,n)
+ci_wilsonbi<- function(p,n,deff,df,confidence=0.95) {
+  n_eff<-ifelse(test = is.na(deff),yes = n, no = n/deff)
+  v_critical<-ifelse(test = p %in% c(0,1),yes = qnorm(confidence - (confidence-1)/2),no = qt(confidence - (confidence-1)/2,df = df))
+  IC_l<- mapply(FUN = function(p,n,v_critical) (1/(1 + (v_critical^2/n)))*(p + ((v_critical^2)/(2*n))-((v_critical/(2*n))*sqrt(4*n*p*(1-p)+v_critical^2))),p,n_eff,v_critical)
+  IC_u<- mapply(FUN = function(p,n,v_critical) (1/(1 + (v_critical^2/n)))*(p + ((v_critical^2)/(2*n))+((v_critical/(2*n))*sqrt(4*n*p*(1-p)+v_critical^2))),p,n_eff,v_critical)
   return(cbind(IC_l,IC_u))
 }
 
 #------------------------------
-
-
 
 get_ci <-  function(data,  ajuste_ene, proportion=FALSE,wilson=FALSE) {
 
@@ -838,8 +826,8 @@ get_ci <-  function(data,  ajuste_ene, proportion=FALSE,wilson=FALSE) {
       } else {
         final <- data %>%
           dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
-                        lower = ci_waldbi(p = .data$stat,n =.data$n,confidence = 0.95)[,1],
-                        upper = ci_waldbi(p = .data$stat,n =.data$n,confidence = 0.95)[,2])
+                        lower = .data$stat - .data$se*t,
+                        upper = .data$stat + .data$se*t)
       }
     } else {
       final <- data %>%
@@ -861,8 +849,8 @@ get_ci <-  function(data,  ajuste_ene, proportion=FALSE,wilson=FALSE) {
       } else {
         final <- data %>%
           dplyr::mutate(t = 2,
-                        lower = ci_waldbi(p = .data$stat,n =.data$n,confidence = 0.95)[,1],
-                        upper = ci_waldbi(p = .data$stat,n =.data$n,confidence = 0.95)[,2])
+                        lower = .data$stat - .data$se*t,
+                        upper = .data$stat + .data$se*t)
       }
     } else {
       final <- data %>%
