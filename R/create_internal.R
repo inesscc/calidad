@@ -821,8 +821,8 @@ get_ci <-  function(data,  ajuste_ene, proportion=FALSE,wilson=FALSE) {
       if(wilson){
         final <- data %>%
           dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
-                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,confidence = 0.95)[,1],
-                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,confidence = 0.95)[,2])
+                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df,confidence = 0.95)[,1],
+                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df,confidence = 0.95)[,2])
       } else {
         final <- data %>%
           dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
@@ -844,8 +844,8 @@ get_ci <-  function(data,  ajuste_ene, proportion=FALSE,wilson=FALSE) {
       if(wilson){
         final <- data %>%
           dplyr::mutate(t = 2,
-                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff ,confidence = 0.95)[,1],
-                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff ,confidence = 0.95)[,2])
+                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df ,confidence = 0.95)[,1],
+                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df ,confidence = 0.95)[,2])
       } else {
         final <- data %>%
           dplyr::mutate(t = 2,
