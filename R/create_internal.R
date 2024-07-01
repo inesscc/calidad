@@ -844,8 +844,8 @@ get_ci <-  function(data,  ajuste_ene, proportion=FALSE,wilson=FALSE) {
       if(wilson){
         final <- data %>%
           dplyr::mutate(t = 2,
-                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,confidence = 0.95)[,1],
-                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,confidence = 0.95)[,2])
+                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff ,confidence = 0.95)[,1],
+                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff ,confidence = 0.95)[,2])
       } else {
         final <- data %>%
           dplyr::mutate(t = 2,
