@@ -92,7 +92,7 @@ assess_ine <- function(table, params, class = "calidad.mean") {
 
   }
 
-  evaluation <- add_class(evaluacion, "eval.prop")
+  evaluacion <- add_class(evaluacion, "eval.prop")
 
   return(evaluacion)
 }
