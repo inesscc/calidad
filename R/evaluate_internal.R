@@ -92,7 +92,7 @@ assess_ine <- function(table, params, class = "calidad.mean") {
 
   }
 
-
+  evaluation <- add_class(evaluation, "eval.prop")
 
   return(evaluacion)
 }
@@ -138,6 +138,7 @@ assess_cepal <- function(table, params, class = "calidad.mean") {
 
   # Add cepal class to the final object
   evaluation <- add_class(evaluation, "cepal.eval")
+  evaluation <- add_class(evaluation, "eval.prop")
 
   return(evaluation)
 
@@ -148,7 +149,7 @@ assess_cepal <- function(table, params, class = "calidad.mean") {
   publish_table <- function(evaluation) {
     evaluation <- evaluation %>%
       dplyr::ungroup() %>%
-      dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
+      {if(any(class(evaluation)=="eval.prop")) dplyr::filter(!is.na(.data$n) & !is.na(.data$df)) else dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv))} %>%
       dplyr::mutate(pasa = sum(dplyr::if_else(.data$label == "reliable", 1, 0)) / nrow(.) * 100,
                     pasa = round(.data$pasa, 2),
                     publication = dplyr::if_else(.data$pasa >= 50, "publish", "do not publish"),
