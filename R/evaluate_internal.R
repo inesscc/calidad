@@ -148,14 +148,25 @@ assess_cepal <- function(table, params, class = "calidad.mean") {
 #-------------------------------------------------
   publish_table <- function(evaluation) {
     t_class<- class(evaluation)
-    evaluation <- evaluation %>%
-      dplyr::ungroup() %>%
-      {if(any(t_class=="eval.prop")) dplyr::filter(!is.na(.data$n) & !is.na(.data$df)) else dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv))} %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(.data$label == "reliable", 1, 0)) / nrow(.) * 100,
-                    pasa = round(.data$pasa, 2),
-                    publication = dplyr::if_else(.data$pasa >= 50, "publish", "do not publish"),
-                    pass = paste0(.data$pasa, "% reliable estimates")) %>%
-      dplyr::select(-"pasa")
+    if(any(t_class=="eval.prop")){
+      evaluation <- evaluation %>%
+        dplyr::ungroup() %>%
+        dplyr::filter(!is.na(.data$n) & !is.na(.data$df)) %>%
+        dplyr::mutate(pasa = sum(dplyr::if_else(.data$label == "reliable", 1, 0)) / nrow(.) * 100,
+                      pasa = round(.data$pasa, 2),
+                      publication = dplyr::if_else(.data$pasa >= 50, "publish", "do not publish"),
+                      pass = paste0(.data$pasa, "% reliable estimates")) %>%
+        dplyr::select(-"pasa")
+    } else {
+      evaluation <- evaluation %>%
+        dplyr::ungroup() %>%
+        dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
+        dplyr::mutate(pasa = sum(dplyr::if_else(.data$label == "reliable", 1, 0)) / nrow(.) * 100,
+                      pasa = round(.data$pasa, 2),
+                      publication = dplyr::if_else(.data$pasa >= 50, "publish", "do not publish"),
+                      pass = paste0(.data$pasa, "% reliable estimates")) %>%
+        dplyr::select(-"pasa")
+    }
 
     return(evaluation)
   }
