@@ -797,6 +797,19 @@ calcular_gl_total <- function(variables, datos) {
 
 }
 
+#------------------------------
+
+# Logit Transformation interval
+
+expit <- function(x) 1/(1+exp(x))
+
+ci_logit<-function(p,se_c,df,confidence=0.95){
+  v_critical<- qt(confidence - (confidence-1)/2,df = df)
+  lb<-mapply(FUN = function(p,se_c,v_critical) expit(-(log(p/(1-p)) - (v_critical * (se_c/(p*(1-p)))))),p,se_c,v_critical)
+  ub<-mapply(FUN = function(p,se_c,v_critical) expit(-(log(p/(1-p)) + (v_critical * (se_c/(p*(1-p)))))),p,se_c,v_critical)
+  ci<-cbind(lb,ub)
+  return(ci)
+}
 
 
 #------------------------------
@@ -808,7 +821,8 @@ ci_wilsonbi<- function(p,n,deff,df,confidence=0.95) {
   v_critical<-ifelse(test = p %in% c(0,1),yes = qnorm(confidence - (confidence-1)/2),no = qt(confidence - (confidence-1)/2,df = df))
   IC_l<- mapply(FUN = function(p,n,v_critical) (1/(1 + (v_critical^2/n)))*(p + ((v_critical^2)/(2*n))-((v_critical/(2*n))*sqrt(4*n*p*(1-p)+v_critical^2))),p,n_eff,v_critical)
   IC_u<- mapply(FUN = function(p,n,v_critical) (1/(1 + (v_critical^2/n)))*(p + ((v_critical^2)/(2*n))+((v_critical/(2*n))*sqrt(4*n*p*(1-p)+v_critical^2))),p,n_eff,v_critical)
-  return(cbind(IC_l,IC_u))
+  ci<-cbind(IC_l,IC_u)
+  return(ci)
 }
 
 #------------------------------
@@ -821,13 +835,13 @@ get_ci <-  function(data,  ajuste_ene, proportion=FALSE,wilson=FALSE) {
       if(wilson){
         final <- data %>%
           dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
-                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df,confidence = 0.95)[,1],
-                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df,confidence = 0.95)[,2])
+                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df ,confidence = 0.95)[,1],
+                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df ,confidence = 0.95)[,2])
       } else {
         final <- data %>%
           dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
-                        lower = .data$stat - .data$se*t,
-                        upper = .data$stat + .data$se*t)
+                        lower = ci_logit(p = .data$stat,se_c =.data$se,df =.data$df,confidence = 0.95)[,1],
+                        upper = ci_logit(p = .data$stat,se_c =.data$se,df =.data$df,confidence = 0.95)[,2])
       }
     } else {
       final <- data %>%
@@ -849,8 +863,8 @@ get_ci <-  function(data,  ajuste_ene, proportion=FALSE,wilson=FALSE) {
       } else {
         final <- data %>%
           dplyr::mutate(t = 2,
-                        lower = .data$stat - .data$se*t,
-                        upper = .data$stat + .data$se*t)
+                        lower = ci_logit(p = .data$stat,se_c =.data$se,df =.data$df,confidence = 0.95)[,1],
+                        upper = ci_logit(p = .data$stat,se_c =.data$se,df =.data$df,confidence = 0.95)[,2])
       }
     } else {
       final <- data %>%
