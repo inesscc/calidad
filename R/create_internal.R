@@ -797,29 +797,81 @@ calcular_gl_total <- function(variables, datos) {
 
 }
 
+#------------------------------
+
+# Logit Transformation interval
+
+expit <- function(x) 1/(1+exp(x))
+
+ci_logit<-function(p,se_c,df,confidence=0.95){
+  v_critical<- qt(confidence - (confidence-1)/2,df = df)
+  lb<-mapply(FUN = function(p,se_c,v_critical) expit(-(log(p/(1-p)) - (v_critical * (se_c/(p*(1-p)))))),p,se_c,v_critical)
+  ub<-mapply(FUN = function(p,se_c,v_critical) expit(-(log(p/(1-p)) + (v_critical * (se_c/(p*(1-p)))))),p,se_c,v_critical)
+  ci<-cbind(lb,ub)
+  return(ci)
+}
 
 
 #------------------------------
 
+# Wilson score interval
 
+ci_wilsonbi<- function(p,n,deff,df,confidence=0.95) {
+  n_eff<-ifelse(test = is.na(deff),yes = n, no = n/deff)
+  v_critical<-ifelse(test = p %in% c(0,1),yes = qnorm(confidence - (confidence-1)/2),no = qt(confidence - (confidence-1)/2,df = df))
+  IC_l<- mapply(FUN = function(p,n,v_critical) (1/(1 + (v_critical^2/n)))*(p + ((v_critical^2)/(2*n))-((v_critical/(2*n))*sqrt(4*n*p*(1-p)+v_critical^2))),p,n_eff,v_critical)
+  IC_u<- mapply(FUN = function(p,n,v_critical) (1/(1 + (v_critical^2/n)))*(p + ((v_critical^2)/(2*n))+((v_critical/(2*n))*sqrt(4*n*p*(1-p)+v_critical^2))),p,n_eff,v_critical)
+  ci<-cbind(IC_l,IC_u)
+  return(ci)
+}
 
+#------------------------------
 
-get_ci <-  function(data,  ajuste_ene) {
+get_ci <-  function(data,  ajuste_ene, proportion=FALSE,wilson=FALSE) {
 
   # Se calculan los intervalos de la manera tradicional en la generalidad de los casos
   if (ajuste_ene == FALSE) {
+    if(proportion){
+      if(wilson){
+        final <- data %>%
+          dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
+                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df ,confidence = 0.95)[,1],
+                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df ,confidence = 0.95)[,2])
+      } else {
+        final <- data %>%
+          dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
+                        lower = ci_logit(p = .data$stat,se_c =.data$se,df =.data$df,confidence = 0.95)[,1],
+                        upper = ci_logit(p = .data$stat,se_c =.data$se,df =.data$df,confidence = 0.95)[,2])
+      }
+    } else {
+      final <- data %>%
+        dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
+                      lower = .data$stat - .data$se*t,
+                      upper = .data$stat + .data$se*t)
+    }
 
-    final <- data %>%
-      dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
-                    lower = .data$stat - .data$se*t,
-                    upper = .data$stat + .data$se*t)
+
     # Estos corresponde al ajuste de la ENE: el t se fija en 2
   } else if (ajuste_ene == TRUE) {
 
-    final <- data %>%
-      dplyr::mutate(t = 2,
-                    lower = .data$stat - .data$se*t,
-                    upper = .data$stat + .data$se*t)
+    if(proportion){
+      if(wilson){
+        final <- data %>%
+          dplyr::mutate(t = 2,
+                        lower = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df ,confidence = 0.95)[,1],
+                        upper = ci_wilsonbi(p = .data$stat,n =.data$n,deff =.data$deff,df =.data$df ,confidence = 0.95)[,2])
+      } else {
+        final <- data %>%
+          dplyr::mutate(t = 2,
+                        lower = ci_logit(p = .data$stat,se_c =.data$se,df =.data$df,confidence = 0.95)[,1],
+                        upper = ci_logit(p = .data$stat,se_c =.data$se,df =.data$df,confidence = 0.95)[,2])
+      }
+    } else {
+      final <- data %>%
+        dplyr::mutate(t = 2,
+                      lower = .data$stat - .data$se*t,
+                      upper = .data$stat + .data$se*t)
+    }
   }
 
   return(final)
@@ -843,8 +895,6 @@ get_deff <- function(var, design, survey_est) {
   deff <- complex_variance / random_variance
 
 }
-
-
 
 
 
@@ -1030,7 +1080,7 @@ create_ratio_internal <- function(var,denominator, domains = NULL, subpop = NULL
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
 
-create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
+create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci = FALSE, wilson = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
                                  rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = TRUE, rm.na = FALSE, env =  parent.frame()) {
 
 
@@ -1102,7 +1152,7 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
 
   # Add confidence intervals
   if (ci == TRUE) {
-    final <- get_ci(final,  ajuste_ene = ajuste_ene)
+    final <- get_ci(final,  ajuste_ene = ajuste_ene, proportion = TRUE, wilson = wilson)
   }
 
 

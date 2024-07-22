@@ -446,7 +446,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' @export
 #'
 
-create_prop = function(var, denominator = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
+create_prop = function(var, denominator = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, wilson = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
                        rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE, eclac_input = FALSE){
 
   # eclac approach is not allowed with denominator
@@ -468,7 +468,7 @@ create_prop = function(var, denominator = NULL, domains = NULL, subpop = NULL, d
   }
 
   if(is.null(denominator)) {
-    final = create_prop_internal(var,  domains, subpop, design, ci, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted)
+    final = create_prop_internal(var,  domains, subpop, design, ci, wilson = wilson, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted)
   }
 
   # Add a class to the object
