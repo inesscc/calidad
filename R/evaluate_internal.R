@@ -1,13 +1,9 @@
 
 # Check that all the inputs are available
-
 check_cepal_inputs <- function(table, var) {
   check_ess <- names(table) %>%  stringr::str_detect(pattern =  var) %>% sum()
   if (check_ess != 1) {stop(paste(var, "must be used!"))}
 }
-
-
-
 #---------------------------------------------------------------------
 #'
 #' Calcula el valor de una función cuadrática
@@ -30,17 +26,11 @@ quadratic <- function(p) {
     }
   })
 }
-
-
-#---------------------------------------------------------------------
-
-
-
+#--------------------------------------------------------------------
 assess_ine <- function(table, params, class = "calidad.mean") {
 
   # General case
   if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 ) {
-
 
     evaluacion <- table %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
@@ -58,8 +48,7 @@ assess_ine <- function(table, params, class = "calidad.mean") {
                         "weakly reliable"
                     )
       )
-
-  # proportion case
+    # proportion case
   } else {
 
     evaluacion <- table %>%
@@ -88,19 +77,11 @@ assess_ine <- function(table, params, class = "calidad.mean") {
                       stat >= 1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_ine)    ~ "reliable",
                       stat >= 1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv between", params$cv_lower_ine, "and", params$cv_upper_ine) ~ "weakly reliable"))
 
-
-
   }
-
-
-
   return(evaluacion)
 }
-
-
 #-------------------------------------------------
-assess_cepal <- function(table, params, class = "calidad.mean") {
-
+assess_cepal2020 <- function(table, params, class = "calidad.mean") {
   # General case
   if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 ) {
 
@@ -117,7 +98,7 @@ assess_cepal <- function(table, params, class = "calidad.mean") {
 
 
       ))
-  # Proportion case
+    # Proportion case
   } else {
 
     evaluation <- table %>%
@@ -136,8 +117,8 @@ assess_cepal <- function(table, params, class = "calidad.mean") {
 
   }
 
-  # Add cepal class to the final object
-  evaluation <- add_class(evaluation, "cepal.eval")
+  # Add cepal 2020 class to the final object
+  evaluation <- add_class(evaluation, "cepal2020.eval")
 
   return(evaluation)
 
@@ -145,79 +126,72 @@ assess_cepal <- function(table, params, class = "calidad.mean") {
 }
 #-------------------------------------------------
 ###################
+utils::globalVariables(c("eval_deff", "eval_ess"))
 
 assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE) {
-
   evaluation <- table %>%
-    dplyr::mutate(eval_deff = dplyr::if_else(.data$deff < 1 & !domain_info, "non-reliable", "phase2"),
-                  eval_deff = dplyr::if_else(.data$deff < 1 & domain_info, "phase2", .data$eval_deff),
-                  eval_deff = dplyr::if_else(.data$deff >= 1, "phase2", .data$eval_deff)) %>%
+    dplyr::mutate(eval_deff = dplyr::if_else(.data$deff < 1 & domain_info & .data$n >= params$n, "Sufficient deff", "non-reliable"),
+                  eval_deff = dplyr::if_else(.data$deff < 1 & !domain_info & .data$n < params$n, "non-reliable","Sufficient deff"),
+                  eval_deff = dplyr::if_else(.data$deff >= 1, "Sufficient deff", "supress")) %>%
     dplyr::mutate(
-      eval_ess = dplyr::if_else(eval_deff == "phase2" & .data$ess >= params$ess, "phase3", "non-reliable"),
-      eval_df = dplyr::if_else(eval_ess == "phase3" & .data$df >= params$df, "phase4",
-                               dplyr::if_else(eval_ess == "phase3" & .data$df < params$df & !domain_info, "non-reliable",
-                                              dplyr::if_else(eval_ess == "phase3" & .data$df < params$df & domain_info, "phase4", .data$eval_df)))
+      eval_ess = dplyr::if_else(eval_deff == "Sufficient deff" & .data$ess >= params$ess, "Sufficient ess", "non-reliable"),
+      eval_df = dplyr::if_else(eval_ess == "Sufficient ess" & .data$df >= params$df, "Sufficient df",
+                               dplyr::if_else(eval_ess == "Sufficient ess" & .data$df < params$df & !domain_info, "non-reliable",
+                                              dplyr::if_else(eval_ess == "Sufficient ess" & .data$df < params$df & domain_info, "Sufficient df", "non-reliable")))
     )
-
   if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1) {
-
     evaluation <- evaluation %>%
       dplyr::mutate(label = dplyr::case_when(
-        eval_df == "phase4" & .data$cv > params$cv_upper_cepal ~ "non-reliable",
-        eval_df == "phase4" & .data$cv > params$cv_lower_cepal & .data$cv <= params$cv_upper_cepal & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        eval_df == "phase4" & .data$cv > params$cv_lower_cepal & .data$cv <= params$cv_upper_cepal & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "phase4" & .data$cv <= params$cv_lower_cepal & .data$unweighted >= params$CCNP_b ~ "reliable",
-        eval_df == "phase4" & .data$cv <= params$cv_lower_cepal & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "phase4" & .data$cv <= params$cv_lower_cepal & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "Sufficient df" & .data$cv > params$cv_upper_cepal ~ "non-reliable",
+        eval_df == "Sufficient df" & .data$cv > params$cv_lower_cepal & .data$cv <= params$cv_upper_cepal & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "Sufficient df" & .data$cv > params$cv_lower_cepal & .data$cv <= params$cv_upper_cepal & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "Sufficient df" & .data$cv <= params$cv_lower_cepal & .data$unweighted >= params$CCNP_b ~ "reliable",
+        eval_df == "Sufficient df" & .data$cv <= params$cv_lower_cepal & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "Sufficient df" & .data$cv <= params$cv_lower_cepal & .data$unweighted < params$CCNP_a ~ "non-reliable",
         TRUE ~ "non-reliable"
       ))
-
-    #proporción
+    #proportion
   } else {
-
+    if (!"log_cv" %in% colnames(table)) {
+      stop("log_cv must be used!")
+    }
     evaluation <- evaluation %>%
       dplyr::mutate(label = dplyr::case_when(
-        eval_df == "phase4" & .data$prop < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
-        eval_df == "phase4" & .data$prop < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "phase4" & .data$prop < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        eval_df == "phase4" & .data$prop >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
-        eval_df == "phase4" & .data$prop >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "phase4" & .data$prop >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        eval_df == "phase4" & .data$prop >= 0.5 & .data$log_cv > params$cvlog_max & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "phase4" & .data$prop >= 0.5 & .data$log_cv > params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "Sufficient df" & .data$stat < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
+        eval_df == "Sufficient df" & .data$stat < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "Sufficient df" & .data$stat < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "Sufficient df" & .data$stat >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
+        eval_df == "Sufficient df" & .data$stat >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "Sufficient df" & .data$stat >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "Sufficient df" & .data$stat >= 0.5 & .data$log_cv > params$cvlog_max & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "Sufficient df" & .data$stat >= 0.5 & .data$log_cv > params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
         TRUE ~ "non-reliable"
       ))
-
   }
-
   evaluation <- add_class(evaluation, "cepal2023.eval")
-
   return(evaluation)
 }
 
 
-#-------------------------------------------------
-  publish_table <- function(evaluation) {
-    evaluation <- evaluation %>%
-      dplyr::ungroup() %>%
-      dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
-      dplyr::mutate(pasa = sum(dplyr::if_else(.data$label == "reliable", 1, 0)) / nrow(.) * 100,
-                    pasa = round(.data$pasa, 2),
-                    publication = dplyr::if_else(.data$pasa >= 50, "publish", "do not publish"),
-                    pass = paste0(.data$pasa, "% reliable estimates")) %>%
-      dplyr::select(-"pasa")
 
-    return(evaluation)
-  }
 
 #-------------------------------------------------
-
-combine_params <- function(deafult_params, user_params) {
-
+publish_table <- function(evaluation) {
+  evaluation <- evaluation %>%
+    dplyr::ungroup() %>%
+    dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
+    dplyr::mutate(pasa = sum(dplyr::if_else(.data$label == "reliable", 1, 0)) / nrow(.) * 100,
+                  pasa = round(.data$pasa, 2),
+                  publication = dplyr::if_else(.data$pasa >= 50, "publish", "do not publish"),
+                  pass = paste0(.data$pasa, "% reliable estimates")) %>%
+    dplyr::select(-"pasa")
+  return(evaluation)
+}
+#-------------------------------------------------
+combine_params <- function(default_params, user_params) {
   # Combine defaults params with user inputs
-  deafult_params <- deafult_params[!names(deafult_params) %in% names(user_params)  ]
-  final_params <- c(deafult_params, user_params)
+  default_params <- default_params[!names(default_params) %in% names(user_params)]
+  final_params <- c(default_params, user_params)
   return(final_params)
-
 }
 

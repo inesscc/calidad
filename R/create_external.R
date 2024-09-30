@@ -3,67 +3,63 @@
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 
 
-
 #' Create the inputs to evaluate the quality of mean estimations
 #'
-#' \code{create_mean} generates ano \code{dataframe} with the following elements: mean,
-#' degrees of freedom, sample size and coefficient of variation. The function allows
+#' \code{create_mean} generates a \code{dataframe} with the following elements: mean,
+#' degrees of freedom, sample size, and coefficient of variation. The function allows
 #' grouping in several domains.
 #'
-#' @param var numeric variable within the  \code{dataframe}.
+#' @param var numeric variable within the \code{dataframe}.
 #' @param domains domains to be estimated separated by the + character.
-#' @param subpop integer dummy variable to filter the dataframe
-#' @param design complex design created by \code{survey} package
-#' @param ci \code{boolean} indicating if the confidence intervals must be calculated
-#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
-#' @param ess \code{boolean} Effective sample size
-#' @param rm.na \code{boolean} Remove NA if it is required
-#' @param deff \code{boolean} Design effect
-#' @param rel_error \code{boolean} Relative error
-#' @param unweighted \code{boolean} Add non weighted count if it is required
-#' @param eclac_input \code{boolean} return eclac inputs
+#' @param subpop integer dummy variable to filter the dataframe.
+#' @param design complex design created by \code{survey} package.
+#' @param ci \code{boolean} indicating if the confidence intervals must be calculated.
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.
+#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.
+#' @param ess \code{boolean} effective sample size.
+#' @param rm.na \code{boolean} remove NA values if required.
+#' @param deff \code{boolean} design effect.
+#' @param rel_error \code{boolean} relative error.
+#' @param unweighted \code{boolean} add non-weighted count if required.
+#' @param eclac_input \code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.
 #' @import survey
-#' @return \code{dataframe} that contains the inputs and all domains to be evaluated
+#' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
 #'
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-#' create_mean("gastot_hd", "zona+sexo",  design = dc)
+#' create_mean("gastot_hd", "zona+sexo", design = dc)
 #' @export
 
 create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE,
-                       rm.na = FALSE, deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = FALSE) {
+                       rm.na = FALSE, deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = c("chile", "eclac_2020", "eclac_2023")) {
 
+  # Match the argument to ensure it is one of the allowed values
+  eclac_input <- match.arg(eclac_input)
 
   # get design variables
-  design_vars <- get_design_vars(design )
+  design_vars <- get_design_vars(design)
 
   # Create list of variables included in domains
   agrupacion <- create_groupby_vars(domains)
 
   # Select relevant columns
-  design <- design[ ,  c(agrupacion,var, subpop, design_vars  ) ]
+  design <- design[, c(agrupacion, var, subpop, design_vars)]
 
-
-
-  # Turn on eclac indicators if the user wants it
-  eclac_inputs <-  eclac_standard(eclac_input)
-  ess = eclac_inputs$ess
-  unweighted = eclac_inputs$unweighted
-  deff = eclac_inputs$deff
-
+  # Turn on eclac indicators if the user selects eclac_2020 or eclac_2023
+  eclac_inputs <- eclac_standard(eclac_input != "chile")
+  ess <- eclac_inputs$ess
+  unweighted <- eclac_inputs$unweighted
+  deff <- eclac_inputs$deff
 
   # Standardize design variable names
   design <- standardize_design_variables(design)
 
-
-  # Convert everything to lowercase  to avoid problems in next steps
+  # Convert everything to lowercase to avoid problems in next steps
   names(design$variables) <- tolower(names(design$variables))
-  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
+  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains), tolower_strings)
   var <- lower_params$var
   subpop <- lower_params$subpop
   domains <- lower_params$domains
-
 
   # Remove NA values
   if (rm.na == TRUE) {
@@ -77,10 +73,10 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
   # warning if the standard error is not obtained from the complex design
   se_message(design)
 
-  # FIlter if the user add subpop parameter
+  # Filter if the user adds subpop parameter
   design <- filter_design(design, subpop)
 
-  #COnvert inputs to formula in order to get an easier manipulation with survey
+  # Convert inputs to formula in order to get an easier manipulation with survey
   var_form <- convert_to_formula(var)
   domains_form <- convert_to_formula(domains)
 
@@ -93,33 +89,33 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
   # get sample size for each group
   n <- get_sample_size(design$variables, agrupacion)
 
-  #Get degrees of freedom
+  # Get degrees of freedom
   gl <- get_df(design, agrupacion)
 
-  #Get coefficient of variation
+  # Get coefficient of variation
   cv <- get_cv(tabla, design, agrupacion)
 
   # Combine all the information in one single table
-  final <- create_output(tabla, agrupacion,  gl, n, cv)
+  final <- create_output(tabla, agrupacion, gl, n, cv)
 
   # Order columns and standardize variable names
-  final <- standardize_columns(final, var, denom = NULL )
+  final <- standardize_columns(final, var, denom = NULL)
 
   # Get confidence intervals if the user includes this parameter
-  if (ci == T) {
-    final <- get_ci(final,  ajuste_ene = ajuste_ene)
+  if (ci == TRUE) {
+    final <- get_ci(final, ajuste_ene = ajuste_ene)
   }
 
-  # add relative error, if the user uses this parameter
+  # Add relative error, if the user uses this parameter
   if (rel_error == TRUE) {
     final <- final %>%
       dplyr::mutate(relative_error = stats::qt(c(.975), df = .data$df) * cv)
   }
 
-  # add the ess if the user uses this parameter
+  # Add the ess if the user uses this parameter
   final <- get_ess(ess)
 
-  # add non weighted count if it is required
+  # Add non weighted count if it is required
   if (unweighted) {
     final <- final %>%
       dplyr::mutate(unweighted = n)
@@ -132,30 +128,30 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
 
 
 
-#-------------------------------------------------------------------------
 
+#-------------------------------------------------------------------------
 
 #' Create the inputs to evaluate the quality of the sum of continuous variables
 #'
 #' \code{create_total} generates a \code{dataframe} with the following elements: sum,
-#' degrees of freedom, sample size and coefficient of variation. The function allows
+#' degrees of freedom, sample size, and coefficient of variation. The function allows
 #' grouping in several domains.
 #'
-#' @param var numeric variable within the  \code{dataframe}.
+#' @param var numeric variable within the \code{dataframe}.
 #' @param domains domains to be estimated separated by the + character.
-#' @param subpop integer dummy variable to filter the dataframe
-#' @param design complex design created by \code{survey} package
-#' @param ci \code{boolean} indicating if the confidence intervals must be calculated
-#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
-#'
-#' @param deff \code{boolean} Design effect
-#' @param ess \code{boolean} Effective sample size
-#' @param rm.na \code{boolean} Remove NA if it is required
-#' @param rel_error \code{boolean} Relative error
-#' @param eclac_input \code{boolean} return eclac inputs
-#' @param unweighted \code{boolean} Add non weighted count if it is required
-#' @return \code{dataframe} that contains the inputs and all domains to be evaluated
+#' @param subpop integer dummy variable to filter the dataframe.
+#' @param design complex design created by \code{survey} package.
+#' @param ci \code{boolean} indicating if the confidence intervals must be calculated.
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.
+#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.
+#' @param ess \code{boolean} effective sample size.
+#' @param rm.na \code{boolean} remove NA values if required.
+#' @param deff \code{boolean} design effect.
+#' @param rel_error \code{boolean} relative error.
+#' @param unweighted \code{boolean} add non-weighted count if required.
+#' @param eclac_input \code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.
+#' @import survey
+#' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
 #'
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
@@ -163,35 +159,35 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
 #' @export
 
 create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE, rm.na = FALSE,
-                         deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = FALSE) {
+                         deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = c("chile", "eclac_2020", "eclac_2023")) {
 
+  # Match the argument to ensure it is one of the allowed values
+  eclac_input <- match.arg(eclac_input)
 
   # get design variables
-  design_vars <- get_design_vars(design )
+  design_vars <- get_design_vars(design)
 
   # Create list of variables included in domains
   agrupacion <- create_groupby_vars(domains)
 
   # Select relevant columns
-  design <- design[ ,  c(agrupacion,var, subpop, design_vars  ) ]
+  design <- design[, c(agrupacion, var, subpop, design_vars)]
 
-
-  # Turn on eclac indicators if the user wants it
-  eclac_inputs <-  eclac_standard(eclac_input)
-  ess = eclac_inputs$ess
-  unweighted = eclac_inputs$unweighted
-  deff = eclac_inputs$deff
+  # Turn on eclac indicators if the user selects eclac_2020 or eclac_2023
+  eclac_inputs <- eclac_standard(eclac_input != "chile")
+  ess <- eclac_inputs$ess
+  unweighted <- eclac_inputs$unweighted
+  deff <- eclac_inputs$deff
 
   # Standardize design variable names
   design <- standardize_design_variables(design)
 
-  # Convert everything to lowercase  to avoid problems in next steps
+  # Convert everything to lowercase to avoid problems in next steps
   names(design$variables) <- tolower(names(design$variables))
-  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
+  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains), tolower_strings)
   var <- lower_params$var
   subpop <- lower_params$subpop
   domains <- lower_params$domains
-
 
   # Remove NA values
   if (rm.na == TRUE) {
@@ -205,11 +201,10 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
   # warning if the standard error is not obtained from the complex design
   se_message(design)
 
-  # FIlter if the user add subpop parameter
+  # Filter if the user adds subpop parameter
   design <- filter_design(design, subpop)
 
-
-  #COnvert inputs to formula in order to get an easier manipulation with survey
+  # Convert inputs to formula in order to get an easier manipulation with survey
   var_form <- convert_to_formula(var)
   domains_form <- convert_to_formula(domains)
 
@@ -222,21 +217,21 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
   # get sample size for each group
   n <- get_sample_size(design$variables, agrupacion)
 
-  #Get degrees of freedom
+  # Get degrees of freedom
   gl <- get_df(design, agrupacion)
 
-  #Get coefficient of variation
+  # Get coefficient of variation
   cv <- get_cv(tabla, design, agrupacion)
 
   # Combine all the information in one single table
-  final <- create_output(tabla, agrupacion,  gl, n, cv)
+  final <- create_output(tabla, agrupacion, gl, n, cv)
 
   # Order columns and standardize variable names
-  final <- standardize_columns(final, var, denom = NULL )
+  final <- standardize_columns(final, var, denom = NULL)
 
   # Get confidence intervals if the user includes this parameter
   if (ci == TRUE) {
-    final <- get_ci(final,  ajuste_ene = ajuste_ene)
+    final <- get_ci(final, ajuste_ene = ajuste_ene)
   }
 
   # add relative error, if the user uses this parameter
@@ -258,71 +253,70 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
   final <- add_class(final, "calidad.total")
 
   return(final)
-
 }
 
 
 #--------------------------------------------------------------------
-
 #' Create the inputs to evaluate the quality of total estimations
 #'
 #' \code{create_size} generates a \code{dataframe} with the following elements: sum,
-#' degrees of freedom, sample size and coefficient of variation. The function allows
+#' degrees of freedom, sample size, and coefficient of variation. The function allows
 #' grouping in several domains.
-#' @param var numeric variable within the  \code{dataframe}. When the domain parameter is not used,
+#'
+#' @param var numeric variable within the \code{dataframe}. When the domain parameter is not used,
 #' it is possible to include more than one variable using the + separator. When a value is introduced
 #' in the domain parameter, the estimation variable must be a dummy variable.
 #' @param domains domains to be estimated separated by the + character.
-#' @param subpop integer dummy variable to filter the dataframe
-#' @param design complex design created by \code{survey} package
-#' @param ci \code{boolean} indicating if the confidence intervals must be calculated
-#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
+#' @param subpop integer dummy variable to filter the dataframe.
+#' @param design complex design created by \code{survey} package.
+#' @param ci \code{boolean} indicating if the confidence intervals must be calculated.
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.
+#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.
+#' @param ess \code{boolean} effective sample size.
+#' @param rm.na \code{boolean} remove NA values if required.
+#' @param deff \code{boolean} design effect.
+#' @param rel_error \code{boolean} relative error.
+#' @param unweighted \code{boolean} add non-weighted count if required.
+#' @param df_type \code{character} use degrees of freedom calculation approach from INE Chile or CEPAL. Options are "chile" or "eclac".
+#' @param eclac_input \code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.
+#' @import survey
+#' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
 #'
-#' @param deff \code{boolean} Design effect
-#' @param ess \code{boolean} Effective sample size
-#' @param rm.na \code{boolean} Remove NA if it is required
-#' @param rel_error \code{boolean} Relative error
-#' @param eclac_input \code{boolean} return eclac inputs
-#' @param unweighted \code{boolean} Add non weighted count if it is required
-#' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".
-#' @return \code{dataframe} that contains the inputs and all domains to be evaluated
-#' @import tidyr
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
 #' create_size("ocupado", "zona+sexo", design = dc)
 #' @export
 
 create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE, rm.na = FALSE,
-                         deff = FALSE, rel_error = FALSE,  unweighted = FALSE, df_type = c("ine", "eclac"), eclac_input = FALSE) {
+                        deff = FALSE, rel_error = FALSE, unweighted = FALSE, df_type = c("chile", "eclac"), eclac_input = c("chile", "eclac_2020", "eclac_2023")) {
 
   df_type <- match.arg(df_type)
+  eclac_input <- match.arg(eclac_input)
 
   # get design variables
-  design_vars <- get_design_vars(design )
+  design_vars <- get_design_vars(design)
 
   # Create list of variables included in domains
   agrupacion <- create_groupby_vars(domains)
 
   # Select relevant columns
-  design <- design[ ,  c(agrupacion,var, subpop, design_vars  ) ]
+  design <- design[, c(agrupacion, var, subpop, design_vars)]
 
-  # Turn on eclac indicators if the user wants it
-  eclac_inputs <-  eclac_standard(eclac_input)
-  ess = eclac_inputs$ess
-  unweighted = eclac_inputs$unweighted
-  deff = eclac_inputs$deff
+  # Turn on eclac indicators if the user selects eclac_2020 or eclac_2023
+  eclac_inputs <- eclac_standard(eclac_input != "chile")
+  ess <- eclac_inputs$ess
+  unweighted <- eclac_inputs$unweighted
+  deff <- eclac_inputs$deff
 
   # Standardize design variable names
   design <- standardize_design_variables(design)
 
   # Convert everything to lowercase to avoid problems
   names(design$variables) <- tolower(names(design$variables))
-  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains ),  tolower_strings )
+  lower_params <- purrr::map(list("var" = var, "subpop" = subpop, "domains" = domains), tolower_strings)
   var <- lower_params$var
   subpop <- lower_params$subpop
   domains <- lower_params$domains
-
 
   # Remove NA values
   if (rm.na == TRUE) {
@@ -336,18 +330,16 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   # warning if the standard error is not obtained from the complex design
   se_message(design)
 
-  # FIlter if the user add subpop parameter
+  # Filter if the user adds subpop parameter
   design <- filter_design(design, subpop)
 
-  #Convert inputs to formulas to get an easier manipulation with survey
+  # Convert inputs to formulas to get an easier manipulation with survey
   var_form <- convert_to_formula(var)
-
-  #COnvert inputs to formula in order to get an easier manipulation with survey
   domains_form <- convert_to_formula(domains)
   agrupacion <- create_groupby_vars(domains)
 
-  # Add estimation variable for the case ine-size
-  if (df_type == "ine") {
+  # Add estimation variable for the case chile-size
+  if (df_type == "chile") {
     agrupacion <- c(agrupacion, var)
     #domains_form <- convert_to_formula(paste0(domains, "+", var))
   }
@@ -358,22 +350,21 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   # get sample size for each group
   n <- get_sample_size(design$variables, agrupacion, df_type)
 
-  #Get degrees of freedom
-  gl <- get_df(design,agrupacion,df_type)
+  # Get degrees of freedom
+  gl <- get_df(design, agrupacion, df_type)
 
-  #Get coefficient of variation
+  # Get coefficient of variation
   cv <- get_cv(tabla, design, agrupacion, type_est = "size")
 
-
   # Combine all the information in one single table
-  final <- create_output(tabla, agrupacion,  gl = gl, n, cv,)
+  final <- create_output(tabla, agrupacion, gl = gl, n, cv)
 
   # Order columns and standardize variable names
   final <- standardize_columns(final, var, denom = NULL)
 
   # Get confidence intervals if the user includes this parameter
   if (ci == TRUE) {
-    final <- get_ci(final,  ajuste_ene = ajuste_ene)
+    final <- get_ci(final, ajuste_ene = ajuste_ene)
   }
 
   # add relative error, if the user uses this parameter
@@ -385,21 +376,15 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   # add the ess if the user uses this parameter
   final <- get_ess(ess)
 
-
   # add non weighted count if it is required
   if (unweighted) {
-    final <- get_unweighted(table =  final, domains =  domains, var = var,
-                            disenio = design)
-
+    final <- get_unweighted(table = final, domains = domains, var = var, disenio = design)
   }
 
   final <- add_class(final, "calidad.size")
 
-
   return(final)
-
 }
-
 
 
 
@@ -407,24 +392,25 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' Create the inputs to evaluate the quality of proportion estimations
 #'
 #' \code{create_prop} generates a \code{dataframe} with the following elements: sum,
-#' degrees of freedom, sample size, standard error and coefficient of variation. The function allows
+#' degrees of freedom, sample size, standard error, and coefficient of variation. The function allows
 #' grouping in several domains.
 #'
 #' @param var numeric variable within the \code{dataframe}, is the numerator of the ratio to be calculated.
-#' @param denominator numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL
+#' @param denominator numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL.
 #' @param domains domains to be estimated separated by the + character.
-#' @param design complex design created by \code{survey} package
-#' @param subpop integer dummy variable to filter the dataframe
-#' @param ci \code{boolean} indicating if the confidence intervals must be calculated
-#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used
-#' @param standard_eval \code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors
-#' @param deff \code{boolean} Design effect
-#' @param ess \code{boolean} Effective sample size
-#' @param rel_error \code{boolean} Relative error
-#' @param eclac_input \code{boolean} return eclac inputs
-#' @param log_cv \code{boolean} logarithmic coefficient of variation
-#' @param unweighted \code{boolean} Add non weighted count if it is required
-#' @return \code{dataframe} that contains the inputs and all domains to be evaluated
+#' @param design complex design created by \code{survey} package.
+#' @param subpop integer dummy variable to filter the dataframe.
+#' @param ci \code{boolean} indicating if the confidence intervals must be calculated.
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.
+#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.
+#' @param deff \code{boolean} design effect.
+#' @param ess \code{boolean} effective sample size.
+#' @param rel_error \code{boolean} relative error.
+#' @param eclac_input \code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.
+#' @param log_cv \code{boolean} logarithmic coefficient of variation.
+#' @param unweighted \code{boolean} add non-weighted count if required.
+#' @import survey
+#' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
 #'
 #' @examples
 #' library(survey)
@@ -435,7 +421,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' old_options <- options()
 #' options(survey.lonely.psu = "certainty")
 #'
-#' create_prop(var = "gasto_zona1", denominator = "gastot_hd", design =  dc)
+#' create_prop(var = "gasto_zona1", denominator = "gastot_hd", design = dc)
 #'
 #' enusc <- filter(enusc, Kish == 1)
 #'
@@ -444,37 +430,36 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' create_prop(var = "VP_DC", denominator = "hom_insg_taxi", design = dc)
 #' options(old_options)
 #' @export
-#'
+create_prop <- function(var, denominator = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
+                        rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE, eclac_input = c("chile", "eclac_2020", "eclac_2023")) {
 
-create_prop = function(var, denominator = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
-                       rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE, eclac_input = FALSE){
+  # Match the argument to ensure it is one of the allowed values
+  eclac_input <- match.arg(eclac_input)
 
   # eclac approach is not allowed with denominator
-  if (!is.null(denominator) & eclac_input == TRUE) {
+  if (!is.null(denominator) & eclac_input != "chile") {
     stop("eclac approach is not allowed with denominator")
   }
 
-  # Turn on eclac indicators if the user wants it
-  eclac_inputs <-  eclac_standard(eclac_input, proportion = TRUE)
-  ess = eclac_inputs$ess
-  unweighted = eclac_inputs$unweighted
-  deff = eclac_inputs$deff
-  log_cv = eclac_inputs$log_cv
+  # Turn on eclac indicators if the user selects eclac_2020 or eclac_2023
+  eclac_inputs <- eclac_standard(eclac_input != "chile", proportion = TRUE)
+  ess <- eclac_inputs$ess
+  unweighted <- eclac_inputs$unweighted
+  deff <- eclac_inputs$deff
+  log_cv <- eclac_inputs$log_cv
 
-
-
-  if(!is.null(denominator)){
-    final = create_ratio_internal(var, denominator, domains, subpop, design, ci, deff, ess,  ajuste_ene, rel_error)
+  if (!is.null(denominator)) {
+    final <- create_ratio_internal(var, denominator, domains, subpop, design, ci, deff, ess, ajuste_ene, rel_error)
   }
 
-  if(is.null(denominator)) {
-    final = create_prop_internal(var,  domains, subpop, design, ci, deff, ess,  ajuste_ene, rel_error, log_cv, unweighted)
+  if (is.null(denominator)) {
+    final <- create_prop_internal(var, domains, subpop, design, ci, deff, ess, ajuste_ene, rel_error, log_cv, unweighted)
   }
 
   # Add a class to the object
   final <- add_class(final, "calidad.prop")
 
   return(final)
-}
 
+}
 

@@ -17,47 +17,47 @@ create_size(
   deff = FALSE,
   rel_error = FALSE,
   unweighted = FALSE,
-  df_type = c("ine", "eclac"),
-  eclac_input = FALSE
+  df_type = c("chile", "eclac"),
+  eclac_input = c("chile", "eclac_2020", "eclac_2023")
 )
 }
 \arguments{
-\item{var}{numeric variable within the  \code{dataframe}. When the domain parameter is not used,
+\item{var}{numeric variable within the \code{dataframe}. When the domain parameter is not used,
 it is possible to include more than one variable using the + separator. When a value is introduced
 in the domain parameter, the estimation variable must be a dummy variable.}
 
 \item{domains}{domains to be estimated separated by the + character.}
 
-\item{subpop}{integer dummy variable to filter the dataframe}
+\item{subpop}{integer dummy variable to filter the dataframe.}
 
-\item{design}{complex design created by \code{survey} package}
+\item{design}{complex design created by \code{survey} package.}
 
-\item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
+\item{ci}{\code{boolean} indicating if the confidence intervals must be calculated.}
 
-\item{ess}{\code{boolean} Effective sample size}
+\item{ess}{\code{boolean} effective sample size.}
 
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.}
 
-\item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
+\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.}
 
-\item{rm.na}{\code{boolean} Remove NA if it is required}
+\item{rm.na}{\code{boolean} remove NA values if required.}
 
-\item{deff}{\code{boolean} Design effect}
+\item{deff}{\code{boolean} design effect.}
 
-\item{rel_error}{\code{boolean} Relative error}
+\item{rel_error}{\code{boolean} relative error.}
 
-\item{unweighted}{\code{boolean} Add non weighted count if it is required}
+\item{unweighted}{\code{boolean} add non-weighted count if required.}
 
-\item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or CEPAL, by default "ine".}
+\item{df_type}{\code{character} use degrees of freedom calculation approach from INE Chile or CEPAL. Options are "chile" or "eclac".}
 
-\item{eclac_input}{\code{boolean} return eclac inputs}
+\item{eclac_input}{\code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.}
 }
 \value{
-\code{dataframe} that contains the inputs and all domains to be evaluated
+\code{dataframe} that contains the inputs and all domains to be evaluated.
 }
 \description{
 \code{create_size} generates a \code{dataframe} with the following elements: sum,
-degrees of freedom, sample size and coefficient of variation. The function allows
+degrees of freedom, sample size, and coefficient of variation. The function allows
 grouping in several domains.
 }
 \examples{

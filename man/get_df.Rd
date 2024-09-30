@@ -11,7 +11,7 @@ get_df(data, domains, df_type = "eclac")
 
 \item{domains}{\code{string} with domains}
 
-\item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or eclac, by default "ine".}
+\item{df_type}{\code{string} Use degrees of freedom calculation approach from INE Chile or eclac, by default "chile".}
 }
 \value{
 \code{dataframe} with results including degrees of freedom

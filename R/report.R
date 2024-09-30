@@ -1,5 +1,3 @@
-
-
 #' Create html table with the results of the evaluation
 #'
 #'
@@ -19,74 +17,99 @@
 #' table <- assess(create_prop("ocupado", domains = "zona+sexo", design = dc))
 #' @export
 
-
 create_html <- function(table) {
 
-
-  # This is the INE case
-  if ( sum(class(table) %in% "cepal.eval")  == 0) {
+  # Caso INE
+  if (sum(class(table) %in% "ine.eval") > 0) {
     table %>%
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
-        label = kableExtra::cell_spec(.data$label, background  = dplyr::case_when(
+        label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
           .data$label == "reliable" ~ "green",
           .data$label == "weakly reliable" ~ "yellow",
           .data$label == "non-reliable" ~ "red"
-        ),
-        color = "black")) %>%
+        ), color = "black")) %>%
       dplyr::mutate(
-        n = kableExtra::cell_spec(.data$n, color= dplyr::case_when(
-          .data$n < 60  ~ "red",
+        n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
+          .data$n < 60 ~ "red",
           .data$n >= 60 ~ "black"
         )),
         df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
-          .data$df < 9  ~ "red",
+          .data$df < 9 ~ "red",
           .data$df >= 9 ~ "black"
         ))) %>%
       kableExtra::kable(format.args = list(decimal.mark = ',', big.mark = "."),
                         format = "html",
                         escape = FALSE,
                         align = "c",
-                        table.attr = "style = \"color: black;\"")  %>%
+                        table.attr = "style = \"color: black;\"") %>%
       kableExtra::kable_styling("striped",
                                 full_width = FALSE,
                                 html_font = "arial") %>%
       kableExtra::kable_paper("hover") %>%
       kableExtra::row_spec(0, bold = TRUE, color = "black")
 
-  } else {
+    # Caso CEPAL 2020
+  } else if (sum(class(table) %in% "cepal2020.eval") > 0) {
     table %>%
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
-        label = kableExtra::cell_spec(.data$label, background  = dplyr::case_when(
+        label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
           .data$label == "publish" ~ "green",
           .data$label == "review" ~ "yellow",
           .data$label == "supress" ~ "red"
-        ),
-        color = "black")) %>%
+        ), color = "black")) %>%
       dplyr::mutate(
-        n = kableExtra::cell_spec(.data$n, color= dplyr::case_when(
-          .data$n < 60  ~ "red",
+        n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
+          .data$n < 60 ~ "red",
           .data$n >= 60 ~ "black"
         )),
         df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
-          .data$df < 9  ~ "red",
+          .data$df < 9 ~ "red",
           .data$df >= 9 ~ "black"
         ))) %>%
       kableExtra::kable(format.args = list(decimal.mark = ',', big.mark = "."),
                         format = "html",
                         escape = FALSE,
                         align = "c",
-                        table.attr = "style = \"color: black;\"")  %>%
+                        table.attr = "style = \"color: black;\"") %>%
       kableExtra::kable_styling("striped",
                                 full_width = FALSE,
                                 html_font = "arial") %>%
       kableExtra::kable_paper("hover") %>%
       kableExtra::row_spec(0, bold = TRUE, color = "black")
 
+    # Caso CEPAL 2023
+  } else if (sum(class(table) %in% "cepal2023.eval") > 0) {
+    table %>%
+      dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
+      dplyr::mutate(
+        label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
+          .data$label == "reliable" ~ "green",
+          .data$label == "weakly-reliable" ~ "yellow",
+          .data$label == "non-reliable" ~ "red"
+        ), color = "black")) %>%
+      dplyr::mutate(
+        n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
+          .data$n < 60 ~ "red",
+          .data$n >= 60 ~ "black"
+        )),
+        df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
+          .data$df < 9 ~ "red",
+          .data$df >= 9 ~ "black"
+        ))) %>%
+      kableExtra::kable(format.args = list(decimal.mark = ',', big.mark = "."),
+                        format = "html",
+                        escape = FALSE,
+                        align = "c",
+                        table.attr = "style = \"color: black;\"") %>%
+      kableExtra::kable_styling("striped",
+                                full_width = FALSE,
+                                html_font = "arial") %>%
+      kableExtra::kable_paper("hover") %>%
+      kableExtra::row_spec(0, bold = TRUE, color = "black")
+
+
   }
-
 }
-
-
 

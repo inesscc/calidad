@@ -17,45 +17,45 @@ create_mean(
   deff = FALSE,
   rel_error = FALSE,
   unweighted = FALSE,
-  eclac_input = FALSE
+  eclac_input = c("chile", "eclac_2020", "eclac_2023")
 )
 }
 \arguments{
-\item{var}{numeric variable within the  \code{dataframe}.}
+\item{var}{numeric variable within the \code{dataframe}.}
 
 \item{domains}{domains to be estimated separated by the + character.}
 
-\item{subpop}{integer dummy variable to filter the dataframe}
+\item{subpop}{integer dummy variable to filter the dataframe.}
 
-\item{design}{complex design created by \code{survey} package}
+\item{design}{complex design created by \code{survey} package.}
 
-\item{ci}{\code{boolean} indicating if the confidence intervals must be calculated}
+\item{ci}{\code{boolean} indicating if the confidence intervals must be calculated.}
 
-\item{ess}{\code{boolean} Effective sample size}
+\item{ess}{\code{boolean} effective sample size.}
 
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used}
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.}
 
-\item{standard_eval}{\code{boolean} Indicating if the function is wrapped inside a function, if \code{TRUE} avoid lazy eval errors}
+\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.}
 
-\item{rm.na}{\code{boolean} Remove NA if it is required}
+\item{rm.na}{\code{boolean} remove NA values if required.}
 
-\item{deff}{\code{boolean} Design effect}
+\item{deff}{\code{boolean} design effect.}
 
-\item{rel_error}{\code{boolean} Relative error}
+\item{rel_error}{\code{boolean} relative error.}
 
-\item{unweighted}{\code{boolean} Add non weighted count if it is required}
+\item{unweighted}{\code{boolean} add non-weighted count if required.}
 
-\item{eclac_input}{\code{boolean} return eclac inputs}
+\item{eclac_input}{\code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.}
 }
 \value{
-\code{dataframe} that contains the inputs and all domains to be evaluated
+\code{dataframe} that contains the inputs and all domains to be evaluated.
 }
 \description{
-\code{create_mean} generates ano \code{dataframe} with the following elements: mean,
-degrees of freedom, sample size and coefficient of variation. The function allows
+\code{create_mean} generates a \code{dataframe} with the following elements: mean,
+degrees of freedom, sample size, and coefficient of variation. The function allows
 grouping in several domains.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
-create_mean("gastot_hd", "zona+sexo",  design = dc)
+create_mean("gastot_hd", "zona+sexo", design = dc)
 }

@@ -2,48 +2,67 @@
 % Please edit documentation in R/evaluate_external.R
 \name{assess}
 \alias{assess}
-\title{assess the quality of mean estimations}
+\title{Assess the quality of mean estimations}
 \usage{
-assess(table, publish = FALSE, scheme = c("chile", "eclac"), ...)
+assess(
+  table,
+  publish = FALSE,
+  scheme = c("chile", "eclac_2020", "eclac_2023"),
+  domain_info = FALSE,
+  ...
+)
 }
 \arguments{
-\item{table}{\code{dataframe} created by \code{crear_insumos_media}}
+\item{table}{\code{dataframe} created by \code{crear_insumos_media}.}
 
 \item{publish}{\code{boolean} indicating if the evaluation of the complete table
-must be added. If it is TRUE, the function adds a new column to the \code{dataframe}}
+must be added. If \code{TRUE}, the function adds a new column to the \code{dataframe}.}
 
-\item{scheme}{string variable, default scheme is "chile" which refers to the evaluation protocol proposed by INE Chile. the alternative is "eclac" to use the eclac protocol}
+\item{scheme}{\code{character} variable indicating the evaluation protocol to use. Options are "chile", "eclac_2020", "eclac_2023".}
 
-\item{...}{the list of cepal parameters. The complete list of parameters is
+\item{domain_info}{Logical. If \code{TRUE}, indicates that the study domain information is available and will be used for assessment.
+This affects how the evaluation is conducted, leveraging specific domain-level data to refine the assessment results.
+When \code{FALSE}, domain-specific adjustments are omitted, and a generalized assessment is performed.}
 
+\item{...}{additional parameters for the evaluation. The complete list of parameters is:
 1. General Parameters
-
 \itemize{
-  \item \code{df} degrees of freedom. default: 9
-  \item \code{n} sample size. default ine scheme is 60. default cepal scheme: 100
+  \item \code{df} degrees of freedom. Default: 9.
+  \item \code{n} sample size. Default for chile scheme: 60. Default for CEPAL schemes: 100.
 }
 
-2. INE parameters
+2. chile Parameters
 \itemize{
-  \item \code{cv_lower_ine} lower limit for cv. default: 0.15
-  \item \code{cv_upper_ine} upper limit for cv. default: 0.3
+  \item \code{cv_lower_ine} lower limit for CV. Default: 0.15.
+  \item \code{cv_upper_ine} upper limit for CV. Default: 0.3.
 }
 
-3. CEPAL parameters
+3. CEPAL 2020 Parameters
 \itemize{
-  \item \code{cv_cepal} limit for cv. default: 0.2
-  \item \code{ess} efective sample size. default: 140
-  \item \code{unweighted} unweighted count. default: 50
+  \item \code{cv_cepal} limit for CV. Default: 0.2.
+  \item \code{ess} effective sample size. Default: 140.
+  \item \code{unweighted} unweighted count. Default: 50.
+  \item \code{log_cv} logarithmic coefficient of variation. Default: 0.175.
+}
+
+4. CEPAL 2023 Parameters
+\itemize{
+  \item \code{cv_lower_cepal} lower limit for CV. Default: 0.2.
+  \item \code{cv_upper_cepal} upper limit for CV. Default: 0.3.
+  \item \code{ess} effective sample size. Default: 60.
+  \item \code{cvlog_max} maximum logarithmic coefficient of variation. Default: 0.175.
+  \item \code{CCNP_b} unweighted count before adjustment. Default: 50.
+  \item \code{CCNP_a} unweighted count after adjustment. Default: 30.
 }}
 }
 \value{
 \code{dataframe} with all the columns included in the input table, plus a new column
-containing a label indicating the evaluation of each estimation: reliable, bit reliable or unreliable
+containing a label indicating the evaluation of each estimation: reliable, bit reliable, or unreliable.
 }
 \description{
-\code{assess} assess the quality of mean estimation using the
-methodology created by INE Chile, which considers sample size, degrees of freedom and
-coeficient of variation.
+\code{assess} evaluates the quality of mean estimations using the
+methodology created by INE Chile, which considers sample size, degrees of freedom, and
+coefficient of variation.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)

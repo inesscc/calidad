@@ -1,4 +1,5 @@
 context("test-assess_internal")
+context("test-assess_internal")
 
 # Diseños muestrales
 options(survey.lonely.psu = "certainty")
@@ -14,46 +15,50 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
                               ),
                             weights = ~fact_cal)
 
-
-
-
-##############
-# assess INE
-##############
-
-
-# Defaults params for INE Chile for mean
+# Defaults params
 default_params_ine = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
-test <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc)
-evaluation <- assess_ine(test, params = default_params_ine, class(test))
+default_params_cepal2020 = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50, log_cv = 0.175)
+default_params_cepal2023 <- list(df = 9, n = 100, cv_lower_cepal = 0.2, cv_upper_cepal = 0.3, ess = 60, cvlog_max = 0.175, CCNP_b = 50, CCNP_a = 30)
 
+test_that("assess_ine works for mean", {
+  test <- create_mean("gastot_hd", domains = "zona+sexo+ecivil", design = dc)
+  evaluation <- assess_ine(test, params = default_params_ine, class(test))
+  expect_true("label" %in% colnames(evaluation))
+  expect_true(all(evaluation$label %in% c("reliable", "weakly reliable", "non-reliable")))
+})
 
-# Defaults params for INE Chile for proportion
-test <-  create_prop("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T)
-evaluation <- assess_ine(test, params = default_params_ine, class(test))
+test_that("assess_ine works for proportion", {
+  test <- create_prop("desocupado", domains = "region", design = dc_ene, deff = TRUE, ess = TRUE)
+  evaluation <- assess_ine(test, params = default_params_ine, class(test))
+  expect_true("label" %in% colnames(evaluation))
+  expect_true(all(evaluation$label %in% c("reliable", "weakly reliable", "non-reliable")))
+})
 
+test_that("assess_cepal2020 works for mean", {
+  test <- create_mean("gastot_hd", domains = "zona+sexo+ecivil", design = dc, deff = TRUE, ess = TRUE, unweighted = TRUE)
+  evaluation <- assess_cepal2020(test, params = default_params_cepal2020, class = class(test))
+  expect_true("label" %in% colnames(evaluation))
+  expect_true(all(evaluation$label %in% c("publish", "review", "supress")))
+})
 
-#################
-# assess CEPAL
-#################
-default_params_cepal = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50, log_cv = 0.175)
-test <-  create_mean("gastot_hd", domains =  "zona+sexo+ecivil", design = dc, deff = T, ess = T, unweighted = T)
-evaluation <- assess_cepal(test, params = default_params_cepal, class = class(test))
+test_that("assess_cepal2020 works for proportion", {
+  test <- create_prop("desocupado", domains = "region", design = dc_ene, deff = TRUE, ess = TRUE, unweighted = TRUE, log_cv = TRUE)
+  evaluation <- assess_cepal2020(test, params = default_params_cepal2020, class = class(test))
+  expect_true("label" %in% colnames(evaluation))
+  expect_true(all(evaluation$label %in% c("publish", "review", "supress")))
+})
 
+test_that("assess_cepal2023 works for mean", {
+  test <- create_mean("gastot_hd", domains = "zona+sexo+ecivil", design = dc, deff = TRUE, ess = TRUE, unweighted = TRUE)
+  evaluation <- assess_cepal2023(test, params = default_params_cepal2023, class = class(test))
+  expect_true("label" %in% colnames(evaluation))
+  expect_true(all(evaluation$label %in% c("reliable", "weakly-reliable", "non-reliable")))
+})
 
-# Defaults params for cepal: proportion case
-test <-  create_prop("desocupado", domains =  "region", design = dc_ene, deff = T, ess = T, unweighted = T, log_cv = T)
-evaluation <- assess_cepal(test, params = default_params_cepal, class(test))
-
-
-
-
-
-####################
-# PUBLISH INE TABLE
-####################
-
-#x <- publish_table(evaluation)
-
-
+test_that("assess_cepal2023 works for proportion", {
+  test <- create_prop("desocupado", domains = "region", design = dc_ene, deff = TRUE, ess = TRUE, unweighted = TRUE, log_cv = TRUE)
+  evaluation <- assess_cepal2023(test, params = default_params_cepal2023, class = class(test))
+  expect_true("label" %in% colnames(evaluation))
+  expect_true(all(evaluation$label %in% c("reliable", "weakly-reliable", "non-reliable")))
+})
 

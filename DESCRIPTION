@@ -16,6 +16,16 @@ Authors@R: c(
         family = "Agloni",
         role = c("ctb"),
         email = "ifaglonij@ine.gob.cl"
+        ),
+      person(given = "Andrea",
+        family = "López",
+        role = c("ctb"),
+        email = "lopezseguraa@gmail.com"
+        ),
+      person(given = "Javiera",
+        family = "Preuss",
+        role = c("ctb"),
+        email = "jmpreussa@ine.gob.cl"
         )
     )
 Description: Assesses the quality of estimates made by complex sample designs,
@@ -25,7 +35,7 @@ Description: Assesses the quality of estimates made by complex sample designs,
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.2
+RoxygenNote: 7.3.1
 Suggests: knitr, rmarkdown, testthat
 VignetteBuilder: knitr
 Depends: R (>= 3.5.0)
