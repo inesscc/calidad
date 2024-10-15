@@ -1,5 +1,4 @@
 context("test-assess_internal")
-context("test-assess_internal")
 
 # Diseños muestrales
 options(survey.lonely.psu = "certainty")
@@ -24,41 +23,38 @@ test_that("assess_ine works for mean", {
   test <- create_mean("gastot_hd", domains = "zona+sexo+ecivil", design = dc)
   evaluation <- assess_ine(test, params = default_params_ine, class(test))
   expect_true("label" %in% colnames(evaluation))
-  expect_true(all(evaluation$label %in% c("reliable", "weakly reliable", "non-reliable")))
+  expect_equal(sum(evaluation$label == 'non-reliable'), 4)
 })
 
 test_that("assess_ine works for proportion", {
-  test <- create_prop("desocupado", domains = "region", design = dc_ene, deff = TRUE, ess = TRUE)
+  test <- create_prop("desocupado", domains = "region", design = dc_ene)
   evaluation <- assess_ine(test, params = default_params_ine, class(test))
   expect_true("label" %in% colnames(evaluation))
-  expect_true(all(evaluation$label %in% c("reliable", "weakly reliable", "non-reliable")))
+  expect_equal(sum(evaluation$label == 'reliable'), 16)
 })
 
 test_that("assess_cepal2020 works for mean", {
-  test <- create_mean("gastot_hd", domains = "zona+sexo+ecivil", design = dc, deff = TRUE, ess = TRUE, unweighted = TRUE)
+  test <- create_mean("gastot_hd", domains = "zona+sexo+ecivil", design = dc, eclac_input = T)
   evaluation <- assess_cepal2020(test, params = default_params_cepal2020, class = class(test))
-  expect_true("label" %in% colnames(evaluation))
-  expect_true(all(evaluation$label %in% c("publish", "review", "supress")))
+  expect_equal(sum(evaluation$label == 'publish'), 10)
 })
 
 test_that("assess_cepal2020 works for proportion", {
-  test <- create_prop("desocupado", domains = "region", design = dc_ene, deff = TRUE, ess = TRUE, unweighted = TRUE, log_cv = TRUE)
+  test <- create_prop("desocupado", domains = "region", design = dc_ene, eclac_input = TRUE, log_cv = TRUE)
   evaluation <- assess_cepal2020(test, params = default_params_cepal2020, class = class(test))
   expect_true("label" %in% colnames(evaluation))
-  expect_true(all(evaluation$label %in% c("publish", "review", "supress")))
+  expect_equal(sum(evaluation$label == 'supress'), 1)
 })
 
 test_that("assess_cepal2023 works for mean", {
-  test <- create_mean("gastot_hd", domains = "zona+sexo+ecivil", design = dc, deff = TRUE, ess = TRUE, unweighted = TRUE)
+  test <- create_mean("gastot_hd", domains = "zona+sexo+ecivil", design = dc, eclac_input = TRUE)
   evaluation <- assess_cepal2023(test, params = default_params_cepal2023, class = class(test))
-  expect_true("label" %in% colnames(evaluation))
-  expect_true(all(evaluation$label %in% c("reliable", "weakly-reliable", "non-reliable")))
+  expect_equal(sum(evaluation$label == 'non-reliable'), 5)
 })
 
 test_that("assess_cepal2023 works for proportion", {
-  test <- create_prop("desocupado", domains = "region", design = dc_ene, deff = TRUE, ess = TRUE, unweighted = TRUE, log_cv = TRUE)
+  test <- create_prop("desocupado", domains = "region", design = dc_ene, eclac_input = TRUE)
   evaluation <- assess_cepal2023(test, params = default_params_cepal2023, class = class(test))
-  expect_true("label" %in% colnames(evaluation))
-  expect_true(all(evaluation$label %in% c("reliable", "weakly-reliable", "non-reliable")))
+  expect_equal(sum(evaluation$label == 'weakly-reliable'), 1)
 })
 

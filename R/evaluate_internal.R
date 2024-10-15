@@ -130,9 +130,9 @@ utils::globalVariables(c("eval_deff", "eval_ess"))
 
 assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE) {
   evaluation <- table %>%
-    dplyr::mutate(eval_deff = dplyr::if_else(.data$deff < 1 & domain_info & .data$n >= params$n, "Sufficient deff", "non-reliable"),
-                  eval_deff = dplyr::if_else(.data$deff < 1 & !domain_info & .data$n < params$n, "non-reliable","Sufficient deff"),
-                  eval_deff = dplyr::if_else(.data$deff >= 1, "Sufficient deff", "supress")) %>%
+    dplyr::mutate(eval_deff = dplyr::case_when(.data$deff >= 1 ~ "Sufficient deff",
+                                        .data$deff < 1 & domain_info & .data$n >= params$n ~ "Sufficient deff",
+                                        TRUE ~ "non-reliable")) %>%
     dplyr::mutate(
       eval_ess = dplyr::if_else(eval_deff == "Sufficient deff" & .data$ess >= params$ess, "Sufficient ess", "non-reliable"),
       eval_df = dplyr::if_else(eval_ess == "Sufficient ess" & .data$df >= params$df, "Sufficient df",

@@ -18,7 +18,7 @@ create_prop(
   log_cv = FALSE,
   unweighted = FALSE,
   standard_eval = FALSE,
-  eclac_input = c("chile", "eclac_2020", "eclac_2023")
+  eclac_input = FALSE
 )
 }
 \arguments{
@@ -48,7 +48,7 @@ create_prop(
 
 \item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.}
 
-\item{eclac_input}{\code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.}
+\item{eclac_input}{\code{boolean} return eclac inputs}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated.

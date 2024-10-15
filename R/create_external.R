@@ -21,7 +21,7 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @param deff \code{boolean} design effect.
 #' @param rel_error \code{boolean} relative error.
 #' @param unweighted \code{boolean} add non-weighted count if required.
-#' @param eclac_input \code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.
+#' @param eclac_input \code{boolean} return eclac inputs.
 #' @import survey
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
 #'
@@ -31,10 +31,8 @@ if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 #' @export
 
 create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE,
-                       rm.na = FALSE, deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = c("chile", "eclac_2020", "eclac_2023")) {
+                       rm.na = FALSE, deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = FALSE) {
 
-  # Match the argument to ensure it is one of the allowed values
-  eclac_input <- match.arg(eclac_input)
 
   # get design variables
   design_vars <- get_design_vars(design)
@@ -45,8 +43,8 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
   # Select relevant columns
   design <- design[, c(agrupacion, var, subpop, design_vars)]
 
-  # Turn on eclac indicators if the user selects eclac_2020 or eclac_2023
-  eclac_inputs <- eclac_standard(eclac_input != "chile")
+  # Turn on eclac indicators if the user wants it
+  eclac_inputs <- eclac_standard(eclac_input)
   ess <- eclac_inputs$ess
   unweighted <- eclac_inputs$unweighted
   deff <- eclac_inputs$deff
@@ -149,7 +147,7 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
 #' @param deff \code{boolean} design effect.
 #' @param rel_error \code{boolean} relative error.
 #' @param unweighted \code{boolean} add non-weighted count if required.
-#' @param eclac_input \code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.
+#' @param eclac_input \code{boolean} return eclac inputs
 #' @import survey
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
 #'
@@ -159,10 +157,8 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
 #' @export
 
 create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE, rm.na = FALSE,
-                         deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = c("chile", "eclac_2020", "eclac_2023")) {
+                         deff = FALSE, rel_error = FALSE, unweighted = FALSE, eclac_input = FALSE) {
 
-  # Match the argument to ensure it is one of the allowed values
-  eclac_input <- match.arg(eclac_input)
 
   # get design variables
   design_vars <- get_design_vars(design)
@@ -173,8 +169,8 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
   # Select relevant columns
   design <- design[, c(agrupacion, var, subpop, design_vars)]
 
-  # Turn on eclac indicators if the user selects eclac_2020 or eclac_2023
-  eclac_inputs <- eclac_standard(eclac_input != "chile")
+  # Turn on eclac indicators if the user wants it
+  eclac_inputs <- eclac_standard(eclac_input)
   ess <- eclac_inputs$ess
   unweighted <- eclac_inputs$unweighted
   deff <- eclac_inputs$deff
@@ -278,7 +274,7 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
 #' @param rel_error \code{boolean} relative error.
 #' @param unweighted \code{boolean} add non-weighted count if required.
 #' @param df_type \code{character} use degrees of freedom calculation approach from INE Chile or CEPAL. Options are "chile" or "eclac".
-#' @param eclac_input \code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.
+#' @param eclac_input \code{boolean} return eclac inputs
 #' @import survey
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
 #'
@@ -288,10 +284,9 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
 #' @export
 
 create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, ess = FALSE, ajuste_ene = FALSE, standard_eval = FALSE, rm.na = FALSE,
-                        deff = FALSE, rel_error = FALSE, unweighted = FALSE, df_type = c("chile", "eclac"), eclac_input = c("chile", "eclac_2020", "eclac_2023")) {
+                        deff = FALSE, rel_error = FALSE, unweighted = FALSE, df_type = c("chile", "eclac"), eclac_input = FALSE) {
 
   df_type <- match.arg(df_type)
-  eclac_input <- match.arg(eclac_input)
 
   # get design variables
   design_vars <- get_design_vars(design)
@@ -302,8 +297,8 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
   # Select relevant columns
   design <- design[, c(agrupacion, var, subpop, design_vars)]
 
-  # Turn on eclac indicators if the user selects eclac_2020 or eclac_2023
-  eclac_inputs <- eclac_standard(eclac_input != "chile")
+  # Turn on eclac indicators if the user wants it
+  eclac_inputs <- eclac_standard(eclac_input)
   ess <- eclac_inputs$ess
   unweighted <- eclac_inputs$unweighted
   deff <- eclac_inputs$deff
@@ -406,7 +401,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' @param deff \code{boolean} design effect.
 #' @param ess \code{boolean} effective sample size.
 #' @param rel_error \code{boolean} relative error.
-#' @param eclac_input \code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.
+#' @param eclac_input \code{boolean} return eclac inputs
 #' @param log_cv \code{boolean} logarithmic coefficient of variation.
 #' @param unweighted \code{boolean} add non-weighted count if required.
 #' @import survey
@@ -431,18 +426,16 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' options(old_options)
 #' @export
 create_prop <- function(var, denominator = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
-                        rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE, eclac_input = c("chile", "eclac_2020", "eclac_2023")) {
+                        rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE, eclac_input = FALSE) {
 
-  # Match the argument to ensure it is one of the allowed values
-  eclac_input <- match.arg(eclac_input)
 
   # eclac approach is not allowed with denominator
-  if (!is.null(denominator) & eclac_input != "chile") {
+  if (!is.null(denominator) & eclac_input== TRUE) {
     stop("eclac approach is not allowed with denominator")
   }
 
   # Turn on eclac indicators if the user selects eclac_2020 or eclac_2023
-  eclac_inputs <- eclac_standard(eclac_input != "chile", proportion = TRUE)
+  eclac_inputs <- eclac_standard(eclac_input, proportion = TRUE)
   ess <- eclac_inputs$ess
   unweighted <- eclac_inputs$unweighted
   deff <- eclac_inputs$deff

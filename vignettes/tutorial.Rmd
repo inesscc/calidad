@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 # Tutorial package calidad 
 
-The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4) and [ECLAC](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) for the quality assessment of estimates from household surveys.
+The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4), [ECLAC 2020](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) and [ECLAC 2023](https://www.cepal.org/sites/default/files/presentations/cea-ce22-cepal-gt-calidad-encuestas-de-hogares.pdf) for the quality assessment of estimates from household surveys.
 
 This tutorial shows the basic use of the package and includes the main functions to create the necessary inputs to implement both quality standards.  
 
@@ -142,20 +142,27 @@ insumos_media_nacional <-  create_mean("gastot_hd", design = dc_epf)
 
 ## Assessment 
 
-Once the inputs have been generated, we can do the assessment To do this, we use the `assess` function.
+Once the inputs have been generated, we can do the assessment. To do this, we use the `assess` function. By default, we apply the INE Chile criteria `scheme = 'chile'`. However, if we want to evaluate using ECLAC criteria, we need to specify `scheme = 'eclac_2020'` or `scheme = 'eclac_2023'`
 
-```{r, eval=T, warning=FALSE}
+
+```{r, eval=F, warning=FALSE}
+
+# INE Chile
 evaluacion_prop <- assess(insumos_prop)
 evaluacion_tot <- assess(insumos_total)
 evaluacion_suma <- assess(insumos_suma)
 evaluacion_media <- assess(insumos_media)
+
+# ECLAC 
+evaluacion_cepal_2020 <- assess(eclac_inputs, scheme = 'eclac_2020')
+evaluacion_cepal_2023 <- assess(eclac_inputs, scheme = 'eclac_2023')
 ```
 
 The output is a `dataframe` that, in addition to containing the information already generated, includes a column that indicates whether the estimate is unreliable, less reliable or reliable.
 
 The function `assess` has a parameter that allows us to know if the table should be published or not. Following the criteria of the standard, if more than 50% of the estimates of a table are not reliable, it should not be published.
 
-```{r}
+```{r eval=F}
 # Unemployment by region
 desagregar <- create_size(var = "desocupado", domains = "region", subpop = "fdt", design =  dc_ene)
 
@@ -164,7 +171,7 @@ evaluacion_tot_desagreg <- assess(desagregar, publish = T)
 evaluacion_tot_desagreg
 ```
 
-```{r}
+```{r eval=F}
 # Reset original options
 options(old_options)
 ```

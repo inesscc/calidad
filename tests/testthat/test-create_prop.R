@@ -55,7 +55,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado,
 # PROBAR NA EN SUBPOP
 #####################
 
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(TRUE, FALSE)) {
   expect_error(create_prop("desocupado", domains = "sexo", subpop = "fdt_na", design = dc_ene, eclac_input = eclac_option),
                "subpop contains NAs!")
 }
@@ -65,9 +65,9 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
 ##############################
 
 # Testear la proporción sin desagregación
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(TRUE, FALSE)) {
   test1 <- create_prop("ocupado", design = dc, eclac_input = eclac_option)
-  test_that(paste("Insumo proporción con", eclac_option), {
+  test_that(paste("Insumo proporción con eclac_input ", eclac_option), {
     expect_equal(round(test1$stat, 3), unname(round(survey::svymean(x = ~ocupado, dc)[1], 3)))
   })
 }
@@ -76,28 +76,31 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
 # PROBAR VARIABLES EN MAYÚSCULA
 ##############################
 
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(TRUE, FALSE)) {
   test <- create_prop("desocupado", domains = "fdt+SEXO_TEST", design = dc_ene, eclac_input = eclac_option)
 
   test1 <- test %>%
     dplyr::filter(fdt == 1 & sexo_test == 1) %>%
     dplyr::pull(stat) * 100
 
-  test_that(paste("Proporción desagregada con", eclac_option), {
+  test_that(paste("Proporción desagregada con eclac_input ", eclac_option), {
     expect_equal(round(test1, 1), 7.1)
   })
 
-  test_that(paste("Proporción desagregada con", eclac_option), {
-    expect_equal(names(test), c("fdt", "sexo_test", "stat", "se", "df", "n", "cv"))
+  test_that(paste("Proporción desagregada con eclac_input", eclac_option), {
+    expect_equal(sum(names(test) %in%  c("fdt", "sexo_test", "stat", "se", "df", "n", "cv")),
+                 length(c("fdt", "sexo_test", "stat", "se", "df", "n", "cv")))
   })
 }
+
+
 
 ##############################
 # PROPORCIÓN CON DESAGREGACIÓN
 ##############################
 
 # Testear la proporción con desagregación con datos de la ENE
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(TRUE, FALSE)) {
   test <- create_prop("desocupado", domains = "fdt+sexo", design = dc_ene, eclac_input = eclac_option) %>%
     dplyr::filter(fdt == 1 & sexo == 1) %>%
     dplyr::pull(stat) * 100
@@ -108,7 +111,7 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
 }
 
 # Testear grados de libertad con desagregación EPF
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(TRUE, FALSE)) {
   test2 <- create_prop("ocupado", domains = "sexo+zona", design = dc, eclac_input = eclac_option) %>%
     dplyr::filter(sexo == 2 & zona == 1) %>%
     dplyr::select(df) %>%
@@ -119,13 +122,13 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
 
   gl <- length(unique(insumo$varunit)) - length(unique(insumo$varstrat))
 
-  test_that(paste("gl proporción desagregado con", eclac_option), {
+  test_that(paste("gl proporción desagregado con eclac_input ", eclac_option), {
     expect_equal(test2, gl)
   })
 }
 
 # Testear tamaño muestral con desagregación EPF
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(TRUE, FALSE)) {
   test3 <- create_prop("ocupado", domains = "sexo+zona+ecivil", design = dc, eclac_input = eclac_option) %>%
     dplyr::filter(sexo == 1 & zona == 1 & ecivil == 2) %>%
     dplyr::select(n) %>%
@@ -136,13 +139,13 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
     dplyr::count() %>%
     dplyr::pull()
 
-  test_that(paste("tamaño muestral proporción desagregado con", eclac_option), {
+  test_that(paste("tamaño muestral proporción desagregado con eclac_input ", eclac_option), {
     expect_equal(test3, n)
   })
 }
 
 # Testear grados de libertad con desagregación ENE
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(TRUE, FALSE)) {
   test4 <- create_prop("desocupado", domains = "sexo+region", design = dc_ene, eclac_input = eclac_option) %>%
     dplyr::filter(sexo == 2 & region == 1) %>%
     dplyr::select(df) %>%
@@ -153,86 +156,86 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
 
   gl <- length(unique(insumo$conglomerado)) - length(unique(insumo$estrato_unico))
 
-  test_that(paste("gl proporción desagregado ene con", eclac_option), {
+  test_that(paste("gl proporción desagregado ene con eclac_input ", eclac_option), {
     expect_equal(test4, gl)
   })
 }
 
 # Testear tamaño muestral con modalidad ratio invertido
-for (eclac_option in c("chile")) {
-  n <- ene %>%
-    dplyr::group_by(sexo, ocupado) %>%
-    dplyr::summarise(contar = dplyr::n()) %>%
-    dplyr::group_by(ocupado) %>%
-    dplyr::summarise(n = sum(contar))
+n <- ene %>%
+  dplyr::group_by(sexo, ocupado) %>%
+  dplyr::summarise(contar = dplyr::n()) %>%
+  dplyr::group_by(ocupado) %>%
+  dplyr::summarise(n = sum(contar))
 
-  test <- create_prop(var = "mujer", denominator = "hombre", domains = "ocupado", design = dc_ene, eclac_input = eclac_option)
+test <- create_prop(var = "mujer", denominator = "hombre", domains = "ocupado", design = dc_ene)
 
-  test_that(paste("gl proporción desagregado ene con", eclac_option), {
-    expect_equal(n %>% dplyr::pull(n), test %>% dplyr::pull(n))
-  })
-}
+test_that("gl proporción desagregado ene", {
+  expect_equal(n %>% dplyr::pull(n), test %>% dplyr::pull(n))
+})
 
 # Testear grados de libertad con modalidad ratio invertido
-for (eclac_option in c("chile")) {
-  test <- create_prop(var = "mujer", denominator = "hombre", domains = "ocupado+metro", design = dc_ene, eclac_input = eclac_option)
+test <- create_prop(var = "mujer", denominator = "hombre", domains = "ocupado+metro", design = dc_ene, eclac_input = F)
 
-  gl <- ene %>%
-    dplyr::group_by(ocupado, metro, conglomerado) %>%
-    dplyr::mutate(n_varunit = dplyr::if_else(dplyr::row_number() == 1, 1, 0)) %>%
-    dplyr::group_by(ocupado, estrato_unico) %>%
-    dplyr::mutate(n_varstrat = dplyr::if_else(dplyr::row_number() == 1, 1, 0)) %>%
-    dplyr::group_by(ocupado, metro, sexo) %>%
-    dplyr::summarise(n_varunit = sum(n_varunit),
-                     n_varstrat = sum(n_varstrat)) %>%
-    dplyr::mutate(gl = n_varunit - n_varstrat) %>%
-    dplyr::group_by(ocupado, metro) %>%
-    dplyr::summarise(gl = sum(gl)) %>%
-    dplyr::arrange(ocupado, metro)
+gl <- ene %>%
+  dplyr::group_by(ocupado, metro, conglomerado) %>%
+  dplyr::mutate(n_varunit = dplyr::if_else(dplyr::row_number() == 1, 1, 0)) %>%
+  dplyr::group_by(ocupado, estrato_unico) %>%
+  dplyr::mutate(n_varstrat = dplyr::if_else(dplyr::row_number() == 1, 1, 0)) %>%
+  dplyr::group_by(ocupado, metro, sexo) %>%
+  dplyr::summarise(n_varunit = sum(n_varunit),
+                   n_varstrat = sum(n_varstrat)) %>%
+  dplyr::mutate(gl = n_varunit - n_varstrat) %>%
+  dplyr::group_by(ocupado, metro) %>%
+  dplyr::summarise(gl = sum(gl)) %>%
+  dplyr::arrange(ocupado, metro)
 
-  test_that(paste("gl proporción desagregado ene con", eclac_option), {
-    expect_equal(gl %>% dplyr::pull(gl), test %>% dplyr::arrange(ocupado, metro) %>% dplyr::pull(df))
-  })
-}
+test_that("gl proporción desagregado ene con eclac_input", {
+  expect_equal(gl %>% dplyr::pull(gl), test %>% dplyr::arrange(ocupado, metro) %>% dplyr::pull(df))
+})
+
 
 # Testear grados de libertad con modalidad ratio normal
-for (eclac_option in c("chile")) {
-  test <- create_prop(var = "gasto_ocup", denominator = "gastot_hd", domains = "zona", design = dc, eclac_input = eclac_option)
+test <- create_prop(var = "gasto_ocup", denominator = "gastot_hd", domains = "zona", design = dc, eclac_input = F)
 
-  gl <- epf_personas %>%
-    dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)) %>%
-    dplyr::group_by(zona, varunit) %>%
-    dplyr::mutate(n_varunit = dplyr::if_else(dplyr::row_number() == 1, 1, 0)) %>%
-    dplyr::group_by(zona, varstrat) %>%
-    dplyr::mutate(n_varstrat = dplyr::if_else(dplyr::row_number() == 1, 1, 0)) %>%
-    dplyr::group_by(zona) %>%
-    dplyr::summarise(n_varunit = sum(n_varunit),
-                     n_varstrat = sum(n_varstrat)) %>%
-    dplyr::mutate(gl = n_varunit - n_varstrat)
+gl <- epf_personas %>%
+  dplyr::mutate(gasto_ocup = dplyr::if_else(ocupado == 1, gastot_hd, 0)) %>%
+  dplyr::group_by(zona, varunit) %>%
+  dplyr::mutate(n_varunit = dplyr::if_else(dplyr::row_number() == 1, 1, 0)) %>%
+  dplyr::group_by(zona, varstrat) %>%
+  dplyr::mutate(n_varstrat = dplyr::if_else(dplyr::row_number() == 1, 1, 0)) %>%
+  dplyr::group_by(zona) %>%
+  dplyr::summarise(n_varunit = sum(n_varunit),
+                   n_varstrat = sum(n_varstrat)) %>%
+  dplyr::mutate(gl = n_varunit - n_varstrat)
 
-  test_that(paste("gl proporción desagregado con", eclac_option), {
-    expect_equal(gl %>% dplyr::pull(gl), test %>% dplyr::pull(df))
-  })
-}
+test_that("gl proporción desagregado con eclac_input ", {
+  expect_equal(gl %>% dplyr::pull(gl), test %>% dplyr::pull(df))
+})
 
 ############################################
 # Probar deff y tamaño de muestra efectivo #
 ############################################
 
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
-  test2 <- create_prop("desocupado", design = dc_ene, eclac_input = eclac_option)
-  test2 <- create_prop("desocupado", domains = "region", design = dc_ene, eclac_input = eclac_option)
-  test2 <- create_prop("desocupado", domains = "region", subpop = "fdt", design = dc_ene, eclac_input = eclac_option)
+test2 <- create_prop("desocupado", design = dc_ene, eclac_input = F)
+test2 <- create_prop("desocupado", domains = "region", design = dc_ene, eclac_input = F)
+test2 <- create_prop("desocupado", domains = "region", subpop = "fdt", design = dc_ene, eclac_input = F)
 
-  expect_warning(create_prop("desocupado", domains = "region+sexo", design = dc_ene, ess = TRUE, eclac_input = eclac_option),
-                 "to get effective sample size use deff = T")
-}
+expect_warning(create_prop("desocupado", domains = "region+sexo", design = dc_ene, ess = TRUE, eclac_input = F),
+               "to get effective sample size use deff = T")
+
+test2_chile <-  create_mean("gastot_hd", design = dc, eclac_input = F, deff = T, ess = T)
+
+test_that("cols deff y ess en chile", {
+  expect_equal(sum(names(test2_chile) %in% c('deff', 'ess')), length(c('deff', 'ess')))
+})
+
 
 #########################
 # Probar cv logarítmico #
 #########################
 
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(FALSE, TRUE)) {
   test2 <- create_prop("desocupado", design = dc_ene, log_cv = TRUE, eclac_input = eclac_option)
   test2 <- create_prop("desocupado", domains = "region", design = dc_ene, log_cv = TRUE, eclac_input = eclac_option)
   test2 <- create_prop("desocupado", domains = "region", subpop = "fdt", design = dc_ene, log_cv = TRUE, eclac_input = eclac_option)
@@ -243,7 +246,7 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
 # Probar alcance de nombres entre variables
 ###########################################
 
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(FALSE, TRUE)) {
   create_prop(var = "desocupado", domains = "sexo+region", design = dc_ene, eclac_input = eclac_option)
 }
 
@@ -251,11 +254,11 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
 # comparamos valores entre create_prop y create_mean #
 ######################################################
 
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(FALSE, TRUE)) {
   test_prop <- create_prop("desocupado", design = dc_ene, eclac_input = eclac_option)
   test_media <- suppressWarnings({create_mean("desocupado", design = dc_ene, eclac_input = eclac_option)})
 
-  test_that(paste("estadísticos similares entre prop y mean con", eclac_option), {
+  test_that(paste("estadísticos similares entre prop y mean con eclac_input ", eclac_option), {
     expect_equal(test_prop %>% dplyr::select(stat) %>% dplyr::pull(), test_media %>% dplyr::select(stat) %>% dplyr::pull())
     expect_equal(test_prop %>% dplyr::select(se) %>% dplyr::pull(), test_media %>% dplyr::select(se) %>% dplyr::pull())
     expect_equal(test_prop %>% dplyr::select(df) %>% dplyr::pull(), test_media %>% dplyr::select(df) %>% dplyr::pull())
@@ -268,60 +271,50 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
 ##### testing outputs names                       #####
 #######################################################
 
-for (eclac_option in c("chile")) {
-  nombre_error <- create_prop(var = "desocup",
-                              denominator = "fdt",
-                              domains = "ext",
-                              subpop = "fdtx",
-                              design = dc_ene,
-                              eclac_input = eclac_option) %>% names()
+nombre_error <- create_prop(var = "desocup",
+                            denominator = "fdt",
+                            domains = "ext",
+                            subpop = "fdtx",
+                            design = dc_ene,
+                            eclac_input = F) %>% names()
 
-  nombre_bien <- create_prop(var = "desocup",
-                             denominator = "fdt",
-                             subpop = "ext",
-                             design = dc_ene,
-                             eclac_input = eclac_option) %>% names
+nombre_bien <- create_prop(var = "desocup",
+                           denominator = "fdt",
+                           subpop = "ext",
+                           design = dc_ene,
+                           eclac_input = F) %>% names
 
-  test_that(paste("comparando nombres con", eclac_option), {
-    expect_equal(all(nombre_bien %in% nombre_error), TRUE)
-  })
-}
+test_that("comparando nombres con", {
+  expect_equal(all(nombre_bien %in% nombre_error), TRUE)
+})
+
 
 ######################################################
 # create_prop para variables con valores igual a 0   #
 ######################################################
 
-for (eclac_option in c("chile")) {
-  test_that(paste("comparando estimaciones con filas igual a 0 con", eclac_option), {
-    expect_equal(create_prop(var = "fdtx",
-                             domains = "desocup",
-                             subpop = "fdt",
-                             design = dc_ene,
-                             eclac_input = eclac_option),
+test_that("comparando estimaciones con filas igual a 0 con", {
+  expect_equal(create_prop(var = "fdtx",
+                           domains = "desocup",
+                           subpop = "fdt",
+                           design = dc_ene,
+                           eclac_input = F),
 
-                 create_prop(var = "fdtx",
-                             denominator = "fdt",
-                             domains = "desocup",
-                             subpop = "fdt",
-                             design = dc_ene,
-                             eclac_input = eclac_option))
-  })
-}
+               create_prop(var = "fdtx",
+                           denominator = "fdt",
+                           domains = "desocup",
+                           subpop = "fdt",
+                           design = dc_ene,
+                           eclac_input = F))
+})
 
-for (eclac_option in c("eclac_2020", "eclac_2023")) {
-  test_that(paste("comparando estimaciones con filas igual a 0 con", eclac_option), {
-    expect_equal(create_prop(var = "fdtx",
-                             domains = "desocup",
-                             subpop = "fdt",
-                             design = dc_ene,
-                             eclac_input = eclac_option),
-                 create_prop(var = "fdtx",
-                             domains = "desocup",
-                             subpop = "fdt",
-                             design = dc_ene,
-                             eclac_input = eclac_option))
-  })
-}
 
+expect_error(create_prop(var = "fdtx",
+                           denominator = "fdt",
+                           domains = "desocup",
+                           subpop = "fdt",
+                           design = dc_ene,
+                           eclac_input = T),
+               'eclac approach is not allowed with denominator')
 
 

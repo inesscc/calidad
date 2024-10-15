@@ -17,7 +17,7 @@ create_mean(
   deff = FALSE,
   rel_error = FALSE,
   unweighted = FALSE,
-  eclac_input = c("chile", "eclac_2020", "eclac_2023")
+  eclac_input = FALSE
 )
 }
 \arguments{
@@ -45,7 +45,7 @@ create_mean(
 
 \item{unweighted}{\code{boolean} add non-weighted count if required.}
 
-\item{eclac_input}{\code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.}
+\item{eclac_input}{\code{boolean} return eclac inputs.}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated.

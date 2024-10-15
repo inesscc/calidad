@@ -26,8 +26,7 @@ get_design_vars <- function(design) {
 #' This function activates the appropriate indicators based on the
 #' selected eclac standard and whether proportion indicators are needed.
 #'
-#' @param eclac A character string specifying the eclac standard.
-#'   It should be either "eclac_2020", "eclac_2023", or "chile".
+#' @param eclac A logical value indicating the eclac standard.
 #' @param env The environment from which to retrieve the existing indicator values.
 #'   Defaults to the parent frame.
 #' @param proportion A logical value indicating whether proportion indicators
@@ -37,14 +36,14 @@ get_design_vars <- function(design) {
 #' @export
 #'
 eclac_standard <- function(eclac,  env = parent.frame(), proportion = FALSE  ) {
-  # Check if eclac is either "eclac_2020" or "eclac_2023"
-  if ((eclac == "eclac_2020" | eclac == "eclac_2023") & proportion == FALSE) {
+
+  if (eclac == TRUE & proportion == FALSE) {
     ess <- TRUE
     unweighted <- TRUE
     deff <- TRUE
     eclac_indicators = list("ess" = ess, "unweighted" = unweighted, "deff" = deff)
 
-  } else if ((eclac == "eclac_2020" | eclac == "eclac_2023") & proportion == TRUE) {
+  } else if (eclac == TRUE & proportion == TRUE) {
     ess <- TRUE
     unweighted <- TRUE
     deff <- TRUE

@@ -62,20 +62,20 @@ dc_enusc <- survey::svydesign(ids = ~Conglomerado,
 ##########################
 
 ### sin desagregación
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(FALSE, TRUE)) {
   for (df_option in c("chile", "eclac")) {
     statOwn <- create_size("ocupado", design = dc_epf_personas, eclac_input = eclac_option, df_type = df_option)
 
     stat <- sum(epf_personas$ocupado * epf_personas$fe)
 
-    test_that(paste("verificación estimación sin desagregación con", eclac_option, "y df_type", df_option), {
+    test_that(paste("verificación estimación sin desagregación con eclac_input ", eclac_option, "y df_type", df_option), {
       expect_equal(stat, statOwn$stat)
     })
   }
 }
 
 ### con desagregación
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(FALSE, TRUE)) {
   for (df_option in c("chile", "eclac")) {
     statOwn <- create_size("ocupado", domains = "zona", design = dc_epf_personas, eclac_input = eclac_option, df_type = df_option)
 
@@ -84,7 +84,7 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
       dplyr::summarize(n = sum(ocupado * fe)) %>%
       dplyr::filter(ocupado == 1) %>% dplyr::pull(n)
 
-    test_that(paste("verificación estimación con desagregación con", eclac_option, "y df_type", df_option), {
+    test_that(paste("verificación estimación con desagregación con eclac_input", eclac_option, "y df_type", df_option), {
       expect_equal(stat, statOwn$stat)
     })
   }
@@ -95,7 +95,7 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
 ################################
 
 # Calcular con el enfoque chile, ya que la opción por defecto es chile, con desagregación
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(FALSE, TRUE)) {
   for (df_option in c("chile", "eclac")) {
     df <- create_size("ocupado", domains = "zona+sexo", design = dc_epf_hogar, eclac_input = eclac_option, df_type = df_option)
 
@@ -116,14 +116,14 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
       dplyr::mutate(df = upm - strata) %>%
       dplyr::filter(ocupado == 1)
 
-    test_that(paste("conteo df diseño complejo, versión", eclac_option, "con desagregación y df_type", df_option), {
+    test_that(paste("conteo df diseño complejo, versión eclac_input ", eclac_option, "con desagregación y df_type", df_option), {
       expect_equal(true_df$df, df$df)
     })
   }
 }
 
 # Calcular con el enfoque sin desagregación
-for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
+for (eclac_option in c(FALSE, TRUE)) {
   for (df_option in c("chile", "eclac")) {
     df <- create_size("ocupado", design = dc_epf_hogar, eclac_input = eclac_option, df_type = df_option)
 
@@ -145,10 +145,27 @@ for (eclac_option in c("chile", "eclac_2020", "eclac_2023")) {
         nrow()
     }
 
-    test_that(paste("conteo df diseño complejo, versión", eclac_option, "sin desagregación y df_type", df_option), {
+    test_that(paste("conteo df diseño complejo, versión eclac_input ", eclac_option, "sin desagregación y df_type", df_option), {
       expect_equal(true_df, df$df[1])
     })
   }
 }
+
+
+######################
+# Confidence intervals
+######################
+
+
+df_chile <- create_size("ocupado", domains = "zona+sexo", design = dc_epf_hogar, eclac_input = F, df_type = 'chile', ci = T)
+test_that("ci cols chile", {
+  expect_equal(sum(names(df_chile) %in% c('t', 'lower', 'upper')), length(c('t', 'lower', 'upper')))
+})
+
+
+df_eclac <- create_size("ocupado", domains = "zona+sexo", design = dc_epf_hogar, eclac_input = T, df_type = 'eclac', ci = T)
+test_that("ci cols eclac", {
+  expect_equal(sum(names(df_eclac) %in% c('t', 'lower', 'upper')), length(c('t', 'lower', 'upper')))
+})
 
 

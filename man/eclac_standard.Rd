@@ -7,8 +7,7 @@
 eclac_standard(eclac, env = parent.frame(), proportion = FALSE)
 }
 \arguments{
-\item{eclac}{A character string specifying the eclac standard.
-It should be either "eclac_2020", "eclac_2023", or "chile".}
+\item{eclac}{A logical value indicating the eclac standard.}
 
 \item{env}{The environment from which to retrieve the existing indicator values.
 Defaults to the parent frame.}

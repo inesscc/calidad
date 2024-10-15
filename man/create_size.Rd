@@ -18,7 +18,7 @@ create_size(
   rel_error = FALSE,
   unweighted = FALSE,
   df_type = c("chile", "eclac"),
-  eclac_input = c("chile", "eclac_2020", "eclac_2023")
+  eclac_input = FALSE
 )
 }
 \arguments{
@@ -50,7 +50,7 @@ in the domain parameter, the estimation variable must be a dummy variable.}
 
 \item{df_type}{\code{character} use degrees of freedom calculation approach from INE Chile or CEPAL. Options are "chile" or "eclac".}
 
-\item{eclac_input}{\code{character} indicating the type of ECLAC inputs to return. Options are "chile", "eclac_2020", "eclac_2023". If "chile", ECLAC inputs are set to FALSE; if "eclac_2020" or "eclac_2023", ECLAC inputs are set to TRUE.}
+\item{eclac_input}{\code{boolean} return eclac inputs}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated.

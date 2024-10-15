@@ -19,7 +19,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 ############
 
 # National level with denominator
-expect_error(create_prop(var = "mujer", denominator = "hombre", design = dc_ene, eclac_input = "eclac_2020"),
+expect_error(create_prop(var = "mujer", denominator = "hombre", design = dc_ene, eclac_input = T),
              "eclac approach is not allowed with denominator")
 
 # INE Chile Standard for mean
@@ -61,7 +61,7 @@ test <- assess(test4, scheme = "eclac_2020")
 expect_error(assess(test2_sin_log, scheme = "eclac_2020"),
              "log_cv must be used!")
 
-eclac <- create_size("desocupado", domains = "region", design = dc_ene, deff = TRUE, ess = TRUE,
+eclac <- create_size("desocupado", domains = "region", design = dc_ene, eclac_input = T,
                      unweighted = TRUE, df_type = "eclac")
 
 test <- assess(eclac, scheme = "eclac_2020", unweighted = 150)
@@ -89,7 +89,7 @@ test <- assess(test4, scheme = "eclac_2023")
 expect_error(assess(test2_sin_log, scheme = "eclac_2023"),
              "log_cv must be used!")
 
-eclac_2023 <- create_size("desocupado", domains = "region", design = dc_ene, deff = TRUE, ess = TRUE,
+eclac_2023 <- create_size("desocupado", domains = "region", design = dc_ene, eclac_input = T,
                           unweighted = TRUE, df_type = "eclac")
 
 test <- assess(eclac_2023, scheme = "eclac_2023", unweighted = 150)
@@ -188,9 +188,18 @@ test_that("assess function works correctly with domain_info = TRUE for eclac_202
   result <- assess(data, publish = FALSE, scheme = "eclac_2023", domain_info = TRUE)
 
   # Verificamos que todas las etiquetas están en el conjunto esperado
-  expect_true(all(result$cepal2023_true$label %in% c("reliable", "weakly-reliable", "non-reliable")))
+  expect_true(all(result$label == c("reliable", "reliable", "non-reliable", 'reliable')))
 
-  # Verificamos que la evaluación del 'deff' es correcta
-  expect_true(all(result$cepal2023_true$eval_deff == "Sufficient deff" | result$cepal2023_true$eval_deff == "Insufficient deff"))
 })
+
+
+test_that("assess function works correctly with domain_info = FALSE for eclac_2023", {
+  result <- assess(data, publish = FALSE, scheme = "eclac_2023", domain_info = FALSE)
+
+  # Verificamos que todas las etiquetas están en el conjunto esperado
+  expect_true(all(result$label == c("reliable", "non-reliable", "non-reliable", 'reliable')))
+
+})
+
+
 
