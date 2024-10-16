@@ -1,7 +1,6 @@
 
-# calidad 0.3.0
+# calidad 0.5.0
 
-
-- spelling corrections
+- New quality standard (CEPAL, 2024) 
 
  
