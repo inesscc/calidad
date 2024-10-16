@@ -16,7 +16,7 @@ knitr::opts_chunk$set(
 
 # Tutorial package calidad 
 
-The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4), [ECLAC 2020](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) and [ECLAC 2023](https://www.cepal.org/sites/default/files/presentations/cea-ce22-cepal-gt-calidad-encuestas-de-hogares.pdf) for the quality assessment of estimates from household surveys.
+The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4), [ECLAC 2020](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) and [ECLAC 2023](https://repositorio.cepal.org/server/api/core/bitstreams/f04569e6-4f38-42e7-a32b-e0b298e0ab9c/content) for the quality assessment of estimates from household surveys.
 
 This tutorial shows the basic use of the package and includes the main functions to create the necessary inputs to implement both quality standards.  
 
