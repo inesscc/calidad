@@ -23,7 +23,7 @@ This tutorial shows the basic use of the package and includes the main functions
 
 ## Data edition
 
-We will use two datasets:
+We will use three datasets:
 
 - Encuesta Nacional de Empleo (efm 2020)  
 - VIII Encuesta de Presupuestos Familiares   
@@ -66,8 +66,10 @@ old_options <-  options()
 ```{r}
 # Complex sample design for ENE
 dc_ene <- svydesign(ids = ~conglomerado , strata = ~estrato_unico, data = ene, weights = ~fact_cal)
+
 # Complex sample design for EPF
 dc_epf <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
+
 options(survey.lonely.psu = "certainty")
 ```
 
@@ -137,6 +139,16 @@ insumos_total_nacional <-  create_total("desocupado", subpop = "fdt", design = d
 # EPF dataset
 insumos_suma_nacional <- create_total("gastot_hd", design = dc_epf)
 insumos_media_nacional <-  create_mean("gastot_hd", design = dc_epf)
+```
+
+
+The create functions also include a `ci` parameter, which allows returning the confidence interval. By default, this parameter is set to `FALSE.` For proportions, the logistic confidence interval is available. To use it, you need to set `ci_logit = TRUE`, as shown below:
+
+```{r}
+# ENE dataset
+prop_nacional_ci <- create_prop("desocupado", subpop = "fdt", design = dc_ene, ci = TRUE)                        
+prop_nacional_ci_logit <- create_prop("desocupado", subpop = "fdt", design = dc_ene, ci = TRUE, ci_logit = TRUE) 
+
 ```
 
 

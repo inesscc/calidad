@@ -101,7 +101,7 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
 
   # Get confidence intervals if the user includes this parameter
   if (ci == TRUE) {
-    final <- get_ci(final, ajuste_ene = ajuste_ene)
+    final <- get_ci(final, ajuste_ene = ajuste_ene, ci_logit = FALSE)
   }
 
   # Add relative error, if the user uses this parameter
@@ -227,7 +227,7 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
 
   # Get confidence intervals if the user includes this parameter
   if (ci == TRUE) {
-    final <- get_ci(final, ajuste_ene = ajuste_ene)
+    final <- get_ci(final, ajuste_ene = ajuste_ene, ci_logit = FALSE)
   }
 
   # add relative error, if the user uses this parameter
@@ -359,7 +359,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 
   # Get confidence intervals if the user includes this parameter
   if (ci == TRUE) {
-    final <- get_ci(final, ajuste_ene = ajuste_ene)
+    final <- get_ci(final, ajuste_ene = ajuste_ene, ci_logit = FALSE)
   }
 
   # add relative error, if the user uses this parameter
@@ -404,6 +404,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' @param eclac_input \code{boolean} return eclac inputs
 #' @param log_cv \code{boolean} logarithmic coefficient of variation.
 #' @param unweighted \code{boolean} add non-weighted count if required.
+#' @param ci_logit \code{boolean} indicating if interval confidence is logit, only available for proportions.
 #' @import survey
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
 #'
@@ -425,8 +426,9 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' create_prop(var = "VP_DC", denominator = "hom_insg_taxi", design = dc)
 #' options(old_options)
 #' @export
-create_prop <- function(var, denominator = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
-                        rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE, eclac_input = FALSE) {
+create_prop <- function(var, denominator = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE,
+                        ajuste_ene = FALSE, rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE,
+                        eclac_input = FALSE, ci_logit = FALSE) {
 
 
   # eclac approach is not allowed with denominator
@@ -446,7 +448,7 @@ create_prop <- function(var, denominator = NULL, domains = NULL, subpop = NULL, 
   }
 
   if (is.null(denominator)) {
-    final <- create_prop_internal(var, domains, subpop, design, ci, deff, ess, ajuste_ene, rel_error, log_cv, unweighted)
+    final <- create_prop_internal(var, domains, subpop, design, ci, deff, ess, ajuste_ene, rel_error, log_cv, unweighted, ci_logit = ci_logit)
   }
 
   # Add a class to the object
