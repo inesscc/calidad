@@ -23,7 +23,7 @@ This tutorial shows the basic use of the package and includes the main functions
 
 ## Data edition
 
-We will use three datasets:
+We will use two datasets:
 
 - Encuesta Nacional de Empleo (efm 2020)  
 - VIII Encuesta de Presupuestos Familiares   
