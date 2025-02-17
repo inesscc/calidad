@@ -147,7 +147,7 @@ The create functions also include a `ci` parameter, which allows returning the c
 ```{r}
 # ENE dataset
 prop_nacional_ci <- create_prop("desocupado", subpop = "fdt", design = dc_ene, ci = TRUE)                        
-prop_nacional_ci_logit <- create_prop("desocupado", subpop = "fdt", design = dc_ene, ci = TRUE, ci_logit = TRUE) 
+prop_nacional_ci_logit <- create_prop("desocupado", subpop = "fdt", design = dc_ene, ci_logit = TRUE) 
 
 ```
 
