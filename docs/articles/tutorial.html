@@ -133,8 +133,10 @@ to declare an option for strata that only have one PSU.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Complex sample design for ENE</span></span>
 <span><span class="va">dc_ene</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survey/man/svydesign.html" class="external-link">svydesign</a></span><span class="op">(</span>ids <span class="op">=</span> <span class="op">~</span><span class="va">conglomerado</span> , strata <span class="op">=</span> <span class="op">~</span><span class="va">estrato_unico</span>, data <span class="op">=</span> <span class="va">ene</span>, weights <span class="op">=</span> <span class="op">~</span><span class="va">fact_cal</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># Complex sample design for EPF</span></span>
 <span><span class="va">dc_epf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/survey/man/svydesign.html" class="external-link">svydesign</a></span><span class="op">(</span>ids <span class="op">=</span> <span class="op">~</span><span class="va">varunit</span>, strata <span class="op">=</span> <span class="op">~</span><span class="va">varstrat</span>, data <span class="op">=</span> <span class="va">epf</span>, weights <span class="op">=</span> <span class="op">~</span><span class="va">fe</span><span class="op">)</span></span>
+<span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span>survey.lonely.psu <span class="op">=</span> <span class="st">"certainty"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
@@ -207,6 +209,15 @@ should be used as follows:</p>
 <span><span class="co"># EPF dataset</span></span>
 <span><span class="va">insumos_suma_nacional</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_total.html">create_total</a></span><span class="op">(</span><span class="st">"gastot_hd"</span>, design <span class="op">=</span> <span class="va">dc_epf</span><span class="op">)</span></span>
 <span><span class="va">insumos_media_nacional</span> <span class="op">&lt;-</span>  <span class="fu"><a href="../reference/create_mean.html">create_mean</a></span><span class="op">(</span><span class="st">"gastot_hd"</span>, design <span class="op">=</span> <span class="va">dc_epf</span><span class="op">)</span></span></code></pre></div>
+<p>The create functions also include a <code>ci</code> parameter, which
+allows returning the confidence interval. By default, this parameter is
+set to <code>FALSE.</code> For proportions, the logistic confidence
+interval is available. To use it, you need to set
+<code>ci_logit = TRUE</code>, as shown below:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># ENE dataset</span></span>
+<span><span class="va">prop_nacional_ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span><span class="st">"desocupado"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span> <span class="va">dc_ene</span>, ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>                        </span>
+<span><span class="va">prop_nacional_ci_logit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span><span class="st">"desocupado"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span> <span class="va">dc_ene</span>, ci <span class="op">=</span> <span class="cn">TRUE</span>, ci_logit <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> </span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
@@ -218,7 +229,7 @@ INE Chile criteria <code>scheme = 'chile'</code>. However, if we want to
 evaluate using ECLAC criteria, we need to specify
 <code>scheme = 'eclac_2020'</code> or
 <code>scheme = 'eclac_2023'</code></p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># INE Chile</span></span>
 <span><span class="va">evaluacion_prop</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess.html">assess</a></span><span class="op">(</span><span class="va">insumos_prop</span><span class="op">)</span></span>
@@ -237,14 +248,14 @@ reliable.</p>
 know if the table should be published or not. Following the criteria of
 the standard, if more than 50% of the estimates of a table are not
 reliable, it should not be published.</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Unemployment by region</span></span>
 <span><span class="va">desagregar</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_size.html">create_size</a></span><span class="op">(</span>var <span class="op">=</span> <span class="st">"desocupado"</span>, domains <span class="op">=</span> <span class="st">"region"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span>  <span class="va">dc_ene</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># assess output</span></span>
 <span><span class="va">evaluacion_tot_desagreg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess.html">assess</a></span><span class="op">(</span><span class="va">desagregar</span>, publish <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
 <span><span class="va">evaluacion_tot_desagreg</span></span></code></pre></div>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Reset original options</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old_options</span><span class="op">)</span></span></code></pre></div>
 </div>
