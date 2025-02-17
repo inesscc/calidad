@@ -164,11 +164,14 @@ get_unweighted <- function(table, disenio, var, domains) {
 #-----------------------------------------------------------------------
 
 get_log_cv <- function(data) {
+
   data <- data %>%
-    dplyr::mutate(log_cv = .data$se / (-log(.data$objetivo)*.data$objetivo))
+    dplyr::mutate(log_cv = dplyr::case_when(.data$stat<0.5 ~ .data$cv/(-log(.data$stat)),
+                                            .data$stat>=0.5 ~ .data$cv/-log(1-.data$stat))
+    )
+
   return(data)
 }
-
 
 
 #-----------------------------------------------------------------------
@@ -1142,9 +1145,8 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   }
 
   # Add log cv, if the user uses this parameter
-  if (!is.null(log_cv) && log_cv) {
-    final <- final %>%
-      dplyr::mutate(log_cv = .data$se / (-log(.data$stat) * .data$stat))
+  if (log_cv) {
+    final <- get_log_cv(final)
   }
 
   # Add the ess if the user uses this parameter
