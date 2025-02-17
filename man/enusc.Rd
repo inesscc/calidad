@@ -3,7 +3,7 @@
 \docType{data}
 \name{enusc}
 \alias{enusc}
-\title{Encuesta Nacional Urbana de Seguridad ciudadana 2019 - ENUSC 2019}
+\title{Encuesta Nacional Urbana de Seguridad Ciudadana 2019 - ENUSC 2019}
 \format{
 dataframe with 24.465 rows y 22 columns
 \describe{

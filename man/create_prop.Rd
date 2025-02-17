@@ -18,7 +18,8 @@ create_prop(
   log_cv = FALSE,
   unweighted = FALSE,
   standard_eval = FALSE,
-  eclac_input = FALSE
+  eclac_input = FALSE,
+  ci_logit = FALSE
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ create_prop(
 \item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.}
 
 \item{eclac_input}{\code{boolean} return eclac inputs}
+
+\item{ci_logit}{\code{boolean} indicating if interval confidence is logit, only available for proportions.}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated.

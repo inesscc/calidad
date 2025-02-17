@@ -164,11 +164,14 @@ get_unweighted <- function(table, disenio, var, domains) {
 #-----------------------------------------------------------------------
 
 get_log_cv <- function(data) {
+
   data <- data %>%
-    dplyr::mutate(log_cv = .data$se / (-log(.data$objetivo)*.data$objetivo))
+    dplyr::mutate(log_cv = dplyr::case_when(.data$stat<0.5 ~ .data$cv/(-log(.data$stat)),
+                                            .data$stat>=0.5 ~ .data$cv/-log(1-.data$stat))
+    )
+
   return(data)
 }
-
 
 
 #-----------------------------------------------------------------------
@@ -814,19 +817,11 @@ calcular_gl_total <- function(variables, datos) {
 #------------------------------
 
 
+## get interval confidence
+get_ci <-  function(data,  ajuste_ene, ci_logit) {
 
-
-get_ci <-  function(data,  ajuste_ene) {
-
-  # Se calculan los intervalos de la manera tradicional en la generalidad de los casos
-  if (ajuste_ene == FALSE) {
-
-    final <- data %>%
-      dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
-                    lower = .data$stat - .data$se*t,
-                    upper = .data$stat + .data$se*t)
-    # Estos corresponde al ajuste de la ENE: el t se fija en 2
-  } else if (ajuste_ene == TRUE) {
+  # ENE chile survey: t = 2
+  if (ajuste_ene) {
 
     final <- data %>%
       dplyr::mutate(t = 2,
@@ -834,8 +829,35 @@ get_ci <-  function(data,  ajuste_ene) {
                     upper = .data$stat + .data$se*t)
   }
 
+  else if (ajuste_ene == FALSE) {
+
+    # logit interval only for proportions
+    if(ci_logit){
+      final <- data %>%
+        dplyr::mutate(
+          t = stats::qt(.975, .data$df),
+          logit_lower = log(.data$stat / (1 - .data$stat)) - (t * .data$se) / (.data$stat * (1 - .data$stat)),
+          logit_upper = log(.data$stat / (1 - .data$stat)) + (t * .data$se) / (.data$stat * (1 - .data$stat))
+        ) %>%
+        dplyr::mutate(
+          lower = exp(.data$logit_lower) / (1 + exp(.data$logit_lower)),
+          upper = exp(.data$logit_upper) / (1 + exp(.data$logit_upper))
+        ) %>%
+        dplyr::select(-.data$logit_lower, -.data$logit_upper)
+
+     # traditional interval confidence
+    }else{
+
+      final <- data %>%
+        dplyr::mutate(t = stats::qt(c(.975), df = .data$df),
+                      lower = .data$stat - .data$se*t,
+                      upper = .data$stat + .data$se*t)
+    }
+  }
+
   return(final)
 }
+
 
 #---------------------------------------------------------------------
 # Obtain deff
@@ -1004,7 +1026,7 @@ create_ratio_internal <- function(var,denominator, domains = NULL, subpop = NULL
 
   # Add confidence intervals
   if (ci == TRUE) {
-    final <- get_ci(final,  ajuste_ene = ajuste_ene)
+    final <- get_ci(final, ajuste_ene = ajuste_ene, ci_logit = FALSE)
   }
 
   # add relative error, if the user uses this parameter
@@ -1039,10 +1061,12 @@ create_ratio_internal <- function(var,denominator, domains = NULL, subpop = NULL
 #' @param ess \code{boolean} Effective sample size
 #' @param rel_error \code{boolean} Relative error
 #' @param unweighted \code{boolean} Add non weighted count if it is required
+#' @param ci_logit \code{boolean} indicating if interval confidence is logit
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated
 #'
-create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE, ajuste_ene = FALSE,
-                                 rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = TRUE, rm.na = FALSE, env =  parent.frame()) {
+create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE,
+                                 ajuste_ene = FALSE, rel_error = FALSE, log_cv = FALSE, unweighted = FALSE,
+                                 standard_eval = TRUE, rm.na = FALSE, env =  parent.frame(), ci_logit = FALSE) {
 
   # get design variables
   design_vars <- get_design_vars(disenio )
@@ -1110,8 +1134,8 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   }
 
   # Add confidence intervals
-  if (ci == TRUE) {
-    final <- get_ci(final, ajuste_ene = ajuste_ene)
+  if (ci == TRUE| ci_logit == TRUE) {
+    final <- get_ci(final,  ajuste_ene = ajuste_ene, ci_logit = ci_logit)
   }
 
   # Add relative error, if the user uses this parameter
@@ -1121,9 +1145,8 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   }
 
   # Add log cv, if the user uses this parameter
-  if (!is.null(log_cv) && log_cv) {
-    final <- final %>%
-      dplyr::mutate(log_cv = .data$se / (-log(.data$stat) * .data$stat))
+  if (log_cv) {
+    final <- get_log_cv(final)
   }
 
   # Add the ess if the user uses this parameter
@@ -1131,4 +1154,3 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
 
   return(final)
 }
-

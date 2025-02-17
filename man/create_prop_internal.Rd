@@ -18,7 +18,8 @@ create_prop_internal(
   unweighted = FALSE,
   standard_eval = TRUE,
   rm.na = FALSE,
-  env = parent.frame()
+  env = parent.frame(),
+  ci_logit = FALSE
 )
 }
 \arguments{
@@ -49,6 +50,8 @@ create_prop_internal(
 \item{rm.na}{\code{boolean} indicating if NA values must be removed}
 
 \item{env}{parent environment to get some variables}
+
+\item{ci_logit}{\code{boolean} indicating if interval confidence is logit}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated

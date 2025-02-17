@@ -54,7 +54,7 @@
 "ene"
 
 
-#' Encuesta Nacional Urbana de Seguridad ciudadana 2019 - ENUSC 2019
+#' Encuesta Nacional Urbana de Seguridad Ciudadana 2019 - ENUSC 2019
 #'
 #' ENUSC data for the year 2019. Contains only a few variables.
 #'
@@ -117,6 +117,39 @@
 #'
 "casen"
 
+
+
+#' Encuesta Nacional Urbana de Seguridad Ciudadana 2023 - ENUSC 2023
+#'
+#' ENUSC data for the year 2023. Contains only a few variables.
+#'
+#' @docType data
+#'
+#' @format dataframe with 49.813 rows y 15 columns
+#' \describe{
+#'  \item{enc_region }{16 regions}
+#'  \item{enc_rpc}{code of region, province and commune}
+#'  \item{Fact_Pers_Reg}{person sample weights at region level}
+#'  \item{Fact_Pers_Com}{person sample weights at commune level}
+#'  \item{Fact_Hog_Reg}{household sample weights at region level}
+#'  \item{Fact_Hog_Com}{household sample weights at commune level}
+#'  \item{VarStrat}{strata}
+#'  \item{Conglomerado}{PSU}
+#'  \item{VH_DV}{Households victimized by violent crimes. It works combined with Fact_Hog_*}
+#'  \item{VH_DC}{Household victimization. It works combined  with Fact_Hog_*}
+#'  \item{VP_DV}{People victimized by violent crimes. It works combined with Fact_Pers_*}
+#'  \item{VP_DC}{Individual victimization. It works combined  with Fact_Pers_*}
+#'  \item{PAD}{Perception of increased crime in the country. It works combined  with Fact_Pers_*}
+#'  \item{rph_sexo}{1 = man; 2 = woman}
+#'  \item{rph_edad}{age}
+#'
+#'  }
+#' @source \url{https://www.ine.gob.cl/docs/default-source/seguridad-ciudadana/bbdd/2023/base-usuario-20-enusc-2023.csv?sfvrsn=34653b72_2&download=true}
+#'
+#' @examples
+#' data(enusc_2023)
+#'
+"enusc_2023"
 
 
 

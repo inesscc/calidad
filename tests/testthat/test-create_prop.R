@@ -318,3 +318,94 @@ expect_error(create_prop(var = "fdtx",
                'eclac approach is not allowed with denominator')
 
 
+
+#######################################
+#  intervalo de confianza logarítmico #
+#######################################
+## usando datos de enusc 2023
+
+dc <- svydesign(ids = ~Conglomerado,
+                weights = ~Fact_Hog_Reg,    # fexp a nivel regional
+                strata = ~VarStrat,
+                check.strata = TRUE,
+                data = enusc_2023)
+
+options(survey.lonely.psu = "certainty")
+
+
+## invervalos de tabulados publicados a nivel regional 2023 para VH_DV (cuadro 82):
+tabulado <- data.frame(enc_region = c(15, 1, 2, 3, 4, 5, 13, 6, 7, 16, 8, 9, 14, 10, 11, 12),
+                       estimacion = c(0.09738246,0.09360261,0.08094008,0.07485991,0.04186417,0.07832234,0.10309919,0.05527160,
+                                      0.04421951,0.05274678,0.07372329,0.05037750,0.06417123,0.04792482,0.03348320,0.02817208),
+                       inferior = c(0.08165596,0.07931276,0.06690903,0.05798859,0.03236068,0.06896989,0.09726782,0.04530393,
+                                    0.03712513,0.04257280,0.06498925,0.04088753,0.04994142,0.03784664,0.02416546,0.01937208),
+                       superior = c(0.11575602,0.11015903,0.09760572,0.09613885,0.05400282,0.08882201,0.10923786,0.06727779,
+                                    0.05259553,0.06518659,0.08352626,0.06192786,0.08210514,0.06051791,0.04622349,0.04080324)
+                       ) %>%
+  dplyr::arrange(enc_region)
+
+VH_DV <- create_prop('VH_DV',
+                     domains = 'enc_region',
+                     design =dc,
+                     eclac_input = T,
+                     ci =T,
+                     ci_logit = T)
+
+test_that("comparando intervalos de confianza logaritmicos lower", {
+  expect_equal(VH_DV$lower,
+               tabulado$inferior
+               )
+})
+
+test_that("comparando intervalos de confianza logaritmicos upper", {
+  expect_equal(VH_DV$upper,
+               tabulado$superior
+  )
+})
+
+
+
+VH_DV <- create_prop('VH_DV',
+                     domains = 'enc_region',
+                     design =dc,
+                     eclac_input = T,
+                     ci_logit = T)
+
+test_that("comparando intervalos de confianza logaritmicos lower sin ci", {
+  expect_equal(VH_DV$lower,
+               tabulado$inferior)
+})
+
+test_that("comparando intervalos de confianza logaritmicos upper sin ci", {
+  expect_equal(VH_DV$upper,
+               tabulado$superior)
+})
+
+
+
+## diseño para pad mujeres
+dc_pers <- svydesign(ids = ~Conglomerado,
+                     weights = ~Fact_Pers_Reg,    # fexp a nivel regional
+                     strata = ~VarStrat,
+                     check.strata = TRUE,
+                     data = enusc_2023 %>%
+                       dplyr::mutate(rph_sexo = as.character(rph_sexo-1)))
+
+# PAD mujeres RM
+PAD_mujeres_rm <- create_prop('PAD',
+                              domains = 'enc_region',
+                              subpop = 'rph_sexo',
+                              design = dc_pers,
+                              eclac_input = T,
+                              ci_logit = T) %>%
+  dplyr::filter(enc_region==13) %>%
+  dplyr::select(lower, upper)
+
+
+test_that("comparando intervalos de confianza logaritmicos usando subpop mujeres", {
+  expect_equal(PAD_mujeres_rm$lower, 0.873195019765033)
+})
+
+test_that("comparando intervalos de confianza logaritmicos usando subpop mujeres", {
+  expect_equal(PAD_mujeres_rm$upper, 0.891274559205541)
+})
