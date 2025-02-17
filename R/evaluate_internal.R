@@ -172,6 +172,64 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
   return(evaluation)
 }
 
+#-------------------------------------------------
+
+## economicas standard
+assess_economicas <- function(table, params, class = "calidad.mean", domain_info = FALSE) {
+
+
+  # General case
+  if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 ) {
+
+    evaluation <- table %>%
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
+                    #eval_domain_info = dplyr::if_else(domain_info, "is part of a study domain", "is not part of a study domain"),
+                    eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
+                    eval_cv = dplyr::case_when(
+                      .data$cv <= params$cv_lower_econ  & .data$cv > 0                   ~ paste("cv <=", params$cv_lower_econ) ,
+                      .data$cv > params$cv_lower_econ & .data$cv <= params$cv_upper_econ ~ paste("cv between", params$cv_lower_econ, "and", params$cv_upper_econ),
+                      .data$cv > params$cv_upper_econ                                    ~ paste("cv >", params$cv_upper_econ)
+                    )) %>%
+
+      dplyr::mutate(label = dplyr::case_when(
+        eval_n == "insufficient sample size" & domain_info == FALSE ~ "non-reliable",
+        eval_n == "insufficient sample size"  & domain_info == TRUE ~ "REVIEW",         ## TODO: RECUPERACION MUESTRAL
+        eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_econ)~ "reliable",
+        eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv ==  paste("cv between", params$cv_lower_econ, "and", params$cv_upper_econ) ~ "weakly reliable",
+        TRUE ~ "non-reliable"
+      ))
+
+
+
+    # Proportion case
+  } else {
+
+    evaluation <- table %>%
+      dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
+                    eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
+                    eval_se = dplyr::case_when(
+                      .data$stat< 0.5 & .data$se<=quadratic(.data$stat) ~ "admissible SE",
+                      .data$stat>=0.5 & .data$se<=quadratic(.data$stat) ~ "admissible SE",
+                      TRUE ~ "high SE"
+                    )
+      ) %>%
+
+      dplyr::mutate(label = dplyr::case_when(
+        eval_n == "insufficient sample size" & domain_info == FALSE ~ "non-reliable",
+        eval_n == "insufficient sample size"  & domain_info == TRUE ~ "REVIEW",         ## TODO: RECUPERACION MUESTRAL
+
+        eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_se == "admissible SE" ~ "reliable",
+        eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_se == "high SE" ~ "weakly reliable",
+        TRUE ~ "weakly reliable"
+      ))
+
+  }
+
+  evaluation <- add_class(evaluation, "economicas.eval")
+
+
+  return(evaluation)
+}
 
 
 

@@ -8,7 +8,7 @@
 #' @param table \code{dataframe} created by \code{crear_insumos_media}.
 #' @param publish \code{boolean} indicating if the evaluation of the complete table
 #' must be added. If \code{TRUE}, the function adds a new column to the \code{dataframe}.
-#' @param scheme \code{character} variable indicating the evaluation protocol to use. Options are "chile", "eclac_2020", "eclac_2023".
+#' @param scheme \code{character} variable indicating the evaluation protocol to use. Options are "chile", "eclac_2020", "eclac_2023", "chile_economicas".
 #' @param domain_info Logical. If \code{TRUE}, indicates that the study domain information is available and will be used for assessment.
 #' This affects how the evaluation is conducted, leveraging specific domain-level data to refine the assessment results.
 #' When \code{FALSE}, domain-specific adjustments are omitted, and a generalized assessment is performed.
@@ -17,7 +17,7 @@
 #' 1. General Parameters
 #' \itemize{
 #'   \item \code{df} degrees of freedom. Default: 9.
-#'   \item \code{n} sample size. Default for chile scheme: 60. Default for CEPAL schemes: 100.
+#'   \item \code{n} sample size. Default for chile scheme: 60. Default for CEPAL schemes: 100. Default for chile economic standard scheme: 30.
 #' }
 #'
 #' 2. chile Parameters
@@ -44,6 +44,12 @@
 #'   \item \code{CCNP_a} unweighted count after adjustment. Default: 30.
 #' }
 #'
+#' 5. Chile Economic Survey Standard Parameters
+#' \itemize{
+#'   \item \code{cv_lower_econ} lower limit for CV. Default: 0.2.
+#'   \item \code{cv_upper_econ} upper limit for CV. Default: 0.3.
+#' }
+#'
 #' @return \code{dataframe} with all the columns included in the input table, plus a new column
 #' containing a label indicating the evaluation of each estimation: reliable, bit reliable, or unreliable.
 #'
@@ -52,7 +58,7 @@
 #' assess(create_mean("gastot_hd", domains = "zona+sexo", design = dc))
 #' @export
 
-assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "eclac_2023"), domain_info = FALSE, ...) {
+assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "eclac_2023", "chile_economicas"), domain_info = FALSE, ...) {
 
   # check if the scheme has the correct input
   scheme <- match.arg(scheme)
@@ -63,6 +69,7 @@ assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "ec
   default_params_ine = list(df = 9, n = 60, cv_lower_ine = 0.15, cv_upper_ine = 0.3 )
   default_params_cepal2020 = list(df = 9, n = 100, cv_cepal = 0.2, ess = 140, unweighted = 50, log_cv = 0.175)
   default_params_cepal2023 <- list(df = 9, n = 100, cv_lower_cepal = 0.2, cv_upper_cepal = 0.3, ess = 60, cvlog_max = 0.175, CCNP_b = 50, CCNP_a = 30)
+  default_params_economicas <- list(df = 9, n = 30, cv_lower_econ = 0.2, cv_upper_econ = 0.3)
 
 
 
@@ -110,6 +117,20 @@ assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "ec
 
      # Apply CEPAL 2023 standard, passing the domain_info argument
     evaluation <- assess_cepal2023(table, params, class(table), domain_info = domain_info) # Assuming default domain_info is FALSE
+
+
+    # Economics Standard
+  } else if (scheme == "chile_economicas") {
+    # Check that all the inputs are available for economicas
+    check_cepal_inputs(table, "deff")
+
+    ## TODO: CHECK TABLA_RECUPERACION MUESTRAL
+
+    # Combine defaults params with user inputs for economicas
+    params <- combine_params(default_params_economicas, user_params)
+
+    # Apply economicas standard, passing the domain_info argument
+    evaluation <- assess_economicas(table, params, class(table), domain_info = domain_info) # Assuming default domain_info is FALSE
 
   }
 
