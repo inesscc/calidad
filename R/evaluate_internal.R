@@ -4,6 +4,100 @@ check_cepal_inputs <- function(table, var) {
   check_ess <- names(table) %>%  stringr::str_detect(pattern =  var) %>% sum()
   if (check_ess != 1) {stop(paste(var, "must be used!"))}
 }
+
+
+## check n_obj
+check_n_obj_var <- function(df_n_obj, table , var = 'n_obj'){
+
+  if(! var %in% names(df_n_obj)){
+    if(!is.null(df_n_obj)){
+      stop("Oops! n_obj missing in df_n_obj object. Please review your data.")
+    }
+    message('n_obj missing in df_n_obj object')
+
+    if((! var %in% names(table))){
+      warning('n_obj missing in the table. \n
+              The process will reject estimations with n < 30')
+
+      return(FALSE)    # No merge
+
+    }else{
+      message('n_obj in table!')
+      return(FALSE)    # No merge
+    }
+
+  }else{
+
+    return(TRUE)       # merge
+  }
+}
+
+## check type col
+check_type_cols <- function(df1, df2, columnas_comunes) {
+
+  tipos_df1 <- sapply(df1 %>% dplyr::select(dplyr::all_of(columnas_comunes)), class)
+  tipos_df2 <- sapply(df2 %>% dplyr::select(dplyr::all_of(columnas_comunes)), class)
+
+  comparacion <- data.frame(
+    col = columnas_comunes,
+    df1 = sapply(tipos_df1[columnas_comunes], paste, collapse = ", "),
+    df2 = sapply(tipos_df2[columnas_comunes], paste, collapse = ", "),
+    coincide = tipos_df1[columnas_comunes] == tipos_df2[columnas_comunes],
+    stringsAsFactors = FALSE)
+
+    if(sum(comparacion$coincide)!=length(columnas_comunes)){
+      print(comparacion)
+      stop("Columns types doesn't match. Please review your data.")
+
+    }
+}
+
+
+merge_columns <- function(table, df_n_obj){
+
+  columns <- intersect(names(table), names(df_n_obj))
+
+  check_type_cols(table, df_n_obj, columns)
+
+  if(! (df_n_obj %>% dplyr::pull(.data$n_obj) %>% is.numeric())){
+    warning('Oops! n_obj is not numeric. Please review your data. \n
+            The process will reject estimations with n < 30')
+    return(table)
+  }
+
+  if((length(columns)>0) & (nrow(df_n_obj) == nrow(table))){
+
+    table_merge <- table %>%
+      dplyr::left_join(df_n_obj, by = columns)
+
+
+    if(nrow(table_merge) != nrow(table)){
+      stop("Oops! Joining tables resulted in a different number of rows. Please review your data.")
+
+      return(table)
+
+    }else if(sum(is.na(table_merge %>% dplyr::pull(.data$n_obj)))>0){
+
+      stop("Oops! Joining tables generated NA values. Please review your data.")
+
+      return(table)
+
+    }else{
+      return(table_merge)
+    }
+
+
+  }else{
+
+    stop("Columns are missing in the table or the number of rows in df_n_obj and the table don't match. Please review your data or manually add n_obj to the table")
+
+    return(table)
+  }
+
+}
+
+
+
 #---------------------------------------------------------------------
 #'
 #' Calcula el valor de una función cuadrática
@@ -177,25 +271,47 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
 ## economicas standard
 assess_economicas <- function(table, params, class = "calidad.mean", domain_info = FALSE) {
 
+  if('n_obj' %in% names(table)){
+    if(table %>% dplyr::pull(.data$n_obj) %>% is.numeric()){
+      table <- table %>%
+        dplyr::mutate(tasa_cumplimiento = .data$n/.data$n_obj)
+
+    }else{
+      table <- table %>%
+        dplyr::mutate(tasa_cumplimiento = NA)
+    }
+
+  }else{
+    table <- table %>%
+      dplyr::mutate(tasa_cumplimiento = NA)
+  }
 
   # General case
-  if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 ) {
+  if ((sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 )| (sum(class %in% 'calidad.prop') == 1  & sum(table$stat>1)>0)) {
 
     evaluation <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
-                    #eval_domain_info = dplyr::if_else(domain_info, "is part of a study domain", "is not part of a study domain"),
+                    eval_tasa_cumplimiento = dplyr::if_else(is.na(.data$tasa_cumplimiento),'insufficient rate',
+                                                            dplyr::if_else(.data$tasa_cumplimiento>=1, 'sufficient rate', 'insufficient rate')),
+
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     eval_cv = dplyr::case_when(
                       .data$cv <= params$cv_lower_econ  & .data$cv > 0                   ~ paste("cv <=", params$cv_lower_econ) ,
                       .data$cv > params$cv_lower_econ & .data$cv <= params$cv_upper_econ ~ paste("cv between", params$cv_lower_econ, "and", params$cv_upper_econ),
                       .data$cv > params$cv_upper_econ                                    ~ paste("cv >", params$cv_upper_econ)
-                    )) %>%
+                      )
+                    ) %>%
 
       dplyr::mutate(label = dplyr::case_when(
         eval_n == "insufficient sample size" & domain_info == FALSE ~ "non-reliable",
-        eval_n == "insufficient sample size"  & domain_info == TRUE ~ "REVIEW",         ## TODO: RECUPERACION MUESTRAL
+        eval_n == "insufficient sample size" & domain_info == TRUE & eval_tasa_cumplimiento == 'insufficient rate' ~ "non-reliable",
         eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_econ)~ "reliable",
+        eval_n == "insufficient sample size" & domain_info == TRUE & eval_tasa_cumplimiento == 'sufficient rate' &
+          eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_econ)~ "reliable",
         eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv ==  paste("cv between", params$cv_lower_econ, "and", params$cv_upper_econ) ~ "weakly reliable",
+        eval_n == "insufficient sample size" & domain_info == TRUE & eval_tasa_cumplimiento == 'sufficient rate' &
+          eval_df == "sufficient df" & eval_cv ==  paste("cv between", params$cv_lower_econ, "and", params$cv_upper_econ) ~ "weakly reliable",
+
         TRUE ~ "non-reliable"
       ))
 
@@ -206,6 +322,8 @@ assess_economicas <- function(table, params, class = "calidad.mean", domain_info
 
     evaluation <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
+                    eval_tasa_cumplimiento = dplyr::if_else(is.na(.data$tasa_cumplimiento),'insufficient rate',
+                                                            dplyr::if_else(.data$tasa_cumplimiento>=1, 'sufficient rate', 'insufficient rate')),
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     eval_se = dplyr::case_when(
                       .data$stat< 0.5 & .data$se<=quadratic(.data$stat) ~ "admissible SE",
@@ -216,10 +334,14 @@ assess_economicas <- function(table, params, class = "calidad.mean", domain_info
 
       dplyr::mutate(label = dplyr::case_when(
         eval_n == "insufficient sample size" & domain_info == FALSE ~ "non-reliable",
-        eval_n == "insufficient sample size"  & domain_info == TRUE ~ "REVIEW",         ## TODO: RECUPERACION MUESTRAL
-
+        eval_n == "insufficient sample size"  & domain_info == TRUE & eval_tasa_cumplimiento == 'insufficient rate' ~ "non-reliable",
         eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_se == "admissible SE" ~ "reliable",
+        eval_n == "insufficient sample size"  & domain_info == TRUE & eval_tasa_cumplimiento == 'sufficient rate'&
+          eval_df == "sufficient df" & eval_se == "admissible SE" ~ "reliable",
         eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_se == "high SE" ~ "weakly reliable",
+        eval_n == "insufficient sample size"  & domain_info == TRUE & eval_tasa_cumplimiento == 'sufficient rate'&
+          eval_df == "sufficient df" & eval_se == "high SE" ~ "weakly reliable",
+
         TRUE ~ "weakly reliable"
       ))
 

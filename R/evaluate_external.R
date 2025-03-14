@@ -12,6 +12,7 @@
 #' @param domain_info Logical. If \code{TRUE}, indicates that the study domain information is available and will be used for assessment.
 #' This affects how the evaluation is conducted, leveraging specific domain-level data to refine the assessment results.
 #' When \code{FALSE}, domain-specific adjustments are omitted, and a generalized assessment is performed.
+#' @param df_n_obj \code{NULL} dataframe with n_obj and
 #' @param ... additional parameters for the evaluation. The complete list of parameters is:
 
 #' 1. General Parameters
@@ -58,7 +59,7 @@
 #' assess(create_mean("gastot_hd", domains = "zona+sexo", design = dc))
 #' @export
 
-assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "eclac_2023", "chile_economicas"), domain_info = FALSE, ...) {
+assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "eclac_2023", "chile_economicas"), domain_info = FALSE, df_n_obj = NULL,...) {
 
   # check if the scheme has the correct input
   scheme <- match.arg(scheme)
@@ -120,17 +121,21 @@ assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "ec
 
 
     # Economics Standard
-  } else if (scheme == "chile_economicas") {
-    # Check that all the inputs are available for economicas
-    check_cepal_inputs(table, "deff")
+  } else if (scheme == "chile_economicas"){
 
-    ## TODO: CHECK TABLA_RECUPERACION MUESTRAL
+    ## check n_obj
+    merge <- check_n_obj_var(df_n_obj, table)
+
+    ## try to join tables
+    if(merge){
+      table <- merge_columns(table, df_n_obj)
+    }
 
     # Combine defaults params with user inputs for economicas
     params <- combine_params(default_params_economicas, user_params)
 
     # Apply economicas standard, passing the domain_info argument
-    evaluation <- assess_economicas(table, params, class(table), domain_info = domain_info) # Assuming default domain_info is FALSE
+    evaluation <- assess_economicas(table, params, class(table), domain_info = domain_info)
 
   }
 

@@ -201,5 +201,82 @@ test_that("assess function works correctly with domain_info = FALSE for eclac_20
 
 })
 
+################################
+# Chile Economic Survey Standard
+
+dc_ele_t <- svydesign(ids = ~rol_ficticio,
+                      weights = ~fe_transversal,
+                      strata = ~estrato,
+                      fpc = ~pob,             # correccion por poblacion finita
+                      data = ELE7)
+
+## prod salarial -> Ingreso Operacional total
+prod_salarial <- create_prop('VA_2022f',
+                             denominator = 'REMP_TOTAL',
+                             domains = 'cod_actividad+cod_tamano',
+                             design = dc_ele_t)
+
+# test check df_n_obj
+
+## sin indicar df_n_obj
+test_that('test df_n_obj == NULL',
+          expect_warning(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T))
+          )
+
+## diferentes tipos de columnas para merge table y df_n_obj
+test_that('test different df types',
+          expect_error(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T, df_n_obj = ELE7_n_obj_transversal)))
 
 
+n_obj_ELE2 <- ELE7_n_obj_transversal %>%
+  mutate(cod_actividad = cod_actividad_letra,
+         cod_tamano = as.character(cod_tamano)) %>%
+  select(-cod_actividad_letra)
+
+## diferente numero de filas entre table y df_n_obj
+test_that('test different number of rows',
+          expect_error(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T,
+                              df_n_obj = n_obj_ELE2 %>%
+                                slice(1:40))
+                       ))
+
+## diferente df_n_obj con NAs
+test_that('test different number of rows',
+          expect_error(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T,
+                              df_n_obj = n_obj_ELE2 %>%
+                                mutate(n_obj= ifelse(n<30),NA, n_obj))
+          ))
+
+### uniendo n_obj a tabla
+prod_salarial2 <- prod_salarial %>%
+  left_join(n_obj_ELE2, by = c('cod_tamano', 'cod_actividad'))
+
+## dos mensajes por separado
+### 1ero
+test_that('test message',expect_message(assess(prod_salarial2, scheme = 'chile_economicas', domain_info = T),
+                                        'n_obj missing in df_n_obj object'))
+
+### 2do
+test_that('test message',expect_message(assess(prod_salarial2, scheme = 'chile_economicas', domain_info = T),
+                                        'n_obj in table!'))
+
+## revision de resultados equivalentes cuando n_obj esta en tabla o en df_n_obj
+test_that('test equal n_obj in table and n_obj in df_n_obj',
+          expect_equal(assess(prod_salarial2, scheme = 'chile_economicas', domain_info = T),
+                       assess(prod_salarial, scheme = 'chile_economicas', domain_info = T, df_n_obj = n_obj_ELE2)))
+
+
+## test con diferentes nombres de columnas
+test_that('test different colnames between table and df_n_obj',
+          expect_error(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T,
+                              df_n_obj = n_obj_ELE2 %>%
+                                rename(codigo_tamano = cod_tamano)),
+                       'Oops! Joining tables resulted in a different number of rows. Please review your data.'
+                       ))
+
+
+## test resultado flujo para ratio
+test_that('test total reliable in prod salarial',
+          expect_equal(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T,
+                              df_n_obj = n_obj_ELE2) %>% filter(label == 'reliable') %>% nrow(),
+                       38))
