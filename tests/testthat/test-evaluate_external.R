@@ -280,3 +280,14 @@ test_that('test total reliable in prod salarial',
           expect_equal(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T,
                               df_n_obj = n_obj_ELE2) %>% filter(label == 'reliable') %>% nrow(),
                        38))
+
+
+## Test para evaluar si el ratio esta entre 0 y 1, en este caso le pusimos que esta entre 0 y 1 cuando en realidad se toman valores fuera a ese intervalo, se espera que arroje error:
+test_that('test para evaluar ratio between 0 y 1',
+          expect_warning(assess(prod_salarial,
+                                scheme = 'chile_economicas',
+                                domain_info = T,
+                                df_n_obj = n_obj_ELE2,
+                                ratio_between_0_1 = TRUE))
+          )
+

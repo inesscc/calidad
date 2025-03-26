@@ -12,7 +12,8 @@
 #' @param domain_info Logical. If \code{TRUE}, indicates that the study domain information is available and will be used for assessment.
 #' This affects how the evaluation is conducted, leveraging specific domain-level data to refine the assessment results.
 #' When \code{FALSE}, domain-specific adjustments are omitted, and a generalized assessment is performed.
-#' @param df_n_obj \code{NULL} dataframe with n_obj and
+#' @param df_n_obj Default \code{NULL}. Dataframe with objective sample size column \code{n_obj} and columns with the domains to evaluate. Its important check the domain columns type with table.
+#' @param ratio_between_0_1 \code{boolean}. If \code{TRUE}, indicates that the estimator is a ratio between 0 and 1.
 #' @param ... additional parameters for the evaluation. The complete list of parameters is:
 
 #' 1. General Parameters
@@ -59,7 +60,7 @@
 #' assess(create_mean("gastot_hd", domains = "zona+sexo", design = dc))
 #' @export
 
-assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "eclac_2023", "chile_economicas"), domain_info = FALSE, df_n_obj = NULL,...) {
+assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "eclac_2023", "chile_economicas"), domain_info = FALSE, df_n_obj = NULL, ratio_between_0_1 = TRUE, ...) {
 
   # check if the scheme has the correct input
   scheme <- match.arg(scheme)
@@ -135,7 +136,11 @@ assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "ec
     params <- combine_params(default_params_economicas, user_params)
 
     # Apply economicas standard, passing the domain_info argument
-    evaluation <- assess_economicas(table, params, class(table), domain_info = domain_info)
+    evaluation <- assess_economicas(table, params, class(table), domain_info = domain_info, ratio_between_0_1 = ratio_between_0_1)
+
+    if (publish == TRUE) {
+      evaluation <- publish_table(evaluation)
+    }
 
   }
 

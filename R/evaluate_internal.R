@@ -220,6 +220,7 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
 }
 #-------------------------------------------------
 ###################
+# CEPAL 2023
 utils::globalVariables(c("eval_deff", "eval_ess"))
 
 assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE) {
@@ -269,7 +270,7 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
 #-------------------------------------------------
 
 ## economicas standard
-assess_economicas <- function(table, params, class = "calidad.mean", domain_info = FALSE) {
+assess_economicas <- function(table, params, class = "calidad.mean", domain_info = FALSE, ratio_between_0_1 = TRUE) {
 
   if('n_obj' %in% names(table)){
     if(table %>% dplyr::pull(.data$n_obj) %>% is.numeric()){
@@ -287,7 +288,12 @@ assess_economicas <- function(table, params, class = "calidad.mean", domain_info
   }
 
   # General case
-  if ((sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 )| (sum(class %in% 'calidad.prop') == 1  & sum(table$stat>1)>0)) {
+  if ((sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 )| (sum(class %in% 'calidad.prop') == 1 & (sum(table$stat>1)>0 | !ratio_between_0_1))) {
+
+    if ((ratio_between_0_1) & sum(class %in% 'calidad.prop') == 1){
+      warning('Oops! We detected a ratio estimation over 1. The evaluation will use a cv.')
+    }
+
 
     evaluation <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
