@@ -405,6 +405,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' @param log_cv \code{boolean} logarithmic coefficient of variation.
 #' @param unweighted \code{boolean} add non-weighted count if required.
 #' @param ci_logit \code{boolean} indicating if interval confidence is logit, only available for proportions.
+#' @param scheme \code{character} variable indicating the evaluation protocol to use for CEPAL standard. Options are "eclac_2020" and "eclac_2023". The "eclac_2020" option does not support ratio estimation.
 #' @import survey
 #' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
 #'
@@ -428,11 +429,13 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' @export
 create_prop <- function(var, denominator = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE,
                         ajuste_ene = FALSE, rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE,
-                        eclac_input = FALSE, ci_logit = FALSE) {
+                        eclac_input = FALSE, ci_logit = FALSE, scheme = c('eclac_2020', 'eclac_2023')) {
 
 
-  # eclac approach is not allowed with denominator
-  if (!is.null(denominator) & eclac_input== TRUE) {
+  scheme <- match.arg(scheme)
+
+  # eclac 2020 approach is not allowed with denominator
+  if (!is.null(denominator) & eclac_input== TRUE & scheme == 'eclac_2020') {
     stop("eclac approach is not allowed with denominator")
   }
 
@@ -444,7 +447,7 @@ create_prop <- function(var, denominator = NULL, domains = NULL, subpop = NULL, 
   log_cv <- eclac_inputs$log_cv
 
   if (!is.null(denominator)) {
-    final <- create_ratio_internal(var, denominator, domains, subpop, design, ci, deff, ess, ajuste_ene, rel_error)
+    final <- create_ratio_internal(var, denominator, domains, subpop, design, ci, deff, ess, ajuste_ene, unweighted, rel_error, log_cv)
   }
 
   if (is.null(denominator)) {

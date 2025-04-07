@@ -80,7 +80,7 @@ prod_salarial <- create_prop('VA_2022f',
 
 # test check coincidencia tipo
 
-ELE7_n_obj_transversal %>%
-  mutate(cod_actividad = cod_actividad_letra,
-         cod_tamano = as.character(cod_tamano)) %>%
-  select(-cod_actividad_letra)
+# ELE7_n_obj_transversal %>%
+#   dplyr::mutate(cod_actividad = cod_actividad_letra,
+#                 cod_tamano = as.character(cod_tamano)) %>%
+#   dplyr::select(-cod_actividad_letra)

@@ -164,11 +164,14 @@ get_unweighted <- function(table, disenio, var, domains) {
 #-----------------------------------------------------------------------
 
 get_log_cv <- function(data) {
-
-  data <- data %>%
-    dplyr::mutate(log_cv = dplyr::case_when(.data$stat<0.5 ~ .data$cv/(-log(.data$stat)),
-                                            .data$stat>=0.5 ~ .data$cv/-log(1-.data$stat))
-    )
+  if(sum(data$stat>1)>0){
+    warning('Oops! We detected a ratio estimation over 1. The log_cv cannot be calculated.')
+  }else{
+    data <- data %>%
+      dplyr::mutate(log_cv = dplyr::case_when(.data$stat<0.5 ~ .data$cv/(-log(.data$stat)),
+                                              .data$stat>=0.5 ~ .data$cv/-log(1-.data$stat))
+                    )
+    }
 
   return(data)
 }
@@ -948,7 +951,7 @@ get_ess <- function(ess, env = parent.frame() ) {
 #'
 
 create_ratio_internal <- function(var,denominator, domains = NULL, subpop = NULL, disenio, ci = FALSE, deff = FALSE, ess = FALSE,
-                                  ajuste_ene = FALSE, unweighted = FALSE, rel_error = FALSE, rm.na = FALSE) {
+                                  ajuste_ene = FALSE, unweighted = FALSE, rel_error = FALSE, log_cv = FALSE, rm.na = FALSE) {
 
   # get design variables
   design_vars <- get_design_vars(disenio )
@@ -1033,6 +1036,11 @@ create_ratio_internal <- function(var,denominator, domains = NULL, subpop = NULL
   if (rel_error == TRUE) {
     final <- final %>%
       dplyr::mutate(relative_error = stats::qt(c(.975), df = .data$df) * cv)
+  }
+
+  # Add log cv, if the user uses this parameter
+  if (log_cv) {
+    final <- get_log_cv(final)
   }
 
   # add the ess if the user uses this parameter

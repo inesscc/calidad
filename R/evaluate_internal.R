@@ -7,13 +7,13 @@ check_cepal_inputs <- function(table, var) {
 
 
 ## check n_obj
-check_n_obj_var <- function(df_n_obj, table , var = 'n_obj'){
+check_n_obj_var <- function(table_n_obj, table , var = 'n_obj'){
 
-  if(! var %in% names(df_n_obj)){
-    if(!is.null(df_n_obj)){
-      stop("Oops! n_obj missing in df_n_obj object. Please review your data.")
+  if(! var %in% names(table_n_obj)){
+    if(!is.null(table_n_obj)){
+      stop("Oops! n_obj missing in table_n_obj object. Please review your data.")
     }
-    message('n_obj missing in df_n_obj object')
+    message('n_obj missing in table_n_obj object')
 
     if((! var %in% names(table))){
       warning('n_obj missing in the table. \n
@@ -33,16 +33,16 @@ check_n_obj_var <- function(df_n_obj, table , var = 'n_obj'){
 }
 
 ## check type col
-check_type_cols <- function(df1, df2, columnas_comunes) {
+check_type_cols <- function(tabla1, tabla2, columnas_comunes) {
 
-  tipos_df1 <- sapply(df1 %>% dplyr::select(dplyr::all_of(columnas_comunes)), class)
-  tipos_df2 <- sapply(df2 %>% dplyr::select(dplyr::all_of(columnas_comunes)), class)
+  tipos_t1 <- sapply(tabla1 %>% dplyr::select(dplyr::all_of(columnas_comunes)), class)
+  tipos_t2 <- sapply(tabla2 %>% dplyr::select(dplyr::all_of(columnas_comunes)), class)
 
   comparacion <- data.frame(
     col = columnas_comunes,
-    df1 = sapply(tipos_df1[columnas_comunes], paste, collapse = ", "),
-    df2 = sapply(tipos_df2[columnas_comunes], paste, collapse = ", "),
-    coincide = tipos_df1[columnas_comunes] == tipos_df2[columnas_comunes],
+    table1 = sapply(tipos_t1[columnas_comunes], paste, collapse = ", "),
+    table2 = sapply(tipos_t2[columnas_comunes], paste, collapse = ", "),
+    coincide = tipos_t1[columnas_comunes] == tipos_t2[columnas_comunes],
     stringsAsFactors = FALSE)
 
     if(sum(comparacion$coincide)!=length(columnas_comunes)){
@@ -53,22 +53,22 @@ check_type_cols <- function(df1, df2, columnas_comunes) {
 }
 
 
-merge_columns <- function(table, df_n_obj){
+merge_columns <- function(table, table_n_obj){
 
-  columns <- intersect(names(table), names(df_n_obj))
+  columns <- intersect(names(table), names(table_n_obj))
 
-  check_type_cols(table, df_n_obj, columns)
+  check_type_cols(table, table_n_obj, columns)
 
-  if(! (df_n_obj %>% dplyr::pull(.data$n_obj) %>% is.numeric())){
+  if(! (table_n_obj %>% dplyr::pull(.data$n_obj) %>% is.numeric())){
     warning('Oops! n_obj is not numeric. Please review your data. \n
             The process will reject estimations with n < 30')
     return(table)
   }
 
-  if((length(columns)>0) & (nrow(df_n_obj) == nrow(table))){
+  if((length(columns)>0) & (nrow(table_n_obj) == nrow(table))){
 
     table_merge <- table %>%
-      dplyr::left_join(df_n_obj, by = columns)
+      dplyr::left_join(table_n_obj, by = columns)
 
 
     if(nrow(table_merge) != nrow(table)){
@@ -89,7 +89,7 @@ merge_columns <- function(table, df_n_obj){
 
   }else{
 
-    stop("Columns are missing in the table or the number of rows in df_n_obj and the table don't match. Please review your data or manually add n_obj to the table")
+    stop("Columns are missing in the table or the number of rows in table_n_obj and the table don't match. Please review your data or manually add n_obj to the table")
 
     return(table)
   }
@@ -121,10 +121,15 @@ quadratic <- function(p) {
   })
 }
 #--------------------------------------------------------------------
-assess_ine <- function(table, params, class = "calidad.mean") {
+assess_ine <- function(table, params, class = "calidad.mean", ratio_between_0_1 = TRUE) {
 
   # General case
-  if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 ) {
+  if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 | (sum(class %in% 'calidad.prop') == 1 & (sum(table$stat>1)>0 | !ratio_between_0_1))) {
+
+    if ((ratio_between_0_1) & sum(class %in% 'calidad.prop') == 1){
+      warning('Oops! We detected a ratio estimation over 1. The evaluation will use a cv.')
+    }
+
 
     evaluacion <- table %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
@@ -148,28 +153,21 @@ assess_ine <- function(table, params, class = "calidad.mean") {
     evaluacion <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
-                    prop_est = dplyr::case_when(.data$stat <= 0.5                     ~ "<= 0.5",
-                                                .data$stat < 1 & .data$stat > 0.5 ~ "> 0.5",
-                                                .data$stat >= 1                        ~ ">= 1"),
-                    eval_type = dplyr::if_else(.data$stat < 1, "Eval SE", "Eval CV"),
+                    prop_est = dplyr::case_when(.data$stat <= 0.5                 ~ "<= 0.5",
+                                                .data$stat < 1 & .data$stat > 0.5 ~ "> 0.5"),
+
                     quadratic = dplyr::if_else(.data$stat < 1, quadratic(.data$stat), NA_real_),
-                    eval_se = dplyr::if_else(.data$stat < 1,
-                                             dplyr::if_else(.data$se <= .data$quadratic,
-                                                            "admissible SE", "high SE"), NA_character_),
-                    eval_cv = dplyr::if_else(.data$stat < 1, NA_character_,
-                                             dplyr::case_when(cv <= params$cv_lower_ine                           ~ paste("cv <=", params$cv_lower_ine),
-                                                              cv > params$cv_lower_ine & cv <= params$cv_upper_ine ~ paste("cv between", params$cv_lower_ine, "and", params$cv_upper_ine),
-                                                              cv > 0.3                                            ~ paste("cv >", params$cv_upper_ine)
-                                             )),
+
+                    eval_se = dplyr::if_else(.data$se <= .data$quadratic, "admissible SE", "high SE"),
+
                     label = dplyr::case_when(
-                      stat <1 & eval_n == "insufficient sample size" | eval_df == "insufficient df"                                                  ~ "non-reliable",
-                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "<= 0.5" & eval_se == "admissible SE"  ~ "reliable",
-                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "<= 0.5" & eval_se == "high SE"      ~ "weakly reliable",
-                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "> 0.5" & eval_se == "admissible SE"   ~ "reliable",
-                      stat <1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "> 0.5" & eval_se == "high SE"       ~ "weakly reliable",
-                      stat >= 1 & eval_n == "insufficient sample size" | eval_df == "insufficient df" | eval_cv == paste("cv >", params$cv_upper_ine) ~ "non-reliable",
-                      stat >= 1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_ine)    ~ "reliable",
-                      stat >= 1 & eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv between", params$cv_lower_ine, "and", params$cv_upper_ine) ~ "weakly reliable"))
+                      eval_n == "insufficient sample size" | eval_df == "insufficient df"                                                  ~ "non-reliable",
+                      eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "<= 0.5" & eval_se == "admissible SE"  ~ "reliable",
+                      eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "<= 0.5" & eval_se == "high SE"      ~ "weakly reliable",
+                      eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "> 0.5" & eval_se == "admissible SE"   ~ "reliable",
+                      eval_n == "sufficient sample size" & eval_df == "sufficient df" & prop_est == "> 0.5" & eval_se == "high SE"       ~ "weakly reliable"
+                      )
+                    )
 
   }
   return(evaluacion)
@@ -223,26 +221,40 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
 # CEPAL 2023
 utils::globalVariables(c("eval_deff", "eval_ess"))
 
-assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE) {
+assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE, low_df_justified =FALSE, ratio_between_0_1 = TRUE) {
+
   evaluation <- table %>%
     dplyr::mutate(eval_deff = dplyr::case_when(.data$deff >= 1 ~ "Sufficient deff",
-                                        .data$deff < 1 & domain_info & .data$n >= params$n ~ "Sufficient deff",
-                                        TRUE ~ "non-reliable")) %>%
+                                               .data$deff < 1 & domain_info & .data$n >= params$n ~ "Sufficient deff",
+                                               TRUE ~ "non-reliable")) %>%
     dplyr::mutate(
       eval_ess = dplyr::if_else(eval_deff == "Sufficient deff" & .data$ess >= params$ess, "Sufficient ess", "non-reliable"),
       eval_df = dplyr::if_else(eval_ess == "Sufficient ess" & .data$df >= params$df, "Sufficient df",
-                               dplyr::if_else(eval_ess == "Sufficient ess" & .data$df < params$df & !domain_info, "non-reliable",
-                                              dplyr::if_else(eval_ess == "Sufficient ess" & .data$df < params$df & domain_info, "Sufficient df", "non-reliable")))
+                               dplyr::if_else(eval_ess == "Sufficient ess" & .data$df < params$df & domain_info & low_df_justified , "Sufficient df",
+                                              "non-reliable"))
     )
-  if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1) {
+
+  if ((sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1) | (sum(class %in% 'calidad.prop') == 1 & (sum(table$stat>1)>0 | !ratio_between_0_1))) {
+
+    if ((ratio_between_0_1) & sum(class %in% 'calidad.prop') == 1){
+      warning('Oops! We detected a ratio estimation over 1. The evaluation will use a cv.')
+    }
+
     evaluation <- evaluation %>%
+      dplyr::mutate(
+        eval_cv = dplyr::case_when(
+          .data$cv > params$cv_upper_cepal ~ paste("cv >", params$cv_upper_cepal),
+          .data$cv > params$cv_lower_cepal & .data$cv <= params$cv_upper_cepal ~ paste("cv between", params$cv_lower_cepal, "and", params$cv_upper_cepal),
+          .data$cv <= params$cv_lower_cepal ~ paste("cv <=", params$cv_lower_cepal))
+        ) %>%
+
       dplyr::mutate(label = dplyr::case_when(
-        eval_df == "Sufficient df" & .data$cv > params$cv_upper_cepal ~ "non-reliable",
-        eval_df == "Sufficient df" & .data$cv > params$cv_lower_cepal & .data$cv <= params$cv_upper_cepal & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        eval_df == "Sufficient df" & .data$cv > params$cv_lower_cepal & .data$cv <= params$cv_upper_cepal & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "Sufficient df" & .data$cv <= params$cv_lower_cepal & .data$unweighted >= params$CCNP_b ~ "reliable",
-        eval_df == "Sufficient df" & .data$cv <= params$cv_lower_cepal & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "Sufficient df" & .data$cv <= params$cv_lower_cepal & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "Sufficient df" & eval_cv == paste("cv >", params$cv_upper_cepal) ~ "non-reliable",
+        eval_df == "Sufficient df" & eval_cv == paste("cv between", params$cv_lower_cepal, "and", params$cv_upper_cepal) & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "Sufficient df" & eval_cv == paste("cv between", params$cv_lower_cepal, "and", params$cv_upper_cepal) & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "Sufficient df" & eval_cv == paste("cv <=", params$cv_lower_cepal) & .data$unweighted >= params$CCNP_b ~ "reliable",
+        eval_df == "Sufficient df" & eval_cv == paste("cv <=", params$cv_lower_cepal) & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "Sufficient df" & eval_cv == paste("cv <=", params$cv_lower_cepal) & .data$unweighted < params$CCNP_a ~ "non-reliable",
         TRUE ~ "non-reliable"
       ))
     #proportion
@@ -251,15 +263,21 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
       stop("log_cv must be used!")
     }
     evaluation <- evaluation %>%
+      dplyr::mutate(eval_log_cv = dplyr::case_when(
+        .data$log_cv <= params$cvlog_max ~ paste("log_cv <=", params$cvlog_max),
+        .data$log_cv > params$cvlog_max ~ paste("log_cv >", params$cvlog_max)
+
+        )) %>%
+
       dplyr::mutate(label = dplyr::case_when(
-        eval_df == "Sufficient df" & .data$stat < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
-        eval_df == "Sufficient df" & .data$stat < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "Sufficient df" & .data$stat < 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        eval_df == "Sufficient df" & .data$stat >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
-        eval_df == "Sufficient df" & .data$stat >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "Sufficient df" & .data$stat >= 0.5 & .data$log_cv <= params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        eval_df == "Sufficient df" & .data$stat >= 0.5 & .data$log_cv > params$cvlog_max & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "Sufficient df" & .data$stat >= 0.5 & .data$log_cv > params$cvlog_max & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "Sufficient df" & .data$stat < 0.5 & eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted >= params$CCNP_b ~ "reliable",
+        eval_df == "Sufficient df" & .data$stat < 0.5 &  eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "Sufficient df" & .data$stat < 0.5 &  eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "Sufficient df" & .data$stat >= 0.5 & eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted >= params$CCNP_b ~ "reliable",
+        eval_df == "Sufficient df" & .data$stat >= 0.5 & eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "Sufficient df" & .data$stat >= 0.5 & eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted < params$CCNP_a ~ "non-reliable",
+        eval_df == "Sufficient df" & .data$stat >= 0.5 & eval_log_cv == paste("log_cv >", params$cvlog_max) & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+        eval_df == "Sufficient df" & .data$stat >= 0.5 & eval_log_cv == paste("log_cv >", params$cvlog_max) & .data$unweighted < params$CCNP_a ~ "non-reliable",
         TRUE ~ "non-reliable"
       ))
   }
@@ -275,16 +293,16 @@ assess_economicas <- function(table, params, class = "calidad.mean", domain_info
   if('n_obj' %in% names(table)){
     if(table %>% dplyr::pull(.data$n_obj) %>% is.numeric()){
       table <- table %>%
-        dplyr::mutate(tasa_cumplimiento = .data$n/.data$n_obj)
+        dplyr::mutate(compliance_rate = .data$n/.data$n_obj)
 
     }else{
       table <- table %>%
-        dplyr::mutate(tasa_cumplimiento = NA)
+        dplyr::mutate(compliance_rate = NA)
     }
 
   }else{
     table <- table %>%
-      dplyr::mutate(tasa_cumplimiento = NA)
+      dplyr::mutate(compliance_rate = NA)
   }
 
   # General case
@@ -297,8 +315,8 @@ assess_economicas <- function(table, params, class = "calidad.mean", domain_info
 
     evaluation <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
-                    eval_tasa_cumplimiento = dplyr::if_else(is.na(.data$tasa_cumplimiento),'insufficient rate',
-                                                            dplyr::if_else(.data$tasa_cumplimiento>=1, 'sufficient rate', 'insufficient rate')),
+                    eval_compliance_rate = dplyr::if_else(is.na(.data$compliance_rate),'insufficient rate',
+                                                            dplyr::if_else(.data$compliance_rate>=1, 'sufficient rate', 'insufficient rate')),
 
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     eval_cv = dplyr::case_when(
@@ -310,12 +328,12 @@ assess_economicas <- function(table, params, class = "calidad.mean", domain_info
 
       dplyr::mutate(label = dplyr::case_when(
         eval_n == "insufficient sample size" & domain_info == FALSE ~ "non-reliable",
-        eval_n == "insufficient sample size" & domain_info == TRUE & eval_tasa_cumplimiento == 'insufficient rate' ~ "non-reliable",
+        eval_n == "insufficient sample size" & domain_info == TRUE & eval_compliance_rate == 'insufficient rate' ~ "non-reliable",
         eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_econ)~ "reliable",
-        eval_n == "insufficient sample size" & domain_info == TRUE & eval_tasa_cumplimiento == 'sufficient rate' &
+        eval_n == "insufficient sample size" & domain_info == TRUE & eval_compliance_rate == 'sufficient rate' &
           eval_df == "sufficient df" & eval_cv == paste("cv <=", params$cv_lower_econ)~ "reliable",
         eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_cv ==  paste("cv between", params$cv_lower_econ, "and", params$cv_upper_econ) ~ "weakly reliable",
-        eval_n == "insufficient sample size" & domain_info == TRUE & eval_tasa_cumplimiento == 'sufficient rate' &
+        eval_n == "insufficient sample size" & domain_info == TRUE & eval_compliance_rate == 'sufficient rate' &
           eval_df == "sufficient df" & eval_cv ==  paste("cv between", params$cv_lower_econ, "and", params$cv_upper_econ) ~ "weakly reliable",
 
         TRUE ~ "non-reliable"
@@ -328,8 +346,8 @@ assess_economicas <- function(table, params, class = "calidad.mean", domain_info
 
     evaluation <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
-                    eval_tasa_cumplimiento = dplyr::if_else(is.na(.data$tasa_cumplimiento),'insufficient rate',
-                                                            dplyr::if_else(.data$tasa_cumplimiento>=1, 'sufficient rate', 'insufficient rate')),
+                    eval_compliance_rate = dplyr::if_else(is.na(.data$compliance_rate),'insufficient rate',
+                                                            dplyr::if_else(.data$compliance_rate>=1, 'sufficient rate', 'insufficient rate')),
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     eval_se = dplyr::case_when(
                       .data$stat< 0.5 & .data$se<=quadratic(.data$stat) ~ "admissible SE",
@@ -340,12 +358,12 @@ assess_economicas <- function(table, params, class = "calidad.mean", domain_info
 
       dplyr::mutate(label = dplyr::case_when(
         eval_n == "insufficient sample size" & domain_info == FALSE ~ "non-reliable",
-        eval_n == "insufficient sample size"  & domain_info == TRUE & eval_tasa_cumplimiento == 'insufficient rate' ~ "non-reliable",
+        eval_n == "insufficient sample size"  & domain_info == TRUE & eval_compliance_rate == 'insufficient rate' ~ "non-reliable",
         eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_se == "admissible SE" ~ "reliable",
-        eval_n == "insufficient sample size"  & domain_info == TRUE & eval_tasa_cumplimiento == 'sufficient rate'&
+        eval_n == "insufficient sample size"  & domain_info == TRUE & eval_compliance_rate == 'sufficient rate'&
           eval_df == "sufficient df" & eval_se == "admissible SE" ~ "reliable",
         eval_n == "sufficient sample size" & eval_df == "sufficient df" & eval_se == "high SE" ~ "weakly reliable",
-        eval_n == "insufficient sample size"  & domain_info == TRUE & eval_tasa_cumplimiento == 'sufficient rate'&
+        eval_n == "insufficient sample size"  & domain_info == TRUE & eval_compliance_rate == 'sufficient rate'&
           eval_df == "sufficient df" & eval_se == "high SE" ~ "weakly reliable",
 
         TRUE ~ "weakly reliable"
