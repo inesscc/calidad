@@ -78,7 +78,7 @@ merge_columns <- function(table, table_n_obj){
 
     }else if(sum(is.na(table_merge %>% dplyr::pull(.data$n_obj)))>0){
 
-      if (sum(table_merge$n<30)>0){
+      if (sum(table_merge$n<30, na.rm = T)>0){
 
         stop("Oops! NA values found in n_obj column and some rows where n < 30. Please review your data.")
 
