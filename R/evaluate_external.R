@@ -140,7 +140,8 @@ assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "ec
     params <- combine_params(default_params_economicas, user_params)
 
     # Apply economicas standard, passing the domain_info argument
-    evaluation <- assess_economicas(table, params, class(table), domain_info = domain_info,
+    evaluation <- assess_economicas(table, params, class(table),
+                                    domain_info = domain_info,
                                     ratio_between_0_1 = ratio_between_0_1)
 
     if (publish == TRUE) {

@@ -19,7 +19,8 @@ create_prop(
   unweighted = FALSE,
   standard_eval = FALSE,
   eclac_input = FALSE,
-  ci_logit = FALSE
+  ci_logit = FALSE,
+  scheme = c("eclac_2020", "eclac_2023")
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ create_prop(
 \item{eclac_input}{\code{boolean} return eclac inputs}
 
 \item{ci_logit}{\code{boolean} indicating if interval confidence is logit, only available for proportions.}
+
+\item{scheme}{\code{character} variable indicating the evaluation protocol to use for CEPAL standard. Options are "eclac_2020" and "eclac_2023". The "eclac_2020" option does not support ratio estimation.}
 }
 \value{
 \code{dataframe} that contains the inputs and all domains to be evaluated.

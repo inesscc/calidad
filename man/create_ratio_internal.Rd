@@ -16,6 +16,7 @@ create_ratio_internal(
   ajuste_ene = FALSE,
   unweighted = FALSE,
   rel_error = FALSE,
+  log_cv = FALSE,
   rm.na = FALSE
 )
 }
@@ -41,6 +42,8 @@ create_ratio_internal(
 \item{unweighted}{\code{boolean} Add non weighted count if it is required}
 
 \item{rel_error}{\code{boolean} Relative error}
+
+\item{log_cv}{\code{boolean} indicating if the log cv must be returned. Used for ratios between 0 and 1.}
 
 \item{rm.na}{\code{boolean} indicating if NA values must be removed}
 }

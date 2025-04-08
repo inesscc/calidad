@@ -1,12 +1,2 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^doc$
-^Meta$
-^README.Rmd
-^\.github$
-cran-comments.md
-^CRAN-RELEASE$
-^_pkgdown\.yml$
-^docs$
-^pkgdown$
-^CRAN-SUBMISSION$

@@ -301,10 +301,10 @@ test_that('test table_n_obj == NULL',
 
 ## diferentes tipos de columnas para merge table y table_n_obj
 test_that('test different df types',
-          expect_error(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T, table_n_obj = ELE7_n_obj_transversal)))
+          expect_error(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T, table_n_obj = ELE7_n_obj)))
 
 
-n_obj_ELE2 <- ELE7_n_obj_transversal %>%
+n_obj_ELE2 <- ELE7_n_obj %>%
   mutate(cod_actividad = cod_actividad_letra,
          cod_tamano = as.character(cod_tamano)) %>%
   select(-cod_actividad_letra)
@@ -342,15 +342,6 @@ test_that('test equal n_obj in table and n_obj in table_n_obj',
                        assess(prod_salarial, scheme = 'chile_economicas', domain_info = T, table_n_obj = n_obj_ELE2, ratio_between_0_1 = FALSE )))
 
 
-## test con diferentes nombres de columnas
-# test_that('test different colnames between table and table_n_obj',
-#           expect_error(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T,
-#                               table_n_obj = n_obj_ELE2 %>%
-#                                 rename(codigo_tamano = cod_tamano)),
-#                        'Oops! Joining tables resulted in a different number of rows. Please review your data.'
-#                        ))  # arroja el warning del paquete dplyr y detecta el error de la funcion c:
-
-
 ## test resultado flujo para ratio
 test_that('test total reliable in prod salarial',
           expect_equal(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T,
@@ -366,4 +357,29 @@ test_that('test para evaluar ratio between 0 y 1',
                                 table_n_obj = n_obj_ELE2,
                                 ratio_between_0_1 = TRUE))
           )
+
+
+## test para evaluar NAs en table_n_obj
+table_n_obj_NAS <- n_obj_ELE2 %>%
+  mutate(n_obj = ifelse(cod_actividad == 'K' & cod_tamano == '1', NA, n_obj))
+
+table_n_obj_NAS2 <- prod_salarial %>%
+  filter(n>30) %>%
+  left_join(table_n_obj_NAS, by = c('cod_actividad', 'cod_tamano')) %>%
+  select(cod_actividad, cod_tamano, n_obj)
+
+
+test_that('test  NA values in n_obj column',
+          expect_warning(assess(prod_salarial %>% filter(n>30),
+                                scheme = 'chile_economicas', domain_info = TRUE,
+                                table_n_obj = table_n_obj_NAS2, ratio_between_0_1 = FALSE),
+                         'Oops! NA values found in n_obj column. The process will skip the sample recovery verification for those rows'))
+
+
+test_that('test  NA values in n_obj column',
+          expect_error(assess(prod_salarial,
+                              scheme = 'chile_economicas', domain_info = TRUE,
+                              table_n_obj = table_n_obj_NAS, ratio_between_0_1 = FALSE),
+                       'Oops! NA values found in n_obj column and some rows where n < 30. Please review your data.'))
+
 

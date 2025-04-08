@@ -942,6 +942,7 @@ get_ess <- function(ess, env = parent.frame() ) {
 #' @param deff \code{boolean} Design effect
 #' @param ess \code{boolean} Effective sample size
 #' @param rel_error \code{boolean} Relative error
+#' @param log_cv \code{boolean} indicating if the log cv must be returned. Used for ratios between 0 and 1.
 #' @param rm.na \code{boolean} indicating if NA values must be removed
 #' @param unweighted \code{boolean} Add non weighted count if it is required
 #' @importFrom rlang :=

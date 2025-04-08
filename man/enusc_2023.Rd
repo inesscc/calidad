@@ -8,12 +8,12 @@
 dataframe with 49.813 rows y 15 columns
 \describe{
  \item{enc_region }{16 regions}
- \item{enc_rpc}{code of region, province and commune}
- \item{Fact_Pers_Reg}{person sample weights at region level}
- \item{Fact_Pers_Com}{person sample weights at commune level}
- \item{Fact_Hog_Reg}{household sample weights at region level}
- \item{Fact_Hog_Com}{household sample weights at commune level}
- \item{VarStrat}{strata}
+ \item{enc_rpc}{Code of region, province and commune}
+ \item{Fact_Pers_Reg}{Person sample weights at region level}
+ \item{Fact_Pers_Com}{Person sample weights at commune level}
+ \item{Fact_Hog_Reg}{Household sample weights at region level}
+ \item{Fact_Hog_Com}{Household sample weights at commune level}
+ \item{VarStrat}{Strata}
  \item{Conglomerado}{PSU}
  \item{VH_DV}{Households victimized by violent crimes. It works combined with Fact_Hog_*}
  \item{VH_DC}{Household victimization. It works combined  with Fact_Hog_*}
@@ -21,7 +21,7 @@ dataframe with 49.813 rows y 15 columns
  \item{VP_DC}{Individual victimization. It works combined  with Fact_Pers_*}
  \item{PAD}{Perception of increased crime in the country. It works combined  with Fact_Pers_*}
  \item{rph_sexo}{1 = man; 2 = woman}
- \item{rph_edad}{age}
+ \item{rph_edad}{Age}
 
  }
 }
