@@ -1,84 +1,32 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url>
-    <loc>/404.html</loc>
-  </url>
-  <url>
-    <loc>/articles/index.html</loc>
-  </url>
-  <url>
-    <loc>/articles/tutorial.html</loc>
-  </url>
-  <url>
-    <loc>/authors.html</loc>
-  </url>
-  <url>
-    <loc>/index.html</loc>
-  </url>
-  <url>
-    <loc>/news/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/assess.html</loc>
-  </url>
-  <url>
-    <loc>/reference/casen.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_html.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_mean.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_prop.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_prop_internal.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_ratio_internal.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_size.html</loc>
-  </url>
-  <url>
-    <loc>/reference/create_total.html</loc>
-  </url>
-  <url>
-    <loc>/reference/eclac_standard.html</loc>
-  </url>
-  <url>
-    <loc>/reference/ene.html</loc>
-  </url>
-  <url>
-    <loc>/reference/enusc.html</loc>
-  </url>
-  <url>
-    <loc>/reference/enusc_2023.html</loc>
-  </url>
-  <url>
-    <loc>/reference/epf_personas.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_cv.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_df.html</loc>
-  </url>
-  <url>
-    <loc>/reference/get_survey_table.html</loc>
-  </url>
-  <url>
-    <loc>/reference/index.html</loc>
-  </url>
-  <url>
-    <loc>/reference/quadratic.html</loc>
-  </url>
-  <url>
-    <loc>/reference/standardize_columns.html</loc>
-  </url>
-  <url>
-    <loc>/reference/standardize_design_variables.html</loc>
-  </url>
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/articles/tutorial.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/news/index.html</loc></url>
+<url><loc>/reference/assess.html</loc></url>
+<url><loc>/reference/casen.html</loc></url>
+<url><loc>/reference/create_html.html</loc></url>
+<url><loc>/reference/create_mean.html</loc></url>
+<url><loc>/reference/create_prop.html</loc></url>
+<url><loc>/reference/create_prop_internal.html</loc></url>
+<url><loc>/reference/create_ratio_internal.html</loc></url>
+<url><loc>/reference/create_size.html</loc></url>
+<url><loc>/reference/create_total.html</loc></url>
+<url><loc>/reference/eclac_standard.html</loc></url>
+<url><loc>/reference/ELE7.html</loc></url>
+<url><loc>/reference/ELE7_n_obj.html</loc></url>
+<url><loc>/reference/ene.html</loc></url>
+<url><loc>/reference/enusc.html</loc></url>
+<url><loc>/reference/enusc_2023.html</loc></url>
+<url><loc>/reference/epf_personas.html</loc></url>
+<url><loc>/reference/get_cv.html</loc></url>
+<url><loc>/reference/get_df.html</loc></url>
+<url><loc>/reference/get_survey_table.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/quadratic.html</loc></url>
+<url><loc>/reference/standardize_columns.html</loc></url>
+<url><loc>/reference/standardize_design_variables.html</loc></url>
 </urlset>
+

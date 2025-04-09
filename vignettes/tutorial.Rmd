@@ -18,7 +18,7 @@ knitr::opts_chunk$set(
 
 The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4), [ECLAC 2020](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) and [ECLAC 2023](https://repositorio.cepal.org/server/api/core/bitstreams/f04569e6-4f38-42e7-a32b-e0b298e0ab9c/content) for the quality assessment of estimates from household surveys and [INE Chile Economics Surveys 2024](https://www.ine.gob.cl/docs/default-source/buenas-practicas/directrices-metodologicas/estandares/documentos/est%C3%A1ndar-evaluaci%C3%B3n-de-calidad-de-estimaciones-econ%C3%B3micas.pdf?sfvrsn=201fbeb9_2) for the quality assessment of estimates from economics surveys.
 
-This tutorial shows the basic use of the package and includes the main functions to create the necessary inputs to implement the quality standards.  
+This tutorial shows the basic use of the package and includes the main functions to create the necessary inputs to implement the quality standards.
 
 
 ## Data edition
@@ -80,7 +80,7 @@ options(survey.lonely.psu = "certainty")
 
 For ELE survey, we also must to declare the fpc (finite population correction)
 
-```{r}
+```{r, eval=FALSE}
 # Complex sample design for ELE
 dc_ele <- svydesign(ids = ~rol_ficticio, weights = ~fe_transversal, strata = ~estrato, fpc = ~pob, data = ELE7)
 
@@ -175,7 +175,7 @@ prop_nacional_ci_logit <- create_prop("desocupado", subpop = "fdt", design = dc_
 We may also be interested in assessing the estimate of a ratio. In the ELE survey, wage productivity is estimated as the ratio between value added and the total gross remuneration of personnel hired by the company. The `create_prop` function includes a `denominator` parameter, where the variable to be used as the denominator in the ratio should be specified.
 
 
-```{r}
+```{r, eval=FALSE}
 
 prod_salarial <- create_prop('VA_2022f', denominator = 'REMP_TOTAL', domains = 'cod_actividad+cod_tamano', design = dc_ele)
 ```
@@ -183,7 +183,7 @@ prod_salarial <- create_prop('VA_2022f', denominator = 'REMP_TOTAL', domains = '
 The ratio estimation is available for ECLAC 2023 standard (`eclac_2023`). If we want to include the ECLAC inputs, we must to add the `scheme` parameter, wich allows to specify the methodological standard to use. By default, the function uses the ECLAC 2020 standard (`eclac_2020`), which does not support ratio estimation.
 
 
-```{r}
+```{r, eval=FALSE}
 
 create_prop('VA_2022f', denominator = 'REMP_TOTAL', domains = 'cod_actividad+ cod_tamano', design = dc_ele, 
             eclac_input = TRUE, scheme = 'eclac_2023')
