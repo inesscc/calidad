@@ -296,12 +296,12 @@ prod_salarial <- create_prop('VA_2022f',
 
 ## sin indicar table_n_obj
 test_that('test table_n_obj == NULL',
-          expect_warning(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T))
+          expect_warning(assess(prod_salarial, scheme = 'chile_economics', domain_info = T))
           )
 
 ## diferentes tipos de columnas para merge table y table_n_obj
 test_that('test different df types',
-          expect_error(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T, table_n_obj = ELE7_n_obj)))
+          expect_error(assess(prod_salarial, scheme = 'chile_economics', domain_info = T, table_n_obj = ELE7_n_obj)))
 
 
 n_obj_ELE2 <- ELE7_n_obj %>%
@@ -311,14 +311,14 @@ n_obj_ELE2 <- ELE7_n_obj %>%
 
 ## diferente numero de filas entre table y table_n_obj
 test_that('test different number of rows',
-          expect_error(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T,
+          expect_error(assess(prod_salarial, scheme = 'chile_economics', domain_info = T,
                               table_n_obj = n_obj_ELE2 %>%
                                 slice(1:40))
                        ))
 
 ## diferente table_n_obj con NAs
 test_that('test different number of rows',
-          expect_error(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T,
+          expect_error(assess(prod_salarial, scheme = 'chile_economics', domain_info = T,
                               table_n_obj = n_obj_ELE2 %>%
                                 mutate(n_obj= ifelse(n<30),NA, n_obj))
           ))
@@ -329,22 +329,22 @@ prod_salarial2 <- prod_salarial %>%
 
 ## dos mensajes por separado
 ### 1ero
-test_that('test message',expect_message(assess(prod_salarial2, scheme = 'chile_economicas', domain_info = T, ratio_between_0_1 = FALSE),
+test_that('test message',expect_message(assess(prod_salarial2, scheme = 'chile_economics', domain_info = T, ratio_between_0_1 = FALSE),
                                         'n_obj missing in table_n_obj object'))
 
 ### 2do
-test_that('test message',expect_message(assess(prod_salarial2, scheme = 'chile_economicas', domain_info = T, ratio_between_0_1 = FALSE),
+test_that('test message',expect_message(assess(prod_salarial2, scheme = 'chile_economics', domain_info = T, ratio_between_0_1 = FALSE),
                                         'n_obj in table!'))
 
 ## revision de resultados equivalentes cuando n_obj esta en tabla o en table_n_obj
 test_that('test equal n_obj in table and n_obj in table_n_obj',
-          expect_equal(assess(prod_salarial2, scheme = 'chile_economicas', domain_info = T, ratio_between_0_1 = FALSE),
-                       assess(prod_salarial, scheme = 'chile_economicas', domain_info = T, table_n_obj = n_obj_ELE2, ratio_between_0_1 = FALSE )))
+          expect_equal(assess(prod_salarial2, scheme = 'chile_economics', domain_info = T, ratio_between_0_1 = FALSE),
+                       assess(prod_salarial, scheme = 'chile_economics', domain_info = T, table_n_obj = n_obj_ELE2, ratio_between_0_1 = FALSE )))
 
 
 ## test resultado flujo para ratio
 test_that('test total reliable in prod salarial',
-          expect_equal(assess(prod_salarial, scheme = 'chile_economicas', domain_info = T,
+          expect_equal(assess(prod_salarial, scheme = 'chile_economics', domain_info = T,
                               table_n_obj = n_obj_ELE2, ratio_between_0_1 = FALSE) %>% filter(label == 'reliable') %>% nrow(),
                        38))
 
@@ -352,7 +352,7 @@ test_that('test total reliable in prod salarial',
 ## Test para evaluar si el ratio esta entre 0 y 1, en este caso le pusimos que esta entre 0 y 1 cuando en realidad se toman valores fuera a ese intervalo, se espera que arroje error:
 test_that('test para evaluar ratio between 0 y 1',
           expect_warning(assess(prod_salarial,
-                                scheme = 'chile_economicas',
+                                scheme = 'chile_economics',
                                 domain_info = T,
                                 table_n_obj = n_obj_ELE2,
                                 ratio_between_0_1 = TRUE))
@@ -371,14 +371,14 @@ table_n_obj_NAS2 <- prod_salarial %>%
 
 test_that('test  NA values in n_obj column',
           expect_warning(assess(prod_salarial %>% filter(n>30),
-                                scheme = 'chile_economicas', domain_info = TRUE,
+                                scheme = 'chile_economics', domain_info = TRUE,
                                 table_n_obj = table_n_obj_NAS2, ratio_between_0_1 = FALSE),
                          'Oops! NA values found in n_obj column. The process will skip the sample recovery verification for those rows'))
 
 
 test_that('test  NA values in n_obj column',
           expect_error(assess(prod_salarial,
-                              scheme = 'chile_economicas', domain_info = TRUE,
+                              scheme = 'chile_economics', domain_info = TRUE,
                               table_n_obj = table_n_obj_NAS, ratio_between_0_1 = FALSE),
                        'Oops! NA values found in n_obj column and some rows where n < 30. Please review your data.'))
 

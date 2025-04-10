@@ -17,7 +17,7 @@ check_n_obj_var <- function(table_n_obj, table , var = 'n_obj'){
 
     if((! var %in% names(table))){
       warning('n_obj missing in the table. \n
-              The process will reject estimations with n < 30')
+              The process will consider estimations with n < 30 as non-reliable.')
 
       return(FALSE)    # No merge
 
@@ -61,7 +61,7 @@ merge_columns <- function(table, table_n_obj){
 
   if(! (table_n_obj %>% dplyr::pull(.data$n_obj) %>% is.numeric())){
     warning('Oops! n_obj is not numeric. Please review your data. \n
-            The process will reject estimations with n < 30')
+            The process will consider estimations with n < 30 as unreliable')
     return(table)
   }
 
@@ -136,7 +136,7 @@ assess_ine <- function(table, params, class = "calidad.mean", ratio_between_0_1 
   if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 | (sum(class %in% 'calidad.prop') == 1 & (sum(table$stat>1)>0 | !ratio_between_0_1))) {
 
     if ((ratio_between_0_1) & sum(class %in% 'calidad.prop') == 1){
-      warning('Oops! We detected a ratio estimation over 1. The evaluation will use a cv.')
+      warning('Oops! A ratio estimation greater than 1 was detected. The assessment will use cv.')
     }
 
 
@@ -246,7 +246,7 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
   if ((sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1) | (sum(class %in% 'calidad.prop') == 1 & (sum(table$stat>1)>0 | !ratio_between_0_1))) {
 
     if ((ratio_between_0_1) & sum(class %in% 'calidad.prop') == 1){
-      warning('Oops! We detected a ratio estimation over 1. The evaluation will use a cv.')
+      warning('Oops! A ratio estimation greater than 1 was detected. The assessment will use cv.')
     }
 
     evaluation <- evaluation %>%
@@ -318,7 +318,7 @@ assess_economicas <- function(table, params, class = "calidad.mean", domain_info
   if ((sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 )| (sum(class %in% 'calidad.prop') == 1 & (sum(table$stat>1)>0 | !ratio_between_0_1))) {
 
     if ((ratio_between_0_1) & sum(class %in% 'calidad.prop') == 1){
-      warning('Oops! We detected a ratio estimation over 1. The evaluation will use a cv.')
+      warning('Oops! A ratio estimation greater than 1 was detected. The assessment will use cv.')
     }
 
 

@@ -7,7 +7,7 @@
 assess(
   table,
   publish = FALSE,
-  scheme = c("chile", "eclac_2020", "eclac_2023", "chile_economicas"),
+  scheme = c("chile", "eclac_2020", "eclac_2023", "chile_economics"),
   domain_info = FALSE,
   low_df_justified = FALSE,
   table_n_obj = NULL,
@@ -21,7 +21,7 @@ assess(
 \item{publish}{\code{boolean} indicating if the evaluation of the complete table
 must be added. If \code{TRUE}, the function adds a new column to the \code{dataframe}.}
 
-\item{scheme}{\code{character} variable indicating the evaluation protocol to use. Options are "chile", "eclac_2020", "eclac_2023", "chile_economicas".}
+\item{scheme}{\code{character} variable indicating the evaluation protocol to use. Options are "chile", "eclac_2020", "eclac_2023", "chile_economics".}
 
 \item{domain_info}{Logical. If \code{TRUE}, indicates that the study domain information is available and will be used for assessment.
 This affects how the evaluation is conducted, leveraging specific domain-level data to refine the assessment results.

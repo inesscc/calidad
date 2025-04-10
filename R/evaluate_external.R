@@ -8,7 +8,7 @@
 #' @param table \code{dataframe} created by \code{crear_insumos_media}.
 #' @param publish \code{boolean} indicating if the evaluation of the complete table
 #' must be added. If \code{TRUE}, the function adds a new column to the \code{dataframe}.
-#' @param scheme \code{character} variable indicating the evaluation protocol to use. Options are "chile", "eclac_2020", "eclac_2023", "chile_economicas".
+#' @param scheme \code{character} variable indicating the evaluation protocol to use. Options are "chile", "eclac_2020", "eclac_2023", "chile_economics".
 #' @param domain_info Logical. If \code{TRUE}, indicates that the study domain information is available and will be used for assessment.
 #' This affects how the evaluation is conducted, leveraging specific domain-level data to refine the assessment results.
 #' When \code{FALSE}, domain-specific adjustments are omitted, and a generalized assessment is performed.
@@ -61,7 +61,7 @@
 #' assess(create_mean("gastot_hd", domains = "zona+sexo", design = dc))
 #' @export
 
-assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "eclac_2023", "chile_economicas"), domain_info = FALSE, low_df_justified = FALSE, table_n_obj = NULL, ratio_between_0_1 = TRUE, ...) {
+assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "eclac_2023", "chile_economics"), domain_info = FALSE, low_df_justified = FALSE, table_n_obj = NULL, ratio_between_0_1 = TRUE, ...) {
 
   # check if the scheme has the correct input
   scheme <- match.arg(scheme)
@@ -126,7 +126,7 @@ assess <- function(table, publish = FALSE, scheme = c("chile", "eclac_2020", "ec
 
 
     # Economics Standard
-  } else if (scheme == "chile_economicas"){
+  } else if (scheme == "chile_economics"){
 
     ## check n_obj
     merge <- check_n_obj_var(table_n_obj, table)

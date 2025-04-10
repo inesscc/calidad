@@ -104,7 +104,9 @@ unemployed).</p>
 <span><span class="va">ene</span> <span class="op">&lt;-</span> <span class="va">ene</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
 <span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>fdt <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">cae_especifico</span> <span class="op">&gt;=</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">cae_especifico</span> <span class="op">&lt;=</span> <span class="fl">9</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, <span class="co"># labour force</span></span>
 <span>         ocupado <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">cae_especifico</span> <span class="op">&gt;=</span> <span class="fl">1</span> <span class="op">&amp;</span> <span class="va">cae_especifico</span> <span class="op">&lt;=</span> <span class="fl">7</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>, <span class="co"># employed</span></span>
-<span>         desocupado <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">cae_especifico</span> <span class="op">&gt;=</span> <span class="fl">8</span> <span class="op">&amp;</span> <span class="va">cae_especifico</span> <span class="op">&lt;=</span> <span class="fl">9</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="co"># unemployed</span></span>
+<span>         desocupado <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">cae_especifico</span> <span class="op">&gt;=</span> <span class="fl">8</span> <span class="op">&amp;</span> <span class="va">cae_especifico</span> <span class="op">&lt;=</span> <span class="fl">9</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>         hombre <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">sexo</span> <span class="op">==</span> <span class="fl">1</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span>,</span>
+<span>         mujer <span class="op">=</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/if_else.html" class="external-link">if_else</a></span><span class="op">(</span><span class="va">sexo</span> <span class="op">==</span> <span class="fl">2</span>, <span class="fl">1</span>, <span class="fl">0</span><span class="op">)</span><span class="op">)</span> <span class="co"># unemployed</span></span>
 <span></span>
 <span><span class="co"># One row per household</span></span>
 <span><span class="va">epf</span> <span class="op">&lt;-</span> <span class="va">epf_personas</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
@@ -185,35 +187,51 @@ standard</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">desagregar</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span>var <span class="op">=</span> <span class="st">"desocupado"</span>, domains <span class="op">=</span> <span class="st">"sexo+region"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span>  <span class="va">dc_ene</span><span class="op">)</span></span></code></pre></div>
 <p>A useful parameter is <code>eclac_input</code>. It allows to return
-the ECLAC inputs. By default this parameter is FALSE and with the option
-TRUE we can activate it.</p>
+the ECLAC inputs. By default this parameter is <code>FALSE</code> and
+with the option <code>TRUE</code> we can activate it.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="va">eclac_inputs</span> <span class="op">&lt;-</span>  <span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span>var <span class="op">=</span> <span class="st">"desocupado"</span>, domains <span class="op">=</span> <span class="st">"sexo+region"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span>  <span class="va">dc_ene</span>, eclac_input <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>In some cases, it may be of interest to assess the estimate of a
+ratio. The <code>create_prop</code> function allows ratio estimation by
+explicitly specifying the numerator and the denominator. To do this, the
+function includes the denominator parameter, where the variable to be
+used in the denominator of the ratio must be provided.</p>
+<p>For ECLAC standards, it is necessary to specify the version of the
+methodology using the scheme parameter, since ratio estimation is only
+supported under the ECLAC 2023 standard (<code>eclac_2023</code>). The
+default option is <code>eclac_2020</code>, which does not include
+support for ratio estimation. An example using <code>eclac_2023</code>
+is shown below:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span>var <span class="op">=</span> <span class="st">"mujer"</span>, denominator <span class="op">=</span> <span class="st">"hombre"</span>, domains <span class="op">=</span> <span class="st">"ocupado"</span>, design <span class="op">=</span> <span class="va">dc_ene</span>,</span>
+<span>            eclac_input <span class="op">=</span> <span class="cn">TRUE</span>, scheme <span class="op">=</span> <span class="st">'eclac_2023'</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level4">
 <h4 id="household-budget-survey-part-2">Household Budget Survey (part 2)<a class="anchor" aria-label="anchor" href="#household-budget-survey-part-2"></a>
 </h4>
-<p>In some cases it may be of interest to assess the quality of a sum.
-For example, the sum of all the income of the EPF at the geographical
-area level (Gran Santiago and other regional capitals). For this, there
-is the <code>create_total</code> function. This function receives a
+<p>We may also be interested in assessing the estimate of a sum. For
+example, the sum of all the income of the EPF at the geographical area
+level (Gran Santiago and other regional capitals). For this, there is
+the <code>create_total</code> function. This function receives a
 continuous variable such as hours, expense, or income and generates
 totals at the requested level. The ending “with” of the function alludes
 to the fact that a continuous variable is being used.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">insumos_suma</span> <span class="op">&lt;-</span>  <span class="fu"><a href="../reference/create_total.html">create_total</a></span><span class="op">(</span>var <span class="op">=</span> <span class="st">"gastot_hd"</span>, domains <span class="op">=</span> <span class="st">"zona"</span>, design <span class="op">=</span>  <span class="va">dc_epf</span><span class="op">)</span></span></code></pre></div>
 <p>If we want to assess the estimate of a mean, we have the function
 <code>create_mean</code>. In this case, we will calculate the average
 expenditure of households, according to geographical area.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">insumos_media</span> <span class="op">&lt;-</span>  <span class="fu"><a href="../reference/create_mean.html">create_mean</a></span><span class="op">(</span>var <span class="op">=</span> <span class="st">"gastot_hd"</span>, domains <span class="op">=</span> <span class="st">"zona"</span>, design <span class="op">=</span>  <span class="va">dc_epf</span><span class="op">)</span></span></code></pre></div>
 <p>The default usage is not to disaggregate, in which case the functions
 should be used as follows:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># ENE dataset</span></span>
 <span><span class="va">insumos_prop_nacional</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span><span class="st">"desocupado"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span> <span class="va">dc_ene</span><span class="op">)</span></span>
 <span><span class="va">insumos_total_nacional</span> <span class="op">&lt;-</span>  <span class="fu"><a href="../reference/create_total.html">create_total</a></span><span class="op">(</span><span class="st">"desocupado"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span> <span class="va">dc_ene</span><span class="op">)</span></span>
+<span></span>
 <span><span class="co"># EPF dataset</span></span>
 <span><span class="va">insumos_suma_nacional</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_total.html">create_total</a></span><span class="op">(</span><span class="st">"gastot_hd"</span>, design <span class="op">=</span> <span class="va">dc_epf</span><span class="op">)</span></span>
 <span><span class="va">insumos_media_nacional</span> <span class="op">&lt;-</span>  <span class="fu"><a href="../reference/create_mean.html">create_mean</a></span><span class="op">(</span><span class="st">"gastot_hd"</span>, design <span class="op">=</span> <span class="va">dc_epf</span><span class="op">)</span></span></code></pre></div>
@@ -222,33 +240,21 @@ allows returning the confidence interval. By default, this parameter is
 set to <code>FALSE.</code> For proportions, the logistic confidence
 interval is available. To use it, you need to set
 <code>ci_logit = TRUE</code>, as shown below:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># ENE dataset</span></span>
 <span><span class="va">prop_nacional_ci</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span><span class="st">"desocupado"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span> <span class="va">dc_ene</span>, ci <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>                        </span>
 <span><span class="va">prop_nacional_ci_logit</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span><span class="st">"desocupado"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span> <span class="va">dc_ene</span>, ci_logit <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span> </span></code></pre></div>
 </div>
 <div class="section level4">
-<h4 id="longitudinal-business-survey-part-3">Longitudinal Business Survey (part 3)<a class="anchor" aria-label="anchor" href="#longitudinal-business-survey-part-3"></a>
+<h4 id="longitudinal-enterprise-survey-part-3">Longitudinal Enterprise Survey (part 3)<a class="anchor" aria-label="anchor" href="#longitudinal-enterprise-survey-part-3"></a>
 </h4>
-<p>We may also be interested in assessing the estimate of a ratio. In
-the ELE survey, wage productivity is estimated as the ratio between
-value added and the total gross remuneration of personnel hired by the
-company. The <code>create_prop</code> function includes a
-<code>denominator</code> parameter, where the variable to be used as the
-denominator in the ratio should be specified.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="va">prod_salarial</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span><span class="st">'VA_2022f'</span>, denominator <span class="op">=</span> <span class="st">'REMP_TOTAL'</span>, domains <span class="op">=</span> <span class="st">'cod_actividad+cod_tamano'</span>, design <span class="op">=</span> <span class="va">dc_ele</span><span class="op">)</span></span></code></pre></div>
-<p>The ratio estimation is available for ECLAC 2023 standard
-(<code>eclac_2023</code>). If we want to include the ECLAC inputs, we
-must to add the <code>scheme</code> parameter, wich allows to specify
-the methodological standard to use. By default, the function uses the
-ECLAC 2020 standard (<code>eclac_2020</code>), which does not support
-ratio estimation.</p>
+<p>In the case of economic surveys, the estimates are carried out in a
+similar way. For example, in the Longitudinal Enterprise Survey (ELE),
+wage productivity is estimated as the ratio between value added and the
+total gross remuneration of personnel hired by the company.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span><span class="st">'VA_2022f'</span>, denominator <span class="op">=</span> <span class="st">'REMP_TOTAL'</span>, domains <span class="op">=</span> <span class="st">'cod_actividad+ cod_tamano'</span>, design <span class="op">=</span> <span class="va">dc_ele</span>, </span>
-<span>            eclac_input <span class="op">=</span> <span class="cn">TRUE</span>, scheme <span class="op">=</span> <span class="st">'eclac_2023'</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">prod_salarial</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_prop.html">create_prop</a></span><span class="op">(</span><span class="st">'VA_2022f'</span>, denominator <span class="op">=</span> <span class="st">'REMP_TOTAL'</span>, domains <span class="op">=</span> <span class="st">'cod_actividad+cod_tamano'</span>, design <span class="op">=</span> <span class="va">dc_ele</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
 <div class="section level3">
@@ -260,24 +266,12 @@ Chile criteria are applied (<code>scheme = 'chile'</code>). However, if
 we want to evaluate using the ECLAC or Chile Economics criteria, we need
 to specify <code>scheme = 'eclac_2020'</code>,
 <code>scheme = 'eclac_2023'</code>, or
-<code>scheme = 'chile_economicas'</code>.</p>
+<code>scheme = 'chile_economics'</code>.</p>
 <p>For the ECLAC 2023 standard (<code>eclac_2023</code>), we can use the
 parameters <code>domain_info</code> and <code>low_df_justified</code> to
 indicate whether the estimation corresponds to a planned study domain
 and whether low degrees of freedom are justified. Both parameters are
 set to <code>FALSE</code> by default.</p>
-<p>In the INE Chile Economics standard (<code>chile_economicas</code>),
-the <code>domain_info</code> parameter is also available, and the
-<code>table_n_obj</code> parameter can be used to specify the target
-sample size for the domains to be evaluated, using a data frame. This
-data frame must include the target sample size in a column named
-<code>n_obj</code>. By default, <code>table_n_obj</code> is
-<code>NULL</code>, and the sample recovery verification will be
-skipped.</p>
-<p>For the assessment of ratios, we can indicate whether the estimated
-value falls between 0 and 1 using the parameter
-<code>ratio_between_0_1</code>. By default, it is set to
-<code>TRUE</code>.</p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span></span>
 <span><span class="co"># INE Chile</span></span>
@@ -288,10 +282,22 @@ value falls between 0 and 1 using the parameter
 <span></span>
 <span><span class="co"># ECLAC </span></span>
 <span><span class="va">evaluacion_cepal_2020</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess.html">assess</a></span><span class="op">(</span><span class="va">eclac_inputs</span>, scheme <span class="op">=</span> <span class="st">'eclac_2020'</span><span class="op">)</span></span>
-<span><span class="va">evaluacion_cepal_2023</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess.html">assess</a></span><span class="op">(</span><span class="va">eclac_inputs</span>, scheme <span class="op">=</span> <span class="st">'eclac_2023'</span>, domain_info <span class="op">=</span> <span class="cn">TRUE</span>, low_df_justified <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span></span>
-<span></span>
-<span><span class="co"># INE Economics</span></span>
+<span><span class="va">evaluacion_cepal_2023</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess.html">assess</a></span><span class="op">(</span><span class="va">eclac_inputs</span>, scheme <span class="op">=</span> <span class="st">'eclac_2023'</span>, domain_info <span class="op">=</span> <span class="cn">TRUE</span>, low_df_justified <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>In the INE Chile Economics standard (<code>chile_economics</code>),
+the <code>domain_info</code> parameter is also available, and the
+<code>table_n_obj</code> parameter can be used to specify the target
+sample size for the domains to be evaluated, using a data frame. This
+data frame must include the target sample size in a column named
+<code>n_obj</code>. By default, <code>table_n_obj</code> is
+<code>NULL</code>, and the sample recovery verification will be
+skipped.</p>
+<p>For the assessment of ratios, we can indicate whether the estimated
+value falls between 0 and 1 using the parameter
+<code>ratio_between_0_1</code>. By default, it is set to
+<code>TRUE</code>. If a value greater than 1 is detected, the
+coefficient of variation (CV) will be used instead.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># INE Economics</span></span>
 <span></span>
 <span><span class="co">## target sample size</span></span>
 <span><span class="va">table_n_obj</span> <span class="op">&lt;-</span> <span class="va">ELE7_n_obj</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
@@ -299,8 +305,9 @@ value falls between 0 and 1 using the parameter
 <span>                cod_tamano <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">as.character</a></span><span class="op">(</span><span class="va">cod_tamano</span><span class="op">)</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span></span>
 <span>  <span class="fu">dplyr</span><span class="fu">::</span><span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="op">-</span><span class="va">cod_actividad_letra</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">eval_ratio</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess.html">assess</a></span><span class="op">(</span><span class="va">prod_salarial</span>, scheme <span class="op">=</span> <span class="st">'chile_economicas'</span>, domain_info <span class="op">=</span> <span class="cn">TRUE</span>, table_n_obj <span class="op">=</span> <span class="va">table_n_obj</span>, ratio_between_0_1 <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
-<span>  </span></code></pre></div>
+<span></span>
+<span><span class="va">eval_ratio</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess.html">assess</a></span><span class="op">(</span><span class="va">prod_salarial</span>, scheme <span class="op">=</span> <span class="st">'chile_economics'</span>,</span>
+<span>                     domain_info <span class="op">=</span> <span class="cn">TRUE</span>, table_n_obj <span class="op">=</span> <span class="va">table_n_obj</span>, ratio_between_0_1 <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
 <p>The output is a <code>dataframe</code> that, in addition to
 containing the information already generated, includes a column that
 indicates whether the estimate is unreliable, less reliable or
@@ -309,14 +316,14 @@ reliable.</p>
 know if the table should be published or not. Following the criteria of
 the standard, if more than 50% of the estimates of a table are not
 reliable, it should not be published.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Unemployment by region</span></span>
 <span><span class="va">desagregar</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/create_size.html">create_size</a></span><span class="op">(</span>var <span class="op">=</span> <span class="st">"desocupado"</span>, domains <span class="op">=</span> <span class="st">"region"</span>, subpop <span class="op">=</span> <span class="st">"fdt"</span>, design <span class="op">=</span>  <span class="va">dc_ene</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># assess output</span></span>
 <span><span class="va">evaluacion_tot_desagreg</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/assess.html">assess</a></span><span class="op">(</span><span class="va">desagregar</span>, publish <span class="op">=</span> <span class="cn">T</span><span class="op">)</span></span>
 <span><span class="va">evaluacion_tot_desagreg</span></span></code></pre></div>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Reset original options</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="va">old_options</span><span class="op">)</span></span></code></pre></div>
 </div>

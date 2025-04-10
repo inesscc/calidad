@@ -43,7 +43,9 @@ library(dplyr)
 ene <- ene %>% 
   mutate(fdt = if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0), # labour force
          ocupado = if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0), # employed
-         desocupado = if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0)) # unemployed
+         desocupado = if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0),
+         hombre = if_else(sexo == 1, 1, 0),
+         mujer = if_else(sexo == 2, 1, 0)) # unemployed
 
 # One row per household
 epf <- epf_personas %>% 
@@ -123,7 +125,7 @@ To get more domains, we can use the "+" symbol as follows:
 desagregar <- create_prop(var = "desocupado", domains = "sexo+region", subpop = "fdt", design =  dc_ene)
 ```
 
-A useful parameter is `eclac_input`. It allows to return the ECLAC inputs. By default this parameter is FALSE and with the option TRUE we can activate it. 
+A useful parameter is `eclac_input`. It allows to return the ECLAC inputs. By default this parameter is `FALSE` and with the option `TRUE` we can activate it. 
  
 ```{r, eval=F}
 
@@ -132,10 +134,22 @@ eclac_inputs <-  create_prop(var = "desocupado", domains = "sexo+region", subpop
 ```
  
 
+In some cases, it may be of interest to assess the estimate of a ratio. The `create_prop` function allows ratio estimation by explicitly specifying the numerator and the denominator. To do this, the function includes the denominator parameter, where the variable to be used in the denominator of the ratio must be provided. 
+
+For ECLAC standards, it is necessary to specify the version of the methodology using the scheme parameter, since ratio estimation is only supported under the ECLAC 2023 standard (`eclac_2023`). The default option is `eclac_2020`, which does not include support for ratio estimation. An example using `eclac_2023` is shown below:
+
+
+```{r, eval=FALSE, warning=FALSE}
+
+create_prop(var = "mujer", denominator = "hombre", domains = "ocupado", design = dc_ene,
+            eclac_input = TRUE, scheme = 'eclac_2023')
+
+```
+
 
 ### Household Budget Survey (part 2)
 
-In some cases it may be of interest to assess the quality of a sum. For example, the sum of all the income of the EPF at the geographical area level (Gran Santiago and other regional capitals). For this, there is the `create_total` function. This function receives a continuous variable such as hours, expense, or income and generates totals at the requested level. The ending "with" of the function alludes to the fact that a continuous variable is being used.
+We may also be interested in assessing the estimate of a sum. For example, the sum of all the income of the EPF at the geographical area level (Gran Santiago and other regional capitals). For this, there is the `create_total` function. This function receives a continuous variable such as hours, expense, or income and generates totals at the requested level. The ending "with" of the function alludes to the fact that a continuous variable is being used.
 
 ```{r, eval=T, warning=FALSE}
 insumos_suma <-  create_total(var = "gastot_hd", domains = "zona", design =  dc_epf)
@@ -154,6 +168,7 @@ The default usage is not to disaggregate, in which case the functions should be 
 # ENE dataset
 insumos_prop_nacional <- create_prop("desocupado", subpop = "fdt", design = dc_ene)
 insumos_total_nacional <-  create_total("desocupado", subpop = "fdt", design = dc_ene)
+
 # EPF dataset
 insumos_suma_nacional <- create_total("gastot_hd", design = dc_epf)
 insumos_media_nacional <-  create_mean("gastot_hd", design = dc_epf)
@@ -170,37 +185,22 @@ prop_nacional_ci_logit <- create_prop("desocupado", subpop = "fdt", design = dc_
 ```
 
 
-### Longitudinal Business Survey (part 3)
+### Longitudinal Enterprise Survey (part 3)
 
-We may also be interested in assessing the estimate of a ratio. In the ELE survey, wage productivity is estimated as the ratio between value added and the total gross remuneration of personnel hired by the company. The `create_prop` function includes a `denominator` parameter, where the variable to be used as the denominator in the ratio should be specified.
-
+In the case of economic surveys, the estimates are carried out in a similar way. For example, in the Longitudinal Enterprise Survey (ELE), wage productivity is estimated as the ratio between value added and the total gross remuneration of personnel hired by the company.
 
 ```{r, eval=FALSE}
 
 prod_salarial <- create_prop('VA_2022f', denominator = 'REMP_TOTAL', domains = 'cod_actividad+cod_tamano', design = dc_ele)
 ```
 
-The ratio estimation is available for ECLAC 2023 standard (`eclac_2023`). If we want to include the ECLAC inputs, we must to add the `scheme` parameter, wich allows to specify the methodological standard to use. By default, the function uses the ECLAC 2020 standard (`eclac_2020`), which does not support ratio estimation.
-
-
-```{r, eval=FALSE}
-
-create_prop('VA_2022f', denominator = 'REMP_TOTAL', domains = 'cod_actividad+ cod_tamano', design = dc_ele, 
-            eclac_input = TRUE, scheme = 'eclac_2023')
-
-```
-
 
 
 ## Assessment 
 
-Once the inputs have been generated, we can proceed with the assessment using the `assess` function. By default, the INE Chile criteria are applied (`scheme = 'chile'`). However, if we want to evaluate using the ECLAC or Chile Economics criteria, we need to specify `scheme = 'eclac_2020'`, `scheme = 'eclac_2023'`, or `scheme = 'chile_economicas'`.
+Once the inputs have been generated, we can proceed with the assessment using the `assess` function. By default, the INE Chile criteria are applied (`scheme = 'chile'`). However, if we want to evaluate using the ECLAC or Chile Economics criteria, we need to specify `scheme = 'eclac_2020'`, `scheme = 'eclac_2023'`, or `scheme = 'chile_economics'`.
 
 For the ECLAC 2023 standard (`eclac_2023`), we can use the parameters `domain_info` and `low_df_justified` to indicate whether the estimation corresponds to a planned study domain and whether low degrees of freedom are justified. Both parameters are set to `FALSE` by default.
-
-In the INE Chile Economics standard (`chile_economicas`), the `domain_info` parameter is also available, and the `table_n_obj` parameter can be used to specify the target sample size for the domains to be evaluated, using a data frame. This data frame must include the target sample size in a column named `n_obj`. By default, `table_n_obj` is `NULL`, and the sample recovery verification will be skipped.
-
-For the assessment of ratios, we can indicate whether the estimated value falls between 0 and 1 using the parameter `ratio_between_0_1`. By default, it is set to `TRUE`.
 
 
 ```{r, eval=F, warning=FALSE}
@@ -216,6 +216,14 @@ evaluacion_cepal_2020 <- assess(eclac_inputs, scheme = 'eclac_2020')
 evaluacion_cepal_2023 <- assess(eclac_inputs, scheme = 'eclac_2023', domain_info = TRUE, low_df_justified = TRUE)
 
 
+```
+
+
+In the INE Chile Economics standard (`chile_economics`), the `domain_info` parameter is also available, and the `table_n_obj` parameter can be used to specify the target sample size for the domains to be evaluated, using a data frame. This data frame must include the target sample size in a column named `n_obj`. By default, `table_n_obj` is `NULL`, and the sample recovery verification will be skipped.
+
+For the assessment of ratios, we can indicate whether the estimated value falls between 0 and 1 using the parameter `ratio_between_0_1`. By default, it is set to `TRUE`. If a value greater than 1 is detected, the coefficient of variation (CV) will be used instead.
+
+```{r, eval = FALSE}
 # INE Economics
 
 ## target sample size
@@ -224,9 +232,14 @@ table_n_obj <- ELE7_n_obj %>%
                 cod_tamano = as.character(cod_tamano)) %>%
   dplyr::select(-cod_actividad_letra)
 
-eval_ratio <- assess(prod_salarial, scheme = 'chile_economicas', domain_info = TRUE, table_n_obj = table_n_obj, ratio_between_0_1 = FALSE)
-  
+
+eval_ratio <- assess(prod_salarial, scheme = 'chile_economics',
+                     domain_info = TRUE, table_n_obj = table_n_obj, ratio_between_0_1 = FALSE)
+
 ```
+
+
+
 
 The output is a `dataframe` that, in addition to containing the information already generated, includes a column that indicates whether the estimate is unreliable, less reliable or reliable.
 
