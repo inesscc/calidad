@@ -7,8 +7,11 @@
 assess(
   table,
   publish = FALSE,
-  scheme = c("chile", "eclac_2020", "eclac_2023"),
+  scheme = c("chile", "eclac_2020", "eclac_2023", "chile_economics"),
   domain_info = FALSE,
+  low_df_justified = FALSE,
+  table_n_obj = NULL,
+  ratio_between_0_1 = TRUE,
   ...
 )
 }
@@ -18,17 +21,23 @@ assess(
 \item{publish}{\code{boolean} indicating if the evaluation of the complete table
 must be added. If \code{TRUE}, the function adds a new column to the \code{dataframe}.}
 
-\item{scheme}{\code{character} variable indicating the evaluation protocol to use. Options are "chile", "eclac_2020", "eclac_2023".}
+\item{scheme}{\code{character} variable indicating the evaluation protocol to use. Options are "chile", "eclac_2020", "eclac_2023", "chile_economics".}
 
 \item{domain_info}{Logical. If \code{TRUE}, indicates that the study domain information is available and will be used for assessment.
 This affects how the evaluation is conducted, leveraging specific domain-level data to refine the assessment results.
 When \code{FALSE}, domain-specific adjustments are omitted, and a generalized assessment is performed.}
 
+\item{low_df_justified}{Logical. If \code{TRUE} the low degrees of freedom are justified and will be used for assessment. By default \code{FALSE}.}
+
+\item{table_n_obj}{Default \code{NULL}. Dataframe with the target sample size column \code{n_obj} and columns with the domains to evaluate. Its important check the domain columns type with table.}
+
+\item{ratio_between_0_1}{\code{boolean}. If \code{TRUE}, indicates that the estimator is a ratio between 0 and 1.}
+
 \item{...}{additional parameters for the evaluation. The complete list of parameters is:
 1. General Parameters
 \itemize{
   \item \code{df} degrees of freedom. Default: 9.
-  \item \code{n} sample size. Default for chile scheme: 60. Default for CEPAL schemes: 100.
+  \item \code{n} sample size. Default for chile scheme: 60. Default for CEPAL schemes: 100. Default for chile economic standard scheme: 30.
 }
 
 2. chile Parameters
@@ -53,6 +62,12 @@ When \code{FALSE}, domain-specific adjustments are omitted, and a generalized as
   \item \code{cvlog_max} maximum logarithmic coefficient of variation. Default: 0.175.
   \item \code{CCNP_b} unweighted count before adjustment. Default: 50.
   \item \code{CCNP_a} unweighted count after adjustment. Default: 30.
+}
+
+5. Chile Economic Survey Standard Parameters
+\itemize{
+  \item \code{cv_lower_econ} lower limit for CV. Default: 0.2.
+  \item \code{cv_upper_econ} upper limit for CV. Default: 0.3.
 }}
 }
 \value{

@@ -1,6 +1,6 @@
 
-# calidad 0.5.0
+# calidad 0.6.0
 
-- New quality standard (CEPAL, 2024) 
+- New quality standard (INE Chile economics, 2024) 
 
  

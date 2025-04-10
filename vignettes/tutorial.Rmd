@@ -16,19 +16,20 @@ knitr::opts_chunk$set(
 
 # Tutorial package calidad 
 
-The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4), [ECLAC 2020](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) and [ECLAC 2023](https://repositorio.cepal.org/server/api/core/bitstreams/f04569e6-4f38-42e7-a32b-e0b298e0ab9c/content) for the quality assessment of estimates from household surveys.
+The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4), [ECLAC 2020](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) and [ECLAC 2023](https://repositorio.cepal.org/server/api/core/bitstreams/f04569e6-4f38-42e7-a32b-e0b298e0ab9c/content) for the quality assessment of estimates from household surveys and [INE Chile Economics Surveys 2024](https://www.ine.gob.cl/docs/default-source/buenas-practicas/directrices-metodologicas/estandares/documentos/est%C3%A1ndar-evaluaci%C3%B3n-de-calidad-de-estimaciones-econ%C3%B3micas.pdf?sfvrsn=201fbeb9_2) for the quality assessment of estimates from economics surveys.
 
-This tutorial shows the basic use of the package and includes the main functions to create the necessary inputs to implement both quality standards.  
+This tutorial shows the basic use of the package and includes the main functions to create the necessary inputs to implement the quality standards.
 
 
 ## Data edition
 
-We will use two datasets:
+We will use three datasets:
 
 - Encuesta Nacional de Empleo (efm 2020)  
 - VIII Encuesta de Presupuestos Familiares   
+- VII Encuesta longitudinal de Empresas (ELE7)
 
-Both datasets are loaded into the package and they can be used when the package is loaded in the session [^haven]. The data edition in the case of ENE has the purpuse of creating some subpopulations (work force, unemployed and unemployed). 
+Those datasets are loaded into the package and they can be used when the package is loaded in the session [^haven]. The data edition in the case of ENE has the purpuse of creating some subpopulations (work force, unemployed and unemployed). 
 
 [^haven]: The data contained within the package has some editions. It is important to note that haven::labelled objects may have some collision with quality functions. If you want to import a dta file, all variables that are of type haven::labelled must be converted to numeric or character.
 
@@ -38,10 +39,13 @@ Both datasets are loaded into the package and they can be used when the package 
 library(survey)
 library(calidad)
 library(dplyr)
+
 ene <- ene %>% 
   mutate(fdt = if_else(cae_especifico >= 1 & cae_especifico <= 9, 1, 0), # labour force
          ocupado = if_else(cae_especifico >= 1 & cae_especifico <= 7, 1, 0), # employed
-         desocupado = if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0)) # unemployed
+         desocupado = if_else(cae_especifico >= 8 & cae_especifico <= 9, 1, 0),
+         hombre = if_else(sexo == 1, 1, 0),
+         mujer = if_else(sexo == 2, 1, 0)) # unemployed
 
 # One row per household
 epf <- epf_personas %>% 
@@ -54,6 +58,7 @@ epf <- epf_personas %>%
 
 
 ## Sample design
+
 Before starting to use the package, it is necessary to declare the sample design of the survey, for which we use the `survey` package. The primary sample unit, the stratum and weights must be declared. It is also possible to use a design with only weights, nevertheless in that case the variance will be estimated under simple random sampling assumption. In this case we will declare a complex design for the two surveys (EPF and ENE). Additionally, it may be useful to declare an option for strata that only have one PSU. 
 
 
@@ -71,15 +76,29 @@ dc_ene <- svydesign(ids = ~conglomerado , strata = ~estrato_unico, data = ene, w
 dc_epf <- svydesign(ids = ~varunit, strata = ~varstrat, data = epf, weights = ~fe)
 
 options(survey.lonely.psu = "certainty")
+
 ```
+
+
+For ELE survey, we also must to declare the fpc (finite population correction)
+
+```{r, eval=FALSE}
+# Complex sample design for ELE
+dc_ele <- svydesign(ids = ~rol_ficticio, weights = ~fe_transversal, strata = ~estrato, fpc = ~pob, data = ELE7)
+
+options(survey.lonely.psu = 'remove')
+
+```
+
+
 
 ## Inputs creation 
 
 ### National Labour Survey (part 1)
 
-To assess the quality of an estimate, the [INE methodology](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4) establishes differentiated criteria for estimates of proportion (or ratio), on the one hand, and estimates of mean, size and total, on the other. In the case of proportion estimation, it is necessary to have the sample size, the degrees of freedom and the standard error. The other estimates require the sample size, the degrees of freedom, and the coefficient of variation.
+To assess the quality of an estimate, the [INE methodology](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4) establishes differentiated criteria for estimates of proportion or ratio between 0 and 1, on the one hand, and estimates of mean, size and total, on the other. In the case of proportion estimation, it is necessary to have the sample size, the degrees of freedom and the standard error. The other estimates require the sample size, the degrees of freedom, and the coefficient of variation.
 
-The package includes separate functions to create the inputs for estimates of **mean, proportion, totals and size**. The following example shows how the proportion  and size functions are used.
+The package includes separate functions to create the inputs for estimates of **mean, proportion, totals and size**. The following example shows how the proportion and size functions are used.
 
 ```{r}
 insumos_prop <- create_prop(var = "desocupado", domains = "sexo", subpop = "fdt", design =  dc_ene) # proportion of unemployed people
@@ -95,7 +114,7 @@ insumos_total <-  create_size(var = "desocupado", domains = "sexo", subpop = "fd
 The function returns all the neccesary inputs to implement the standard
 
 
-```{r, include=F}
+```{r}
 insumos_total
 ```
 
@@ -106,18 +125,31 @@ To get more domains, we can use the "+" symbol as follows:
 desagregar <- create_prop(var = "desocupado", domains = "sexo+region", subpop = "fdt", design =  dc_ene)
 ```
 
-A useful parameter is `eclac_input`. It allows to return the ECLAC inputs. By default this parameter is FALSE and with the option TRUE we can activate it.   
+A useful parameter is `eclac_input`. It allows to return the ECLAC inputs. By default this parameter is `FALSE` and with the option `TRUE` we can activate it. 
  
 ```{r, eval=F}
 
 eclac_inputs <-  create_prop(var = "desocupado", domains = "sexo+region", subpop = "fdt", design =  dc_ene, eclac_input = TRUE)
+
 ```
  
- 
+
+In some cases, it may be of interest to assess the estimate of a ratio. The `create_prop` function allows ratio estimation by explicitly specifying the numerator and the denominator. To do this, the function includes the denominator parameter, where the variable to be used in the denominator of the ratio must be provided. 
+
+For ECLAC standards, it is necessary to specify the version of the methodology using the scheme parameter, since ratio estimation is only supported under the ECLAC 2023 standard (`eclac_2023`). The default option is `eclac_2020`, which does not include support for ratio estimation. An example using `eclac_2023` is shown below:
+
+
+```{r, eval=FALSE, warning=FALSE}
+
+create_prop(var = "mujer", denominator = "hombre", domains = "ocupado", design = dc_ene,
+            eclac_input = TRUE, scheme = 'eclac_2023')
+
+```
+
 
 ### Household Budget Survey (part 2)
 
-In some cases it may be of interest to assess the quality of a sum. For example, the sum of all the income of the EPF at the geographical area level (Gran Santiago and other regional capitals). For this, there is the `create_total` function. This function receives a continuous variable such as hours, expense, or income and generates totals at the requested level. The ending "with" of the function alludes to the fact that a continuous variable is being used.
+We may also be interested in assessing the estimate of a sum. For example, the sum of all the income of the EPF at the geographical area level (Gran Santiago and other regional capitals). For this, there is the `create_total` function. This function receives a continuous variable such as hours, expense, or income and generates totals at the requested level. The ending "with" of the function alludes to the fact that a continuous variable is being used.
 
 ```{r, eval=T, warning=FALSE}
 insumos_suma <-  create_total(var = "gastot_hd", domains = "zona", design =  dc_epf)
@@ -136,6 +168,7 @@ The default usage is not to disaggregate, in which case the functions should be 
 # ENE dataset
 insumos_prop_nacional <- create_prop("desocupado", subpop = "fdt", design = dc_ene)
 insumos_total_nacional <-  create_total("desocupado", subpop = "fdt", design = dc_ene)
+
 # EPF dataset
 insumos_suma_nacional <- create_total("gastot_hd", design = dc_epf)
 insumos_media_nacional <-  create_mean("gastot_hd", design = dc_epf)
@@ -152,9 +185,22 @@ prop_nacional_ci_logit <- create_prop("desocupado", subpop = "fdt", design = dc_
 ```
 
 
+### Longitudinal Enterprise Survey (part 3)
+
+In the case of economic surveys, the estimates are carried out in a similar way. For example, in the Longitudinal Enterprise Survey (ELE), wage productivity is estimated as the ratio between value added and the total gross remuneration of personnel hired by the company.
+
+```{r, eval=FALSE}
+
+prod_salarial <- create_prop('VA_2022f', denominator = 'REMP_TOTAL', domains = 'cod_actividad+cod_tamano', design = dc_ele)
+```
+
+
+
 ## Assessment 
 
-Once the inputs have been generated, we can do the assessment. To do this, we use the `assess` function. By default, we apply the INE Chile criteria `scheme = 'chile'`. However, if we want to evaluate using ECLAC criteria, we need to specify `scheme = 'eclac_2020'` or `scheme = 'eclac_2023'`
+Once the inputs have been generated, we can proceed with the assessment using the `assess` function. By default, the INE Chile criteria are applied (`scheme = 'chile'`). However, if we want to evaluate using the ECLAC or Chile Economics criteria, we need to specify `scheme = 'eclac_2020'`, `scheme = 'eclac_2023'`, or `scheme = 'chile_economics'`.
+
+For the ECLAC 2023 standard (`eclac_2023`), we can use the parameters `domain_info` and `low_df_justified` to indicate whether the estimation corresponds to a planned study domain and whether low degrees of freedom are justified. Both parameters are set to `FALSE` by default.
 
 
 ```{r, eval=F, warning=FALSE}
@@ -167,8 +213,33 @@ evaluacion_media <- assess(insumos_media)
 
 # ECLAC 
 evaluacion_cepal_2020 <- assess(eclac_inputs, scheme = 'eclac_2020')
-evaluacion_cepal_2023 <- assess(eclac_inputs, scheme = 'eclac_2023')
+evaluacion_cepal_2023 <- assess(eclac_inputs, scheme = 'eclac_2023', domain_info = TRUE, low_df_justified = TRUE)
+
+
 ```
+
+
+In the INE Chile Economics standard (`chile_economics`), the `domain_info` parameter is also available, and the `table_n_obj` parameter can be used to specify the target sample size for the domains to be evaluated, using a data frame. This data frame must include the target sample size in a column named `n_obj`. By default, `table_n_obj` is `NULL`, and the sample recovery verification will be skipped.
+
+For the assessment of ratios, we can indicate whether the estimated value falls between 0 and 1 using the parameter `ratio_between_0_1`. By default, it is set to `TRUE`. If a value greater than 1 is detected, the coefficient of variation (CV) will be used instead.
+
+```{r, eval = FALSE}
+# INE Economics
+
+## target sample size
+table_n_obj <- ELE7_n_obj %>%
+  dplyr::mutate(cod_actividad = cod_actividad_letra,
+                cod_tamano = as.character(cod_tamano)) %>%
+  dplyr::select(-cod_actividad_letra)
+
+
+eval_ratio <- assess(prod_salarial, scheme = 'chile_economics',
+                     domain_info = TRUE, table_n_obj = table_n_obj, ratio_between_0_1 = FALSE)
+
+```
+
+
+
 
 The output is a `dataframe` that, in addition to containing the information already generated, includes a column that indicates whether the estimate is unreliable, less reliable or reliable.
 
