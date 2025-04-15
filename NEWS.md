@@ -1,5 +1,5 @@
 
-# calidad 0.6.0
+# calidad 0.8.0
 
 - New quality standard (INE Chile economics, 2024) 
 
