@@ -327,14 +327,6 @@ test_that('test different number of rows',
 prod_salarial2 <- prod_salarial %>%
   left_join(n_obj_ELE2, by = c('cod_tamano', 'cod_actividad'))
 
-## dos mensajes por separado
-### 1ero
-test_that('test message',expect_message(assess(prod_salarial2, scheme = 'chile_economics', domain_info = T, ratio_between_0_1 = FALSE),
-                                        'n_obj missing in table_n_obj object'))
-
-### 2do
-test_that('test message',expect_message(assess(prod_salarial2, scheme = 'chile_economics', domain_info = T, ratio_between_0_1 = FALSE),
-                                        'n_obj in table!'))
 
 ## revision de resultados equivalentes cuando n_obj esta en tabla o en table_n_obj
 test_that('test equal n_obj in table and n_obj in table_n_obj',

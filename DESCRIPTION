@@ -1,7 +1,7 @@
 Package: calidad
 Type: Package
 Title: Assesses the Quality of Estimates Made by Complex Sample Designs
-Version: 0.8.0
+Version: 0.8.1
 Authors@R: c(
       person(given = "Klaus",
         family = "Lehmann",
@@ -36,7 +36,7 @@ License: GPL-3
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.3.2
-Suggests: knitr, rmarkdown, testthat
+Suggests: knitr, rmarkdown, testthat, srvyr
 VignetteBuilder: knitr
 Depends: R (>= 3.5.0)
 Imports: 
