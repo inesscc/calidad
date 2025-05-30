@@ -10,16 +10,64 @@ tolower_strings <-  function(x) {
 
 
 # get design variables
+# get_design_vars <- function(design) {
+#   if (as.character(design$call$ids)[[2]] != "1") {
+#     psu <- unificar_variables_upm(design)
+#     strata <-   unificar_variables_estrato(design)
+#     vars <- c(psu, strata)
+#   } else {
+#     vars <- NULL
+#   }
+#   return(vars)
+# }
+
+
+
 get_design_vars <- function(design) {
-  if (as.character(design$call$ids)[[2]] != "1") {
-    psu <- unificar_variables_upm(design)
-    strata <-   unificar_variables_estrato(design)
+  ### evaluacion update y as_survey
+  create_vars <- FALSE
+  if (as.character(design$call)[[1]] != "svydesign"){
+    if(as.character(design$call)[1] == 'update'| as.character(design$call)[1] == 'subset'){
+      message("Complex design with modifications")
+    }
+
+    if (names(design$cluster) !='id') {
+      create_vars <- TRUE
+    }else{
+      # si la variable se llama igual que el valor por defecto, se revisara que este presente en las variables
+      if('id' %in% names(design$variables)){
+        if(is.character(design$variables$id)){
+
+          if(identical(as.factor(design$variables$id), design$cluster$id)){
+            create_vars <- TRUE
+          }
+        }else{
+          if(identical(design$variables$id, design$cluster$id)){
+            create_vars <- TRUE
+          }
+        }
+      }
+    }
+  }  ## usamos lo de siempre si se detecta svydesign
+  else{
+    if (!as.character(design$call$ids)[[2]] %in% c("0", "1")) {
+      create_vars <- TRUE
+    }
+  }
+
+  if(create_vars){
+    psu <- names(design$cluster)
+    strata <- names(design$strata)
     vars <- c(psu, strata)
   } else {
     vars <- NULL
   }
+
   return(vars)
 }
+
+
+
 
 #' Turn on all the indicators needed for the eclac standard
 #'
@@ -180,13 +228,44 @@ get_log_cv <- function(data) {
 #-----------------------------------------------------------------------
 
 
+# se_message <- function(design) {
+#   if (as.character(design$call$ids)[[2]] == "1") {
+#     warning("se calculated without complex design")
+#   }
+#
+# }
+
+
 se_message <- function(design) {
-  if (as.character(design$call$ids)[[2]] == "1") {
-    warning("se calculated without complex design")
+
+  disenio_complejo <- TRUE
+  ## identificar si es q no hay update o se usa as_design
+  if (as.character(design$call)[[1]] != "svydesign"){
+    if (names(design$cluster) == 'id') {
+      ## si id no esta en las variables, entonces no es un disenio complejo
+      if(!'id' %in% names(design$variables)){
+        disenio_complejo <- FALSE
+      }else{
+        if(is.character(design$variables$id)){
+          if(!identical(as.factor(design$variables$id), design$cluster$id)){
+            disenio_complejo <- FALSE
+          }
+        }else{
+          if(!identical(design$variables$id, design$cluster$id)){
+            disenio_complejo <- TRUE
+          }
+        }
+      }
+    }
+  }else{ # caso normal con svydesign
+    if (as.character(design$call$ids)[[2]] %in% c("0","1"))
+      disenio_complejo <- FALSE
   }
 
+  if (!disenio_complejo) {
+    warning("se calculated without complex design")
+  }
 }
-
 
 #-----------------------------------------------------------------------
 
@@ -196,26 +275,71 @@ se_message <- function(design) {
 #' @param design \code{dataframe}
 #' @return design survey
 
+# standardize_design_variables <- function(design) {
+#
+#   # Cambiar nombre de UPM y estrato solo si el disenio fue declarado con ellas
+#   if (as.character(design$call$ids)[[2]] != "1") {
+#     # Create variables only when they dont't already exist
+#     if (tolower(unificar_variables_upm(design)) != "varunit") {
+#       design$variables$varunit = design$variables[[unificar_variables_upm(design)]]
+#     }
+#     if (tolower(unificar_variables_estrato(design)) != "varstrat") {
+#       design$variables$varstrat = design$variables[[unificar_variables_estrato(design)]]
+#     }
+#
+#     if (tolower(unificar_variables_factExp(design)) != "fe" ) {
+#       design$variables$fe = design$variables[[unificar_variables_factExp(design)]]
+#
+#     }
+#   }
+#
+#   return(design)
+#
+# }
+
+
 standardize_design_variables <- function(design) {
 
   # Cambiar nombre de UPM y estrato solo si el disenio fue declarado con ellas
-  if (as.character(design$call$ids)[[2]] != "1") {
+  create_vars <- FALSE
+
+  if (as.character(design$call)[[1]] != "svydesign"){
+
+    if (names(design$cluster) !='id') {
+      create_vars <- TRUE
+
+    }else{ # caso si names() == 'id'
+      if('id' %in% names(design$variables)){
+        if(is.character(design$variables$id)){ # cuando es tipo str lo transforma a factor
+          if(identical(as.factor(design$variables$id), design$cluster$id)){
+          create_vars <- TRUE
+          }
+        }else{
+          if(identical(design$variables$id, design$cluster$id)){
+            create_vars <- TRUE
+            }
+        }
+      }
+    }
+  }else{
+    if (!as.character(design$call$ids)[[2]] %in% c("0","1")){
+      create_vars <- TRUE
+    }
+  }
+  if(create_vars){
     # Create variables only when they dont't already exist
-    if (tolower(unificar_variables_upm(design)) != "varunit") {
-      design$variables$varunit = design$variables[[unificar_variables_upm(design)]]
+    if (tolower(names(design$cluster)) != "varunit") {
+      design$variables$varunit = design$variables[[names(design$cluster)]]
     }
-    if (tolower(unificar_variables_estrato(design)) != "varstrat") {
-      design$variables$varstrat = design$variables[[unificar_variables_estrato(design)]]
+    if (tolower(names(design$strata)) != "varstrat") {
+      design$variables$varstrat = design$variables[[names(design$strata)]]
     }
-
-    if (tolower(unificar_variables_factExp(design)) != "fe" ) {
-      design$variables$fe = design$variables[[unificar_variables_factExp(design)]]
-
+    if (tolower(names(design$allprob)) != "fe") {
+      design$variables$fe = design$variables[[names(design$allprob)]]
     }
   }
 
   return(design)
-
 }
 
 
@@ -374,23 +498,62 @@ get_cv <- function(table, design, domains, type_est = "all", env = parent.frame(
 
 
 
+# get_df <- function(data, domains, df_type = "eclac"){
+#   design <- data
+#   data <- data$variables
+#
+#   ### Si no hay diseño, no se calcula nada
+#   if (as.character(design$call$ids)[[2]] == "1") {
+#     gl <- data %>%
+#       dplyr::group_by_at(.vars  = domains) %>%
+#       dplyr::summarise(upm = NA,
+#                        vartstrat = NA,
+#                        df = NA
+#       ) %>%
+#       dplyr::mutate_at(.vars = dplyr::vars(dplyr::all_of(domains) ), .funs = as.character)
+#
+#     return(gl)
+#   }
+
 get_df <- function(data, domains, df_type = "eclac"){
   design <- data
   data <- data$variables
 
-  ### Si no hay diseño, no se calcula nada
-  if (as.character(design$call$ids)[[2]] == "1") {
-    gl <- data %>%
-      dplyr::group_by_at(.vars  = domains) %>%
-      dplyr::summarise(upm = NA,
-                       vartstrat = NA,
-                       df = NA
-      ) %>%
-      dplyr::mutate_at(.vars = dplyr::vars(dplyr::all_of(domains) ), .funs = as.character)
+  sin_diseno <- FALSE
+  if (as.character(design$call)[[1]] != "svydesign"){
 
-    return(gl)
+    if (names(design$cluster) == 'id') {
+      ### para filtrar casos con coincidencia de nombre 'id'
+      if (! 'id' %in% names(design$variables)){
+        sin_diseno <- TRUE
+      }else{ # si no son iguales, entonces es no se usa disenio complejo
+        if(is.character(design$variables$id)){ # cuando es tipo str lo transforma a factor
+          if(!identical(as.factor(design$variables$id), design$cluster$id)){
+            sin_diseno <- TRUE
+          }
+        }else{
+          if(!identical(design$variables$id, design$cluster$id)){
+            sin_diseno <- TRUE
+          }
+        }
+      }
+    }
+  }else{
+    if (as.character(design$call$ids)[[2]] %in% c("0", "1")){
+      sin_diseno <- TRUE
+    }
   }
-
+  ### Si no hay diseño, no se calcula nada
+  if (sin_diseno) {
+      gl <- data %>%
+        dplyr::group_by_at(.vars  = domains) %>%
+        dplyr::summarise(upm = NA,
+                         vartstrat = NA,
+                         df = NA
+        ) %>%
+        dplyr::mutate_at(.vars = dplyr::vars(dplyr::all_of(domains)), .funs = as.character)
+      return(gl)
+    }
 
   if (!is.null(domains)) {
 

@@ -13,7 +13,7 @@ check_n_obj_var <- function(table_n_obj, table , var = 'n_obj'){
     if(!is.null(table_n_obj)){
       stop("Oops! n_obj missing in table_n_obj object. Please review your data.")
     }
-    message('n_obj missing in table_n_obj object')
+    # message('n_obj missing in table_n_obj object')
 
     if((! var %in% names(table))){
       warning('n_obj missing in the table. \n
@@ -22,7 +22,7 @@ check_n_obj_var <- function(table_n_obj, table , var = 'n_obj'){
       return(FALSE)    # No merge
 
     }else{
-      message('n_obj in table!')
+      # message('n_obj in table!')
       return(FALSE)    # No merge
     }
 

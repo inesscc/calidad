@@ -1,8 +1,7 @@
 
-# calidad 0.8.0
+# calidad 0.8.1
 
-- New quality standard (INE Chile economics, 2024) 
+- New functionality that supports modifications to complex survey designs declared using the `transform()`, `update()`, and `subset()` functions.
 
-- New parameter ratio_between_0_1 in assess function to improve the assessment for quality in the case of proportions.  
+- New functionality that supports designs declared with `srvyr::as_survey_design()`.
 
-- New step in CEPAL 2023 schema to include the case of justified low degrees of freedom. Implemented trough low_df_justified parameter   

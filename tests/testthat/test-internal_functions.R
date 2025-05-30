@@ -48,6 +48,51 @@ ene <- ene %>%
 dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data = ene, weights = ~fact_cal)
 
 
+# disenio con as_survey_design
+dc_as_survey_enusc <- enusc_2023 %>%
+  mutate(id = Conglomerado) %>%
+  srvyr::as_survey_design(id, strata = VarStrat, weights = Fact_Hog_Reg)
+
+# disenio con update
+dc_update <- update(dc_as_survey_enusc, aux=VH_DV + VH_DC )
+
+# disenio con transformacion (simil a update)
+dc_transform <- transform(dc_as_survey_enusc, aux=VH_DV + VH_DC)
+
+# disenio sin conglomerado con as_survey_design
+dc_as_survey_enusc_sin <- enusc_2023 %>%
+  dplyr::mutate(id = Conglomerado) %>%
+  srvyr::as_survey_design(1, strata = VarStrat, weights = Fact_Hog_Reg)
+
+# disenio sin conglomerado
+dc_sin_conglomerado <- survey::svydesign(ids = ~1, strata = ~VarStrat, weights = ~Fact_Hog_Reg,
+                                         data = enusc_2023 %>% dplyr::mutate(id = Conglomerado))
+
+# disenio sin conglomerado con as_survey_design ~0
+dc_as_survey_enusc_sin0 <- enusc_2023 %>%
+  dplyr::mutate(id = Conglomerado) %>%
+  srvyr::as_survey_design(0, strata = VarStrat, weights = Fact_Hog_Reg)
+
+# disenio sin conglomerado ~0
+dc_sin_conglomerado0 <- survey::svydesign(ids = ~0, strata = ~VarStrat, weights = ~Fact_Hog_Reg,
+                                         data = enusc_2023 %>% dplyr::mutate(id = Conglomerado))
+
+
+## disenio con subset
+
+dc_epf <- survey::svydesign(ids = ~varunit,
+                            data = epf_personas %>%
+                            dplyr::group_by(folio) %>%
+                            dplyr::slice(1) %>%
+                            dplyr::ungroup() %>%
+                            dplyr::mutate(
+                              metro = dplyr::if_else(zona == 1, 1, 0),
+                              metro_na = dplyr::if_else(dplyr::row_number() <= 10, NA_real_, metro )),
+                          strata = ~varstrat,
+                          weights = ~fe)
+
+dc_epf_subset <- subset(dc_epf, gastot_hd> 426548)   ## filtramos valores sobre el Q1 para ej
+
 #####################
 # GET_SAMPLE_SIZE
 #####################
@@ -197,5 +242,62 @@ df <- get_df(dc_sin_varunit, agrupacion)
 
 test_that("conteo df sin diseño complejo", {
   expect_equal(df$df[1], NA)
+})
+
+
+
+##############################################
+## Creacion del disenio con otras funciones ##
+##############################################
+
+### usando disenio con update/ transform
+test_that("comparar resultado update con transform indicando cluster", {
+  expect_equal(create_prop('VH_DV', domains = 'enc_region', design = dc_update),
+               create_prop('VH_DV', domains = 'enc_region', design = dc_transform))
+  })
+
+test_that("revision mensaje por no usar funcion svydesign",{
+  expect_message(create_prop('VH_DV', domains = 'enc_region', design = dc_update),
+                          'Complex design with modifications')
+  })
+
+
+### usando dc sin conglomerado ~1
+test_that('muestra sin conglomerado',{
+  expect_warning(create_prop('VH_DV', domains = 'enc_region', design = dc_sin_conglomerado))
+  })
+
+test_that('muestra sin conglomerado df',{
+  expect_equal(get_df(dc_sin_conglomerado, NULL)[[1]], NA)
+})
+
+
+### usando dc sin conglomerado as_survey_design ~1
+test_that('muestra sin conglomerado con as_survey_design',{
+  expect_warning(create_prop('VH_DV', domains = 'enc_region', design = dc_as_survey_enusc_sin))
+})
+
+test_that('muestra sin conglomerado as_survey_design',{
+  expect_equal(get_df(dc_as_survey_enusc_sin, NULL)[[1]], NA)
+})
+
+
+### usando dc sin conglomerado as_survey_design ~0
+test_that('muestra sin conglomerado con as_survey_design',{
+  expect_warning(create_prop('VH_DV', domains = 'enc_region', design = dc_as_survey_enusc_sin0))
+})
+
+test_that('muestra sin conglomerado as_survey_design',{
+  expect_equal(get_df(dc_as_survey_enusc_sin0, NULL)[[1]], NA)
+})
+
+test_that('muestra sin conglomerado con as_survey_design',{
+  expect_warning(create_prop('VH_DV', domains = 'enc_region', design = dc_sin_conglomerado0))
+})
+
+### usando dc con modificacion subset
+test_that("revision mensaje por no usar funcion svydesign (subset)",{
+  expect_message(create_mean('gastot_hd', design = dc_epf_subset),
+                 'Complex design with modifications')
 })
 
