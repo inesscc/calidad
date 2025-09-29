@@ -75,7 +75,7 @@ dc_as_survey_enusc_sin0 <- enusc_2023 %>%
 
 # disenio sin conglomerado ~0
 dc_sin_conglomerado0 <- survey::svydesign(ids = ~0, strata = ~VarStrat, weights = ~Fact_Hog_Reg,
-                                         data = enusc_2023 %>% dplyr::mutate(id = Conglomerado))
+                                          data = enusc_2023 %>% dplyr::mutate(id = Conglomerado))
 
 
 ## disenio con subset
@@ -262,33 +262,82 @@ test_that("revision mensaje por no usar funcion svydesign",{
   })
 
 
-### usando dc sin conglomerado ~1
+### usando dc sin conglomerado ~1  -------
 test_that('muestra sin conglomerado',{
   expect_warning(create_prop('VH_DV', domains = 'enc_region', design = dc_sin_conglomerado))
   })
 
+
+## calculo manual de gl sin conglomerados
+gl <- enusc_2023 %>%
+  dplyr::group_by(VarStrat) %>%
+  dplyr::summarise(n_muestra=dplyr::n(), N_Marco=sum(Fact_Hog_Reg)) %>%
+  dplyr::ungroup() %>%
+  dplyr::summarise(n=sum(n_muestra),
+                   est=dplyr::n()) %>%
+  dplyr::mutate(gl=n-est)
+
+
+# estandarizacion de nombres
+dc_sin_conglomerado <- standardize_design_variables(dc_sin_conglomerado)
+names(dc_sin_conglomerado$variables) <- tolower(names(dc_sin_conglomerado$variables))
+
+
 test_that('muestra sin conglomerado df',{
-  expect_equal(get_df(dc_sin_conglomerado, NULL)[[1]], NA)
+  expect_equal(get_df(dc_sin_conglomerado, NULL)[[1]], gl$gl)
 })
 
 
-### usando dc sin conglomerado as_survey_design ~1
+### usando dc sin conglomerado as_survey_design ~1 -------
 test_that('muestra sin conglomerado con as_survey_design',{
   expect_warning(create_prop('VH_DV', domains = 'enc_region', design = dc_as_survey_enusc_sin))
 })
 
+
+
+## calculo manual de gl sin conglomerados
+gl_as_survey <- enusc_2023 %>%
+  dplyr::group_by(VarStrat) %>%
+  dplyr::summarise(n_muestra=dplyr::n(), N_Marco=sum(Fact_Hog_Reg)) %>%
+  dplyr::ungroup() %>%
+  dplyr::summarise(n=sum(n_muestra),
+            est=dplyr::n()) %>%
+  dplyr::mutate(gl=n-est)
+
+
+
+## estandarizacion de nombres
+dc_as_survey_enusc_sin <- standardize_design_variables(dc_as_survey_enusc_sin)
+names(dc_as_survey_enusc_sin$variables) <- tolower(names(dc_as_survey_enusc_sin$variables))
+
+
 test_that('muestra sin conglomerado as_survey_design',{
-  expect_equal(get_df(dc_as_survey_enusc_sin, NULL)[[1]], NA)
+  expect_equal(get_df(dc_as_survey_enusc_sin, NULL)[[1]], gl_as_survey$gl)
 })
 
 
-### usando dc sin conglomerado as_survey_design ~0
+### usando dc sin conglomerado as_survey_design ~0 -------
 test_that('muestra sin conglomerado con as_survey_design',{
   expect_warning(create_prop('VH_DV', domains = 'enc_region', design = dc_as_survey_enusc_sin0))
 })
 
+
+## calculo manual de gl sin conglomerados
+gl_as_survey_0 <- enusc_2023 %>%
+  dplyr::group_by(VarStrat) %>%
+  dplyr::summarise(n_muestra=dplyr::n(), N_Marco=sum(Fact_Hog_Reg)) %>%
+  dplyr::ungroup() %>%
+  dplyr::summarise(n=sum(n_muestra),
+            est=dplyr::n()) %>%
+  dplyr::mutate(gl=n-est)
+
+## estandarizacion de nombres
+dc_as_survey_enusc_sin0 <- standardize_design_variables(dc_as_survey_enusc_sin0)
+names(dc_as_survey_enusc_sin0$variables) <- tolower(names(dc_as_survey_enusc_sin0$variables))
+
+
 test_that('muestra sin conglomerado as_survey_design',{
-  expect_equal(get_df(dc_as_survey_enusc_sin0, NULL)[[1]], NA)
+  expect_equal(get_df(dc_as_survey_enusc_sin0, NULL)[[1]], gl_as_survey_0$gl)
 })
 
 test_that('muestra sin conglomerado con as_survey_design',{

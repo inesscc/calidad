@@ -55,6 +55,7 @@ get_design_vars <- function(design) {
     }
   }
 
+
   if(create_vars){
     psu <- names(design$cluster)
     strata <- names(design$strata)
@@ -274,73 +275,31 @@ se_message <- function(design) {
 #' Rename design variables, so we can use the later
 #' @param design \code{dataframe}
 #' @return design survey
-
-# standardize_design_variables <- function(design) {
-#
-#   # Cambiar nombre de UPM y estrato solo si el disenio fue declarado con ellas
-#   if (as.character(design$call$ids)[[2]] != "1") {
-#     # Create variables only when they dont't already exist
-#     if (tolower(unificar_variables_upm(design)) != "varunit") {
-#       design$variables$varunit = design$variables[[unificar_variables_upm(design)]]
-#     }
-#     if (tolower(unificar_variables_estrato(design)) != "varstrat") {
-#       design$variables$varstrat = design$variables[[unificar_variables_estrato(design)]]
-#     }
-#
-#     if (tolower(unificar_variables_factExp(design)) != "fe" ) {
-#       design$variables$fe = design$variables[[unificar_variables_factExp(design)]]
-#
-#     }
-#   }
-#
-#   return(design)
-#
-# }
-
-
 standardize_design_variables <- function(design) {
 
-  # Cambiar nombre de UPM y estrato solo si el disenio fue declarado con ellas
-  create_vars <- FALSE
+  variables <- tolower(names(design$variables))
+  # Create variables only when they dont't already exist
 
-  if (as.character(design$call)[[1]] != "svydesign"){
+  cn <- names(design$cluster)
+  if (length(cn) && !"varunit" %in% variables) {
+    design$variables$varunit <- design$cluster[[cn]]
+  }
 
-    if (names(design$cluster) !='id') {
-      create_vars <- TRUE
-
-    }else{ # caso si names() == 'id'
-      if('id' %in% names(design$variables)){
-        if(is.character(design$variables$id)){ # cuando es tipo str lo transforma a factor
-          if(identical(as.factor(design$variables$id), design$cluster$id)){
-          create_vars <- TRUE
-          }
-        }else{
-          if(identical(design$variables$id, design$cluster$id)){
-            create_vars <- TRUE
-            }
-        }
-      }
-    }
-  }else{
-    if (!as.character(design$call$ids)[[2]] %in% c("0","1")){
-      create_vars <- TRUE
+  if (design$has.strata) {
+    sn <- names(design$strata)
+    if (length(sn) && !"varstrat" %in% variables) {
+      design$variables$varstrat <- design$strata[[sn]]
     }
   }
-  if(create_vars){
-    # Create variables only when they dont't already exist
-    if (tolower(names(design$cluster)) != "varunit") {
-      design$variables$varunit = design$variables[[names(design$cluster)]]
-    }
-    if (tolower(names(design$strata)) != "varstrat") {
-      design$variables$varstrat = design$variables[[names(design$strata)]]
-    }
-    if (tolower(names(design$allprob)) != "fe") {
-      design$variables$fe = design$variables[[names(design$allprob)]]
-    }
+
+  apn <- names(design$allprob)
+  if (length(apn) && !"fe" %in% variables) {
+    design$variables$fe <- design$allprob[[apn]]
   }
 
   return(design)
 }
+
 
 
 
@@ -490,62 +449,18 @@ get_cv <- function(table, design, domains, type_est = "all", env = parent.frame(
 
 #' Get degrees of freedom
 #'
-#' Receive data and domains. Returns a data frame with the psu, strata and df for each cell
+#' Receive data and domains. Returns a data frame with the psu (if available), strata and degrees of freedom (df) for each cell
 #' @param data \code{dataframe}
 #' @param domains \code{string} with domains
 #' @param df_type \code{string} Use degrees of freedom calculation approach from INE Chile or eclac, by default "chile".
 #' @return \code{dataframe} with results including degrees of freedom
 
-
-
-# get_df <- function(data, domains, df_type = "eclac"){
-#   design <- data
-#   data <- data$variables
-#
-#   ### Si no hay diseño, no se calcula nada
-#   if (as.character(design$call$ids)[[2]] == "1") {
-#     gl <- data %>%
-#       dplyr::group_by_at(.vars  = domains) %>%
-#       dplyr::summarise(upm = NA,
-#                        vartstrat = NA,
-#                        df = NA
-#       ) %>%
-#       dplyr::mutate_at(.vars = dplyr::vars(dplyr::all_of(domains) ), .funs = as.character)
-#
-#     return(gl)
-#   }
-
 get_df <- function(data, domains, df_type = "eclac"){
   design <- data
   data <- data$variables
-
-  sin_diseno <- FALSE
-  if (as.character(design$call)[[1]] != "svydesign"){
-
-    if (names(design$cluster) == 'id') {
-      ### para filtrar casos con coincidencia de nombre 'id'
-      if (! 'id' %in% names(design$variables)){
-        sin_diseno <- TRUE
-      }else{ # si no son iguales, entonces es no se usa disenio complejo
-        if(is.character(design$variables$id)){ # cuando es tipo str lo transforma a factor
-          if(!identical(as.factor(design$variables$id), design$cluster$id)){
-            sin_diseno <- TRUE
-          }
-        }else{
-          if(!identical(design$variables$id, design$cluster$id)){
-            sin_diseno <- TRUE
-          }
-        }
-      }
-    }
-  }else{
-    if (as.character(design$call$ids)[[2]] %in% c("0", "1")){
-      sin_diseno <- TRUE
-    }
-  }
-  ### Si no hay diseño, no se calcula nada
-  if (sin_diseno) {
-      gl <- data %>%
+  ### Si no hay estratos, no se calcula nada, pues todas las encuestas del INE son estratificadas
+  if(!design$has.strata){
+    gl <- data %>%
         dplyr::group_by_at(.vars  = domains) %>%
         dplyr::summarise(upm = NA,
                          vartstrat = NA,
@@ -553,7 +468,8 @@ get_df <- function(data, domains, df_type = "eclac"){
         ) %>%
         dplyr::mutate_at(.vars = dplyr::vars(dplyr::all_of(domains)), .funs = as.character)
       return(gl)
-    }
+  }
+
 
   if (!is.null(domains)) {
 
@@ -563,8 +479,8 @@ get_df <- function(data, domains, df_type = "eclac"){
 
       gl <- calcular_upm(design$variables, domains)  %>%
         dplyr::left_join(calcular_estrato(design$variables, domains), by = domains)  %>%
-        dplyr::mutate(df = .data$upm - .data$varstrat)   %>%
-        dplyr::filter(!!rlang::parse_expr(estimation_var) == 1)   %>% # the zero cases are deleted
+        dplyr::mutate(df = .data$upm - .data$varstrat) %>%
+        dplyr::filter(!!rlang::parse_expr(estimation_var) == 1)  %>%   # the zero cases are deleted
         dplyr::mutate_at(.vars = dplyr::vars(dplyr::all_of(domains) ), .funs = as.character) %>%
         dplyr::ungroup()   %>%
         dplyr::select(-c("upm","varstrat"))

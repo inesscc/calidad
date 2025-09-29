@@ -409,3 +409,64 @@ test_that("comparando intervalos de confianza logaritmicos usando subpop mujeres
 test_that("comparando intervalos de confianza logaritmicos usando subpop mujeres", {
   expect_equal(PAD_mujeres_rm$upper, 0.891274559205541)
 })
+
+
+
+##################################
+# Chile Economic Survey Standard #
+##################################
+
+options(survey.lonely.psu = "remove")
+
+dc_ele_t <- svydesign(ids = ~1,
+                      weights = ~fe_transversal,
+                      strata = ~estrato,
+                      fpc = ~pob,             # correccion por poblacion finita
+                      data = ELE7)
+
+## prod salarial con funcion create
+prod_salarial <- suppressWarnings(create_prop('VA_2022f',       # suprimimos warning pues no es lo que nos interesa evaluar
+                             denominator = 'REMP_TOTAL',
+                             domains = 'cod_tamano',
+                             design = dc_ele_t)) %>%
+  dplyr::mutate(cv = unname(cv))
+
+
+## estimacion con survey
+mod_ratio_SALARIAL <- svyby(~VA_2022f, denominator = ~REMP_TOTAL, ~cod_tamano,
+                            design = dc_ele_t,
+                            svyratio, vartype = c( "se","cv")) %>%
+  dplyr::rename(stat = `VA_2022f/REMP_TOTAL`,
+         se = `se.VA_2022f/REMP_TOTAL`)
+
+gl_prod_salarial <- ELE7 %>%
+  dplyr::group_by(estrato, cod_tamano) %>%
+  dplyr::summarise(n_muestra= dplyr::n(), N_Marco=sum(fe_transversal)) %>%
+  dplyr::ungroup() %>%
+  dplyr::group_by(cod_tamano) %>%
+  dplyr::summarise(n=sum(n_muestra),
+            est= dplyr::n()) %>%
+  dplyr::mutate(df=n-est)
+
+mod_ratio_SALARIAL <- mod_ratio_SALARIAL %>%
+  dplyr::left_join(gl_prod_salarial %>% dplyr::select(cod_tamano, df, n), by = c('cod_tamano')) %>%
+  dplyr::mutate(cod_tamano = as.character(cod_tamano))
+
+
+for(columna in names(prod_salarial)){
+  test_that(paste("comparacion estimacion sin conglomerados ELE7 con estimacion svyby", columna), {
+    expect_equal(prod_salarial[, c(columna)], mod_ratio_SALARIAL[, c(columna)])
+  })
+}
+
+## comparacion con valor publicado
+
+test_that(paste("comparacion estimacion sin conglomerados ELE7 con valor real", columna), {
+  expect_equal(round(prod_salarial$stat, 1), c(4.5, 2.7, 2.4, 3.1, 3.4))
+})
+
+test_that(paste("comparacion estimacion sin conglomerados ELE7 con valor real", columna), {
+  expect_equal(round(prod_salarial$cv*100, 1), c(4.2, 6.6, 4.8, 7.1, 9.2))
+})
+
+
