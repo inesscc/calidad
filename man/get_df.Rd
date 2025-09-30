@@ -17,5 +17,5 @@ get_df(data, domains, df_type = "eclac")
 \code{dataframe} with results including degrees of freedom
 }
 \description{
-Receive data and domains. Returns a data frame with the psu, strata and df for each cell
+Receive data and domains. Returns a data frame with the psu (if available), strata and degrees of freedom (df) for each cell
 }

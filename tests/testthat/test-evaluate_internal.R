@@ -60,27 +60,3 @@ test_that("assess_cepal2023 works for proportion", {
 
 
 
-
-
-################################
-# Chile Economic Survey Standard
-
-dc_ele_t <- svydesign(ids = ~rol_ficticio,
-                      weights = ~fe_transversal,
-                      strata = ~estrato,
-                      fpc = ~pob,             # correccion por poblacion finita
-                      data = ELE7)
-
-## prod salarial -> Ingreso Operacional total
-prod_salarial <- create_prop('VA_2022f',
-                             denominator = 'REMP_TOTAL',
-                             domains = 'cod_actividad+cod_tamano',
-                             design = dc_ele_t)
-
-
-# test check coincidencia tipo
-
-# ELE7_n_obj %>%
-#   dplyr::mutate(cod_actividad = cod_actividad_letra,
-#                 cod_tamano = as.character(cod_tamano)) %>%
-#   dplyr::select(-cod_actividad_letra)
