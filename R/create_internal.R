@@ -1242,3 +1242,4 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
 
   return(final)
 }
+

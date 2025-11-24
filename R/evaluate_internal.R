@@ -140,7 +140,7 @@ assess_ine <- function(table, params, class = "calidad.mean", ratio_between_0_1 
     }
 
 
-    evaluacion <- table %>%
+    evaluation <- table %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
@@ -159,7 +159,7 @@ assess_ine <- function(table, params, class = "calidad.mean", ratio_between_0_1 
     # proportion case
   } else {
 
-    evaluacion <- table %>%
+    evaluation <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     prop_est = dplyr::case_when(.data$stat <= 0.5                 ~ "<= 0.5",
@@ -179,8 +179,11 @@ assess_ine <- function(table, params, class = "calidad.mean", ratio_between_0_1 
                     )
 
   }
-  return(evaluacion)
+# Add ine class to the final object
+  evaluation <- add_class(evaluation, "ine.eval")
+  return(evaluation)
 }
+
 #-------------------------------------------------
 assess_cepal2020 <- function(table, params, class = "calidad.mean") {
   # General case
