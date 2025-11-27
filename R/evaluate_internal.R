@@ -186,7 +186,8 @@ assess_ine <- function(table, params, class = "calidad.mean", ratio_between_0_1 
 
 #-------------------------------------------------
 assess_cepal2020 <- function(table, params, class = "calidad.mean") {
-  # General case
+
+  # General case (Medias, Totales, Tamaños)
   if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 ) {
 
     evaluation <- table %>%
@@ -196,12 +197,11 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     eval_cv = dplyr::if_else(.data$cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(label = dplyr::case_when(
-        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" | eval_unweighted == "insufficient cases" ~ "supress",
-        eval_df == "insufficient df"  ~ "review",
-        eval_cv ==  "adequate cv"  ~ "publish"
-
-
+        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" | eval_unweighted == "insufficient cases" ~ "non-reliable", # Antes supress
+        eval_df == "insufficient df"  ~ "weakly reliable", # Antes review
+        eval_cv ==  "adequate cv"  ~ "reliable"            # Antes publish
       ))
+
     # Proportion case
   } else {
 
@@ -214,19 +214,16 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
                     eval_cv = dplyr::if_else(.data$cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(label = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
-          eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "supress",
-        eval_df == "insufficient df" | eval_cv == "non adequate cv" ~ "review",
-        eval_cv ==  "adequate cv"  ~ "publish"
+          eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "non-reliable", # Antes supress
+        eval_df == "insufficient df" | eval_cv == "non adequate cv" ~ "weakly reliable",                  # Antes review
+        eval_cv ==  "adequate cv"  ~ "reliable"                                                           # Antes publish
       ))
-
   }
 
   # Add cepal 2020 class to the final object
   evaluation <- add_class(evaluation, "cepal2020.eval")
 
   return(evaluation)
-
-
 }
 #-------------------------------------------------
 ###################
