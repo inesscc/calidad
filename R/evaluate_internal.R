@@ -197,9 +197,9 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     eval_cv = dplyr::if_else(.data$cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(label = dplyr::case_when(
-        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" | eval_unweighted == "insufficient cases" ~ "non-reliable", # Antes supress
-        eval_df == "insufficient df"  ~ "weakly reliable", # Antes review
-        eval_cv ==  "adequate cv"  ~ "reliable"            # Antes publish
+        eval_n == "insufficient sample size" | eval_ess == "insufficient ess" | eval_unweighted == "insufficient cases" ~ "supress",
+        eval_df == "insufficient df"  ~ "review",
+        eval_cv ==  "adequate cv"  ~ "publish"
       ))
 
     # Proportion case
@@ -214,9 +214,9 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
                     eval_cv = dplyr::if_else(.data$cv < params$cv_cepal, "adequate cv", "non adequate cv")) %>%
       dplyr::mutate(label = dplyr::case_when(
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" |
-          eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "non-reliable", # Antes supress
-        eval_df == "insufficient df" | eval_cv == "non adequate cv" ~ "weakly reliable",                  # Antes review
-        eval_cv ==  "adequate cv"  ~ "reliable"                                                           # Antes publish
+          eval_unweighted == "insufficient cases" | eval_log_cv == "non adequate log cv"  ~ "supress",
+        eval_df == "insufficient df" | eval_cv == "non adequate cv" ~ "review",
+        eval_cv ==  "adequate cv"  ~ "publish"
       ))
   }
 

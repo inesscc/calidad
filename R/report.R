@@ -11,25 +11,8 @@
 #' @return A \code{knitr_kable} object representing the HTML table.
 #'
 #' @import kableExtra
-#' @importFrom dplyr mutate mutate_if case_when
+#' @importFrom dplyr mutate mutate_if case_when if_else
 #'
-#' @examples
-#' \dontrun{
-#' library(survey)
-#' library(dplyr)
-#'
-#' # Example design
-#' dc <- svydesign(ids = ~varunit, strata = ~varstrat,
-#'                 data = epf_personas %>% group_by(folio) %>% slice(1),
-#'                 weights = ~fe)
-#'
-#' # Create estimation and assess
-#' est <- create_mean("gastot_hd", domains = "zona", design = dc)
-#' evaluation <- assess(est)
-#'
-#' # Generate HTML table
-#' create_html(evaluation)
-#' }
 #' @export
 
 create_html <- function(table) {
@@ -45,12 +28,13 @@ create_html <- function(table) {
           .data$label == "non-reliable" ~ "red",
           TRUE ~ "white"
         ), color = "black"),
+        # Usamos eval_n para no hardcodear el 60
         n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
-          .data$n < 60 ~ "red",
+          grepl("insufficient", .data$eval_n) ~ "red",
           TRUE ~ "black"
         )),
         df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
-          .data$df < 9 ~ "red",
+          grepl("insufficient", .data$eval_df) ~ "red",
           TRUE ~ "black"
         ))) %>%
       .apply_kable_styling()
@@ -58,6 +42,13 @@ create_html <- function(table) {
     # --- 2. ESTÁNDAR CEPAL 2020 ---
   } else if (inherits(table, "cepal2020.eval")) {
     table %>%
+      # LO TUVE QUE "TRADUCIR", NO SÉ SI ESTÁ BIEN
+      dplyr::mutate(label = dplyr::case_when(
+        label == "publish" ~ "reliable",
+        label == "review" ~ "weakly reliable",
+        label == "supress" ~ "non-reliable",
+        TRUE ~ label
+      )) %>%
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
         label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
@@ -67,11 +58,11 @@ create_html <- function(table) {
           TRUE ~ "white"
         ), color = "black"),
         n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
-          .data$n < 60 ~ "red",
+          grepl("insufficient", .data$eval_n) ~ "red",
           TRUE ~ "black"
         )),
         df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
-          .data$df < 9 ~ "red",
+          grepl("insufficient", .data$eval_df) ~ "red",
           TRUE ~ "black"
         ))) %>%
       .apply_kable_styling()
@@ -79,6 +70,11 @@ create_html <- function(table) {
     # --- 3. ESTÁNDAR CEPAL 2023 ---
   } else if (inherits(table, "cepal2023.eval")) {
     table %>%
+      # LIMPIEZA: weakly-reliable -> weakly reliable (sin guion)
+      dplyr::mutate(label = dplyr::case_when(
+        label == "weakly-reliable" ~ "weakly reliable",
+        TRUE ~ label
+      )) %>%
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
         label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
@@ -87,12 +83,13 @@ create_html <- function(table) {
           .data$label == "non-reliable" ~ "red",
           TRUE ~ "white"
         ), color = "black"),
+        # CEPAL 23 a veces no trae eval_n, usamos lógica defensiva
         n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
           .data$n < 60 ~ "red",
           TRUE ~ "black"
         )),
         df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
-          .data$df < 9 ~ "red",
+          !grepl("Sufficient", .data$eval_df) ~ "red",
           TRUE ~ "black"
         ))) %>%
       .apply_kable_styling()
@@ -103,36 +100,31 @@ create_html <- function(table) {
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
         label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
-          # Etiquetas corregidas: reliable, weakly reliable, non-reliable
           .data$label == "reliable" ~ "green",
           .data$label == "weakly reliable" ~ "yellow",
           .data$label == "non-reliable" ~ "red",
           TRUE ~ "white"
         ), color = "black"),
         n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
-          .data$n < 60 ~ "red",
+          grepl("insufficient", .data$eval_n) ~ "red",
           TRUE ~ "black"
         )),
         df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
-          .data$df < 9 ~ "red",
+          grepl("insufficient", .data$eval_df) ~ "red",
           TRUE ~ "black"
         ))) %>%
       .apply_kable_styling()
   }
 }
 
-#' Helper interno para ponerle letras comunes, revisar acá que la documentación que leí decía que era weno
+#' Helper interno para temas de formato y letras
 #' @keywords internal
 .apply_kable_styling <- function(df_styled) {
   df_styled %>%
     kableExtra::kable(format.args = list(decimal.mark = ',', big.mark = "."),
-                      format = "html",
-                      escape = FALSE,
-                      align = "c",
+                      format = "html", escape = FALSE, align = "c",
                       table.attr = "style = \"color: black;\"") %>%
-    kableExtra::kable_styling("striped",
-                              full_width = FALSE,
-                              html_font = "arial") %>%
+    kableExtra::kable_styling("striped", full_width = FALSE, html_font = "arial") %>%
     kableExtra::kable_paper("hover") %>%
     kableExtra::row_spec(0, bold = TRUE, color = "black")
 }

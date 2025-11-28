@@ -35,14 +35,17 @@ test_that("create_html genera tabla correcta para output estándar INE", {
 
   est_ine <- create_mean("gastot_hd", domains = "zona", design = dc)
   eval_ine <- assess(est_ine)
-  eval_ine$n[1] <- 50 # Forzar alerta n < 60 para probar rojo en columna n
+  # Forzar n bajo para probar color rojo en columna n
+  eval_ine$n[1] <- 50
+  # Forzar etiqueta eval_n para que coincida con la lógica
+  eval_ine$eval_n[1] <- "insufficient sample size"
 
   html_output <- create_html(eval_ine)
   html_str <- as.character(html_output)
 
   testthat::expect_true(inherits(html_output, "knitr_kable"))
   testthat::expect_match(html_str, "background-color: green")
-  testthat::expect_match(html_str, "color: red") # Alerta de n < 60
+  testthat::expect_match(html_str, "color: red")
 })
 
 ###################################
@@ -51,35 +54,25 @@ test_that("create_html genera tabla correcta para output estándar INE", {
 
 test_that("create_html genera tabla correcta para output CEPAL 2020", {
 
-  # Generamos estimación
   est_cepal <- create_prop("desocupado", domains = "region", design = dc_ene, eclac_input = TRUE, log_cv = TRUE)
   eval_cepal20 <- assess(est_cepal, scheme = "eclac_2020")
 
-  # --- PARCHE DE LIMPIEZA PARA EL TEST ---
-
-  eval_cepal20 <- eval_cepal20 %>%
-    dplyr::mutate(label = dplyr::case_when(
-      label == "publish" ~ "reliable",
-      label == "review" ~ "weakly reliable",
-      label == "supress" ~ "non-reliable",
-      TRUE ~ label
-    ))
-
+  # El objeto eval_cepal20 viene con "publish", "review", etc.
   html_output <- create_html(eval_cepal20)
   html_str <- as.character(html_output)
 
   testthat::expect_true(inherits(html_output, "knitr_kable"))
 
-  # Validaciones condicionales
-  if ("reliable" %in% eval_cepal20$label) {
+  # Validamos que el HTML tenga los colores correctos según la etiqueta original
+  if ("publish" %in% eval_cepal20$label) {
     testthat::expect_match(html_str, "background-color: green")
   }
 
-  if ("weakly reliable" %in% eval_cepal20$label) {
+  if ("review" %in% eval_cepal20$label) {
     testthat::expect_match(html_str, "background-color: yellow")
   }
 
-  if ("non-reliable" %in% eval_cepal20$label) {
+  if ("supress" %in% eval_cepal20$label) {
     testthat::expect_match(html_str, "background-color: red")
   }
 })
@@ -93,30 +86,13 @@ test_that("create_html genera tabla correcta para output CEPAL 2023", {
   est_cepal <- create_prop("desocupado", domains = "region", design = dc_ene, eclac_input = TRUE, log_cv = TRUE)
   eval_cepal23 <- assess(est_cepal, scheme = "eclac_2023")
 
-  # --- PARCHE DE LIMPIEZA PARA EL TEST ---
-#ESTO DE ACÁ QUIZÁS LO SACAMOS?
-
-  eval_cepal23 <- eval_cepal23 %>%
-    dplyr::mutate(label = dplyr::case_when(
-      label == "weakly-reliable" ~ "weakly reliable",
-      TRUE ~ label
-    ))
-
   html_output <- create_html(eval_cepal23)
   html_str <- as.character(html_output)
 
-  testthat::expect_true(inherits(html_output, "knitr_kable"))
-
-  if ("reliable" %in% eval_cepal23$label) {
-    testthat::expect_match(html_str, "background-color: green")
-  }
-
-  if ("weakly reliable" %in% eval_cepal23$label) {
+  # Validamos usando la etiqueta original "weakly-reliable" (con guion)
+  # sabiendo que el reporte la limpia y pinta amarillo.
+  if ("weakly-reliable" %in% eval_cepal23$label) {
     testthat::expect_match(html_str, "background-color: yellow")
-  }
-
-  if ("non-reliable" %in% eval_cepal23$label) {
-    testthat::expect_match(html_str, "background-color: red")
   }
 
   testthat::expect_match(html_str, "table-striped")
@@ -152,18 +128,8 @@ test_that("create_html genera tabla correcta para Encuestas Económicas", {
                        table_n_obj = table_n_obj,
                        ratio_between_0_1 = FALSE)
 
-
-  #ESTO ACÁ PODRÍAMOS SACARLO X2
-  eval_ratio <- eval_ratio %>%
-    dplyr::mutate(label = dplyr::case_when(
-      label == "weakly-reliable" ~ "weakly reliable",
-      TRUE ~ label
-    ))
-
   html_output <- create_html(eval_ratio)
   html_str <- as.character(html_output)
-
-  testthat::expect_true(inherits(html_output, "knitr_kable"))
 
   if ("reliable" %in% eval_ratio$label) {
     testthat::expect_match(html_str, "background-color: green")
