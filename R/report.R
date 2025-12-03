@@ -28,21 +28,41 @@ create_html <- function(table) {
           .data$label == "non-reliable" ~ "red",
           TRUE ~ "white"
         ), color = "black"),
-        # Usamos eval_n para no hardcodear el 60
-        n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
+
+        # Semáforo parapersonas de n y df
+        n = kableExtra::cell_spec(.data$n, color = "black", background = dplyr::case_when(
           grepl("insufficient", .data$eval_n) ~ "red",
-          TRUE ~ "black"
+          TRUE ~ "white"
         )),
-        df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
+        df = kableExtra::cell_spec(.data$df, color = "black", background = dplyr::case_when(
           grepl("insufficient", .data$eval_df) ~ "red",
-          TRUE ~ "black"
-        ))) %>%
+          TRUE ~ "white"
+        )),
+
+        # Semáforo para CV (Coeficiente de Variación), solo lo aplicamos si existe la columna eval_cv y dice "cv >"
+        # no hay nigún otro color aun, la javi aun no dice de ponerle verde si es que está bien en verdad.
+        cv = if("eval_cv" %in% names(table)) {
+          kableExtra::cell_spec(.data$cv, color = "black", background = dplyr::case_when(
+            grepl("cv >", .data$eval_cv) ~ "red",
+            TRUE ~ "white"
+          ))
+        } else { .data$cv },
+
+        # Semáforo para SE (Error Estándar), solo lo aplicamos si existe la columna eval_se y dice "high"
+        # lo mimsmo acá au
+        se = if("eval_se" %in% names(table)) {
+          kableExtra::cell_spec(.data$se, color = "black", background = dplyr::case_when(
+            grepl("high", .data$eval_se) ~ "red",
+            TRUE ~ "white"
+          ))
+        } else { .data$se }
+
+      ) %>%
       .apply_kable_styling()
 
     # --- 2. ESTÁNDAR CEPAL 2020 ---
   } else if (inherits(table, "cepal2020.eval")) {
     table %>%
-      # LO TUVE QUE "TRADUCIR", NO SÉ SI ESTÁ BIEN
       dplyr::mutate(label = dplyr::case_when(
         label == "publish" ~ "reliable",
         label == "review" ~ "weakly reliable",
@@ -57,14 +77,40 @@ create_html <- function(table) {
           .data$label == "non-reliable" ~ "red",
           TRUE ~ "white"
         ), color = "black"),
-        n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
+
+        # 1. n y df genericos
+        n = kableExtra::cell_spec(.data$n, color = "black", background = dplyr::case_when(
           grepl("insufficient", .data$eval_n) ~ "red",
-          TRUE ~ "black"
+          TRUE ~ "white"
         )),
-        df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
+        df = kableExtra::cell_spec(.data$df, color = "black", background = dplyr::case_when(
           grepl("insufficient", .data$eval_df) ~ "red",
-          TRUE ~ "black"
-        ))) %>%
+          TRUE ~ "white"
+        )),
+
+        # 2. CV eval_cv usa "non adequate", así que lo dejaré así x ahora
+        cv = kableExtra::cell_spec(.data$cv, color = "black", background = dplyr::case_when(
+          grepl("non adequate", .data$eval_cv) ~ "red",
+          TRUE ~ "white"
+        )),
+
+        # 3. Tamaño Efectivo de la muestra (ESS)
+        ess = if("eval_ess" %in% names(table)) {
+          kableExtra::cell_spec(.data$ess, color = "black", background = dplyr::case_when(
+            grepl("insufficient", .data$eval_ess) ~ "red",
+            TRUE ~ "white"
+          ))
+        } else { .data$ess },
+
+        # 4. Conteo no ponderado, el coso de Unweighted
+        unweighted = if("eval_unweighted" %in% names(table)) {
+          kableExtra::cell_spec(.data$unweighted, color = "black", background = dplyr::case_when(
+            grepl("insufficient", .data$eval_unweighted) ~ "red",
+            TRUE ~ "white"
+          ))
+        } else { .data$unweighted }
+
+      ) %>%
       .apply_kable_styling()
 
     # --- 3. ESTÁNDAR CEPAL 2023 ---
@@ -84,13 +130,13 @@ create_html <- function(table) {
           TRUE ~ "white"
         ), color = "black"),
         # CEPAL 23 a veces no trae eval_n, usamos lógica defensiva
-        n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
+        n = kableExtra::cell_spec(.data$n, color = "black", background = dplyr::case_when(
           .data$n < 60 ~ "red",
-          TRUE ~ "black"
+          TRUE ~ "white"
         )),
-        df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
+        df = kableExtra::cell_spec(.data$df, color = "black", background = dplyr::case_when(
           !grepl("Sufficient", .data$eval_df) ~ "red",
-          TRUE ~ "black"
+          TRUE ~ "white"
         ))) %>%
       .apply_kable_styling()
 
@@ -99,20 +145,50 @@ create_html <- function(table) {
     table %>%
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
+        # 1. Semáforo Etiqueta "normal"
         label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
           .data$label == "reliable" ~ "green",
           .data$label == "weakly reliable" ~ "yellow",
           .data$label == "non-reliable" ~ "red",
           TRUE ~ "white"
         ), color = "black"),
-        n = kableExtra::cell_spec(.data$n, color = dplyr::case_when(
+
+        # 2. n y df Rojo si eval dice insufficient y hay que funarlo
+        n = kableExtra::cell_spec(.data$n, color = "black", background = dplyr::case_when(
           grepl("insufficient", .data$eval_n) ~ "red",
-          TRUE ~ "black"
+          TRUE ~ "white"
         )),
-        df = kableExtra::cell_spec(.data$df, color = dplyr::case_when(
+        df = kableExtra::cell_spec(.data$df, color = "black", background = dplyr::case_when(
           grepl("insufficient", .data$eval_df) ~ "red",
-          TRUE ~ "black"
-        ))) %>%
+          TRUE ~ "white"
+        )),
+
+        # 3. CV (Si existe y es alto)
+        cv = if("eval_cv" %in% names(table)) {
+          kableExtra::cell_spec(.data$cv, color = "black", background = dplyr::case_when(
+            grepl("cv >", .data$eval_cv) ~ "red",
+            TRUE ~ "white"
+          ))
+        } else { .data$cv },
+
+        # 4. SE, si existe y es alto = "high SE"
+        se = if("eval_se" %in% names(table)) {
+          kableExtra::cell_spec(.data$se, color = "black", background = dplyr::case_when(
+            grepl("high", .data$eval_se) ~ "red",
+            TRUE ~ "white"
+          ))
+        } else { .data$se },
+
+        # 5. Tasa de Cumplimiento (Compliance Rate)
+        # Aquí miramos el NA como indirectamente?: si es NA, el eval dice "insufficient" -> Rojo
+        compliance_rate = if("eval_compliance_rate" %in% names(table)) {
+          kableExtra::cell_spec(.data$compliance_rate, color = "black", background = dplyr::case_when(
+            grepl("insufficient", .data$eval_compliance_rate) ~ "red",
+            TRUE ~ "white"
+          ))
+        } else { .data$compliance_rate }
+
+      ) %>%
       .apply_kable_styling()
   }
 }
@@ -128,3 +204,4 @@ create_html <- function(table) {
     kableExtra::kable_paper("hover") %>%
     kableExtra::row_spec(0, bold = TRUE, color = "black")
 }
+
