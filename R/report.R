@@ -39,9 +39,8 @@ create_html <- function(table) {
           TRUE ~ "white"
         )),
 
-        # Semáforo para CV (Coeficiente de Variación), solo lo aplicamos si existe la columna eval_cv y dice "cv >"
+        # Semáforo para CV, solo lo aplicamos si existe la columna eval_cv y dice "cv >"
         # no hay nigún otro color aun, la javi aun no dice de ponerle verde si es que está bien en verdad.
-        # Pero le ponemos amarillo pq sí.
         cv = if("eval_cv" %in% names(table)) {
           kableExtra::cell_spec(.data$cv, color = "black", background = dplyr::case_when(
             grepl("cv >", .data$eval_cv) ~ "red",
@@ -65,18 +64,14 @@ create_html <- function(table) {
     # --- 2. ESTÁNDAR CEPAL 2020 ---
   } else if (inherits(table, "cepal2020.eval")) {
     table %>%
-      dplyr::mutate(label = dplyr::case_when(
-        label == "publish" ~ "reliable",
-        label == "review" ~ "weakly reliable",
-        label == "supress" ~ "non-reliable",
-        TRUE ~ label
-      )) %>%
+      # no hay que poner la traducción forzada, demasiada innovación
+
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
         label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
-          .data$label == "reliable" ~ "green",
-          .data$label == "weakly reliable" ~ "yellow",
-          .data$label == "non-reliable" ~ "red",
+          .data$label == "publish" ~ "green",
+          .data$label == "review" ~ "yellow",
+          .data$label == "supress" ~ "red",
           TRUE ~ "white"
         ), color = "black"),
 
@@ -85,14 +80,14 @@ create_html <- function(table) {
           grepl("insufficient", .data$eval_n) ~ "red",
           TRUE ~ "white"
         )),
+
+        # Ojo: df y cv en CEPAL 2020 son amarillos (review), no rojos.
         df = kableExtra::cell_spec(.data$df, color = "black", background = dplyr::case_when(
-          grepl("insufficient", .data$eval_df) ~ "yellow", # Review
+          grepl("insufficient", .data$eval_df) ~ "yellow",
           TRUE ~ "white"
         )),
-
-        # 2. CV eval_cv usa "non adequate", así que lo dejaré así x ahora
         cv = kableExtra::cell_spec(.data$cv, color = "black", background = dplyr::case_when(
-          grepl("non adequate", .data$eval_cv) ~ "yellow", # Review
+          grepl("non adequate", .data$eval_cv) ~ "yellow",
           TRUE ~ "white"
         )),
 
@@ -183,11 +178,12 @@ create_html <- function(table) {
           ))
         } else { .data$se },
 
-        # 5. Tasa de Cumplimiento (Compliance Rate) para que la Javi esté feliz
+        # 5. Tasa de Cumplimiento, lo que pidió la javi
         # Aquí miramos el NA como indirectamente?: si es NA, el eval dice "insufficient" -> Rojo
+        # CORRECCIÓN DE FLUJO: Solo pintamos rojo si FALLA n Y FALLA tasa, según el ppt
         compliance_rate = if("eval_compliance_rate" %in% names(table)) {
           kableExtra::cell_spec(.data$compliance_rate, color = "black", background = dplyr::case_when(
-            grepl("insufficient", .data$eval_compliance_rate) ~ "red",
+            (grepl("insufficient", .data$eval_n) & grepl("insufficient", .data$eval_compliance_rate)) ~ "red",
             TRUE ~ "white"
           ))
         } else { .data$compliance_rate }
@@ -208,4 +204,3 @@ create_html <- function(table) {
     kableExtra::kable_paper("hover") %>%
     kableExtra::row_spec(0, bold = TRUE, color = "black")
 }
-
