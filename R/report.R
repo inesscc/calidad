@@ -17,6 +17,10 @@
 
 create_html <- function(table) {
 
+  #ROJO = NO, REVISAR PQ ALGO ESTÁ MUY MALITO
+  #AMARILLO = WARNING NO TAN BRÍGIDO
+  #VERDE = PONGALE
+
   # --- 1. ESTÁNDAR INE ---
   if (inherits(table, "ine.eval")) {
     table %>%
@@ -39,8 +43,7 @@ create_html <- function(table) {
           TRUE ~ "white"
         )),
 
-        # Semáforo para CV, solo lo aplicamos si existe la columna eval_cv y dice "cv >"
-        # no hay nigún otro color aun, la javi aun no dice de ponerle verde si es que está bien en verdad.
+        # Semáforo para CV (Rojo si > tope, Amarillo si está entre medio)
         cv = if("eval_cv" %in% names(table)) {
           kableExtra::cell_spec(.data$cv, color = "black", background = dplyr::case_when(
             grepl("cv >", .data$eval_cv) ~ "red",
@@ -49,8 +52,7 @@ create_html <- function(table) {
           ))
         } else { .data$cv },
 
-        # Semáforo para SE (Error Estándar), solo lo aplicamos si existe la columna eval_se y dice "high"
-        # lo mimsmo acá au
+        # Semáforo para SE (Amarillo si es alto)
         se = if("eval_se" %in% names(table)) {
           kableExtra::cell_spec(.data$se, color = "black", background = dplyr::case_when(
             grepl("high", .data$eval_se) ~ "yellow",
@@ -61,10 +63,11 @@ create_html <- function(table) {
       ) %>%
       .apply_kable_styling()
 
-    # --- 2. ESTÁNDAR CEPAL 2020 ---
+    # --- 2. ESTÁNDAR CEPAL 2020
   } else if (inherits(table, "cepal2020.eval")) {
     table %>%
-      # no hay que poner la traducción forzada, demasiada innovación
+      # NOTA: Se eliminó la traducción forzada. Se respetan publish/review/supress.
+      #Era demasiada innovación
 
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
@@ -75,7 +78,7 @@ create_html <- function(table) {
           TRUE ~ "white"
         ), color = "black"),
 
-        # 1. n y df genericos
+        # 1. Indicadores Críticos -> ROJO (Causan Supress)
         n = kableExtra::cell_spec(.data$n, color = "black", background = dplyr::case_when(
           grepl("insufficient", .data$eval_n) ~ "red",
           TRUE ~ "white"
@@ -91,7 +94,7 @@ create_html <- function(table) {
           TRUE ~ "white"
         )),
 
-        # 3. Tamaño Efectivo de la muestra (ESS)
+        # 3. Tamaño Efectivo y No Ponderado -> ROJO
         ess = if("eval_ess" %in% names(table)) {
           kableExtra::cell_spec(.data$ess, color = "black", background = dplyr::case_when(
             grepl("insufficient", .data$eval_ess) ~ "red",
@@ -99,7 +102,6 @@ create_html <- function(table) {
           ))
         } else { .data$ess },
 
-        # 4. Conteo no ponderado, el coso de Unweighted
         unweighted = if("eval_unweighted" %in% names(table)) {
           kableExtra::cell_spec(.data$unweighted, color = "black", background = dplyr::case_when(
             grepl("insufficient", .data$eval_unweighted) ~ "red",
@@ -113,7 +115,7 @@ create_html <- function(table) {
     # --- 3. ESTÁNDAR CEPAL 2023 ---
   } else if (inherits(table, "cepal2023.eval")) {
     table %>%
-      # LIMPIEZA: weakly-reliable -> weakly reliable (sin guion)
+
       dplyr::mutate(label = dplyr::case_when(
         label == "weakly-reliable" ~ "weakly reliable",
         TRUE ~ label
@@ -127,7 +129,6 @@ create_html <- function(table) {
           TRUE ~ "white"
         ), color = "black"),
 
-        # CEPAL 23 a veces no trae eval_n, usamos una lógica para esto
         n = kableExtra::cell_spec(.data$n, color = "black", background = dplyr::case_when(
           .data$n < 60 ~ "red",
           TRUE ~ "white"
@@ -143,7 +144,6 @@ create_html <- function(table) {
     table %>%
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
-        # 1. Semáforo Etiqueta "normal"
         label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
           .data$label == "reliable" ~ "green",
           .data$label == "weakly reliable" ~ "yellow",
@@ -151,7 +151,6 @@ create_html <- function(table) {
           TRUE ~ "white"
         ), color = "black"),
 
-        # 2. n y df Rojo si eval dice insufficient y hay que funarlo
         n = kableExtra::cell_spec(.data$n, color = "black", background = dplyr::case_when(
           grepl("insufficient", .data$eval_n) ~ "red",
           TRUE ~ "white"
@@ -161,7 +160,6 @@ create_html <- function(table) {
           TRUE ~ "white"
         )),
 
-        # 3. CV (Si existe y es alto)
         cv = if("eval_cv" %in% names(table)) {
           kableExtra::cell_spec(.data$cv, color = "black", background = dplyr::case_when(
             grepl("cv >", .data$eval_cv) ~ "red",
@@ -170,7 +168,6 @@ create_html <- function(table) {
           ))
         } else { .data$cv },
 
-        # 4. SE, si existe y es alto = "high SE"
         se = if("eval_se" %in% names(table)) {
           kableExtra::cell_spec(.data$se, color = "black", background = dplyr::case_when(
             grepl("high", .data$eval_se) ~ "yellow",
@@ -178,9 +175,7 @@ create_html <- function(table) {
           ))
         } else { .data$se },
 
-        # 5. Tasa de Cumplimiento, lo que pidió la javi
-        # Aquí miramos el NA como indirectamente?: si es NA, el eval dice "insufficient" -> Rojo
-        # CORRECCIÓN DE FLUJO: Solo pintamos rojo si FALLA n Y FALLA tasa, según el ppt
+        # CORRECCIÓN DE FLUJO: Solo pintamos rojo si FALLA n Y FALLA tasa
         compliance_rate = if("eval_compliance_rate" %in% names(table)) {
           kableExtra::cell_spec(.data$compliance_rate, color = "black", background = dplyr::case_when(
             (grepl("insufficient", .data$eval_n) & grepl("insufficient", .data$eval_compliance_rate)) ~ "red",
