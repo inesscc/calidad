@@ -234,42 +234,40 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
 
   evaluation <- table %>%
     dplyr::mutate(
-      # Deff (Por metodología esto es así)
+      # Deff
       eval_deff = dplyr::case_when(
         .data$deff >= 1 ~ "Sufficient deff",
         .data$deff < 1 ~ "Insufficient deff",
         TRUE ~ "NA"
       ),
-      # N, Tamaño Muestral
+      # N F1
       eval_n = dplyr::case_when(
         .data$n >= params$n ~ "sufficient sample size",
         TRUE ~ "insufficient sample size"
       ),
-      # ess, es el Tamaño Efectivo de Muestra, nuestro F2
+      # ESS
       eval_ess = dplyr::case_when(
         .data$ess >= params$ess ~ "Sufficient ess",
         TRUE ~ "Insufficient ess"
       ),
-      # DF los grados de libertad, nuestro F3
+      # DF F2
       eval_df = dplyr::case_when(
         .data$df >= params$df ~ "Sufficient df",
-
-        # LA EXCEPCIÓN ES DOMINIO PLANIFICADO AA. Si es dominio planificado (según diagrama)
         .data$df < params$df & domain_info & low_df_justified ~ "Sufficient df",
         TRUE ~ "Insufficient df"
       ),
-      # Unweighted Conteo de Casos no ponderado, F5
+      # Unweighted (Conteo de Casos sumamos el caso intermedio) F3
       eval_unweighted = dplyr::case_when(
-        .data$unweighted >= params$CCNP_b ~ "sufficient cases", # > 50
-        .data$unweighted >= params$CCNP_a ~ "insufficient cases", # 30-50
-        TRUE ~ "insufficient cases" # < 30
+        .data$unweighted >= params$CCNP_b ~ paste(">=", params$CCNP_b),      # Ej: ">= 50"
+        .data$unweighted >= params$CCNP_a ~ paste(params$CCNP_a, "to", params$CCNP_b), # Ej: "30 to 50"
+        TRUE ~ paste("<", params$CCNP_a)                                     # Ej: "< 30"
       )
     )
 
   # Etiqueta previa de precisión, el CV o Log-CV según corresponda. F4
   # Calculamos si es fiable por precisión antes de aplicar los filtros más duros.
 
-  # Detectar si debemos forzar el uso de CV Normal
+  # Detectar si hay que forzar el uso de CV Normal
   use_normal_cv <- (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1) |
     (sum(class %in% 'calidad.prop') == 1 & (sum(table$stat > 1, na.rm = TRUE) > 0 | !ratio_between_0_1))
 
@@ -278,7 +276,7 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
       warning('Oops! A ratio estimation greater than 1 was detected. The assessment will use cv.')
     }
 
-    # Lógica CV Normal
+    # --- Lógica CV Normal para los x, totales, sumas y cosas normales
     evaluation <- evaluation %>%
       dplyr::mutate(
         eval_cv = dplyr::case_when(
@@ -287,9 +285,7 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
           .data$cv > params$cv_upper_cepal ~ paste("cv >", params$cv_upper_cepal),
           TRUE ~ "NA"
         ),
-
-        #ACÁ NO SÉ SI LO ESTOY PIFIANDO JAVI AAAA. PQ FUNCIONA, PERO NO SÉ SI ES LÓGICA DE PAQUETE UNA ETIQUETA TEMPORAL
-        #Etiqueta temporal basada SOLO en la precisión y conteo de casos (F4 y 5)
+        # SumamosLa etiqueta temporal para precisión y conteo
         temp_label_precision = dplyr::case_when(
           .data$cv <= params$cv_lower_cepal & .data$unweighted >= params$CCNP_b ~ "reliable",
           .data$cv <= params$cv_upper_cepal & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
@@ -298,9 +294,9 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
       )
 
   } else {
-    # En caso de Lógica Log-CV, proporciones en 0-1
     if (!"log_cv" %in% colnames(table)) stop("log_cv must be used for proportions!")
 
+    # --- Lógica Log-CV, para las cosas entre 0 y 1, onda la probreza, proporciones
     evaluation <- evaluation %>%
       dplyr::mutate(
         eval_log_cv = dplyr::case_when(
@@ -308,31 +304,42 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
           .data$log_cv > params$cvlog_max ~ paste("log_cv >", params$cvlog_max),
           TRUE ~ "NA"
         ),
-        # Etiqueta temporal Log-CV
+
         temp_label_precision = dplyr::case_when(
+
+          # Caso Ideal: LogCV bueno y N grande
           .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
+
+          # LogCV bueno PERO N entre 30 y 50, sería el caso intermedio
+          .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+
+          # Caso Malo
           TRUE ~ "non-reliable"
         )
       )
   }
 
-  # El momento final, disen.Jerarquía Estricta del paquete.
-  # Aquí se mira la etiqueta final "label". Si fallan las primeras f's, hasta la 3,
-  # se ignora la precisión y se marca "non-reliable".
-
   evaluation <- evaluation %>%
-    dplyr::mutate(label = dplyr::case_when(
-      # 1. Filtro ESS. If falla, explota todo
-      .data$ess < params$ess ~ "non-reliable",
+    dplyr::mutate(
+      # ESto se pregunta si es un dominio planificado con N suficiente? protipjavi
+      # Si esto es TRUE, nos saltamos los chequeos de Deff y ESS.
+      is_robust_domain = (domain_info & .data$n >= 100),
 
-      # 2. Filtro DF. If falla, explota todo, pero hay un superhero, la justificación de los grados de libertad es el coso de dominio planificado
-      (.data$df < params$df & !(domain_info & low_df_justified)) ~ "non-reliable",
+      label = dplyr::case_when(
+        # 1. Filtro DF
+        (.data$df < params$df & !(domain_info & low_df_justified)) ~ "non-reliable",
 
-      # 3. If pasa los filtros críticos, usamos la etiqueta temporal de precisión que calculamos antes
-      TRUE ~ .data$temp_label_precision
-    )) %>%
-    dplyr::select(-temp_label_precision) # Matamos la columna auxiliar
+        # 2. Filtro ESS. IF NO es un dominio robusto
+        (!is_robust_domain & .data$ess < params$ess) ~ "non-reliable",
 
+        # 3. Filtro Deff. If NO es un dominio robusto. Opcional según diagrama,
+        # pero si Deff < 1 suele ser alerta.
+
+        # 4. Si sobrevivió a los filtros o tomó el atajo, usamos la etiqueta de precisión
+        TRUE ~ .data$temp_label_precision
+      )
+    ) %>%
+    dplyr::select(-temp_label_precision, -is_robust_domain) # Limpieza
 
   evaluation <- add_class(evaluation, "cepal2023.eval")
   return(evaluation)
