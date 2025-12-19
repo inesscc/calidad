@@ -225,8 +225,9 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
 
   return(evaluation)
 }
-#-------------------------------------------------
-###################
+
+#----------------------------------------------------------------------------------------
+
 assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE, low_df_justified = FALSE, ratio_between_0_1 = TRUE) {
 
   # Evaluaciones independientes x comuna
@@ -242,8 +243,8 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
       ),
       # N F1
       eval_n = dplyr::case_when(
-        .data$n >= params$n ~ "sufficient sample size",
-        TRUE ~ "insufficient sample size"
+        .data$n >= params$n ~ "Sufficient sample size",
+        TRUE ~ "Insufficient sample size"
       ),
       # ESS
       eval_ess = dplyr::case_when(
@@ -267,15 +268,26 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
   # Etiqueta previa de precisión, el CV o Log-CV según corresponda. F4
   # Calculamos si es fiable por precisión antes de aplicar los filtros más duros.
 
-  # Detectar si hay que forzar el uso de CV Normal
-  use_normal_cv <- (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1) |
-    (sum(class %in% 'calidad.prop') == 1 & (sum(table$stat > 1, na.rm = TRUE) > 0 | !ratio_between_0_1))
+
+  # 1. Detectamos si tiene cara de proporción (tiene log_cv) o si lo dice la clase
+  has_log_cv <- "log_cv" %in% colnames(table)
+  is_prop_class <- any(class %in% 'calidad.prop')
+  stats_over_1 <- sum(table$stat > 1, na.rm = TRUE) > 0
+
+
+  if ((has_log_cv | is_prop_class) & ratio_between_0_1 & stats_over_1) {
+    warning('Oops! A ratio estimation greater than 1 was detected. The assessment will use cv.')
+  }
+
+  # 3. Decidimos si usar CV Normal
+  #    - Si NO tiene log_cv -> CV Normal
+  #    - Si TIENE log_cv -> Solo CV Normal si hay valores > 1 o piden ignorar ratio 0-1
+
+  use_normal_cv <- !has_log_cv |
+    (has_log_cv & (stats_over_1 | !ratio_between_0_1))
+
 
   if (use_normal_cv) {
-    if ((ratio_between_0_1) & sum(class %in% 'calidad.prop') == 1) {
-      warning('Oops! A ratio estimation greater than 1 was detected. The assessment will use cv.')
-    }
-
     # --- Lógica CV Normal para los x, totales, sumas y cosas normales
     evaluation <- evaluation %>%
       dplyr::mutate(
@@ -285,7 +297,7 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
           .data$cv > params$cv_upper_cepal ~ paste("cv >", params$cv_upper_cepal),
           TRUE ~ "NA"
         ),
-        # SumamosLa etiqueta temporal para precisión y conteo
+        # LA etiqueta temporal para precisión y conteo
         temp_label_precision = dplyr::case_when(
           .data$cv <= params$cv_lower_cepal & .data$unweighted >= params$CCNP_b ~ "reliable",
           .data$cv <= params$cv_upper_cepal & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
@@ -294,7 +306,6 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
       )
 
   } else {
-    if (!"log_cv" %in% colnames(table)) stop("log_cv must be used for proportions!")
 
     # --- Lógica Log-CV, para las cosas entre 0 y 1, onda la probreza, proporciones
     evaluation <- evaluation %>%
@@ -306,7 +317,6 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
         ),
 
         temp_label_precision = dplyr::case_when(
-
           # Caso Ideal: LogCV bueno y N grande
           .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
 
@@ -322,24 +332,25 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
   evaluation <- evaluation %>%
     dplyr::mutate(
       # ESto se pregunta si es un dominio planificado con N suficiente? protipjavi
+      # AJUSTE CLAVE: Usamos 'unweighted' (conteo real) en vez de 'n' para ser estrictos con el atajo.
       # Si esto es TRUE, nos saltamos los chequeos de Deff y ESS.
-      is_robust_domain = (domain_info & .data$n >= 100),
+      is_robust_domain = (domain_info & .data$unweighted >= 100),
 
       label = dplyr::case_when(
-        # 1. Filtro DF
-        (.data$df < params$df & !(domain_info & low_df_justified)) ~ "non-reliable",
+        # 1. Filtro Deff (Según diagrama es el primero).
+        (!is_robust_domain & .data$deff < 1) ~ "non-reliable",
 
-        # 2. Filtro ESS. IF NO es un dominio robusto
+        # 2. Filtro ESS. IF NO es un dominio robusto (Segundo en el diagrama)
         (!is_robust_domain & .data$ess < params$ess) ~ "non-reliable",
 
-        # 3. Filtro Deff. If NO es un dominio robusto. Opcional según diagrama,
-        # pero si Deff < 1 suele ser alerta.
+        # 3. Filtro DF. (Tercero en el diagrama)
+        (.data$df < params$df & !(domain_info & low_df_justified)) ~ "non-reliable",
 
         # 4. Si sobrevivió a los filtros o tomó el atajo, usamos la etiqueta de precisión
         TRUE ~ .data$temp_label_precision
       )
     ) %>%
-    dplyr::select(-temp_label_precision, -is_robust_domain) # Limpieza
+    dplyr::select(-temp_label_precision, -is_robust_domain)
 
   evaluation <- add_class(evaluation, "cepal2023.eval")
   return(evaluation)
