@@ -331,12 +331,11 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
 
   evaluation <- evaluation %>%
     dplyr::mutate(
-      # ESto se pregunta si es un dominio planificado con N suficiente? protipjavi
-      # AJUSTE CLAVE: Usamos 'unweighted' (conteo real) en vez de 'n' para ser estrictos con el atajo.
-      # Si esto es TRUE, nos saltamos los chequeos de Deff y ESS.
-      is_robust_domain = (domain_info & .data$unweighted >= 100),
 
+      is_robust_domain = (domain_info & .data$n >= 100),
       label = dplyr::case_when(
+
+
         # 1. Filtro Deff (Según diagrama es el primero).
         (!is_robust_domain & .data$deff < 1) ~ "non-reliable",
 
