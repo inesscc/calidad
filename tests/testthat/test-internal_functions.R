@@ -50,7 +50,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
 
 # disenio con as_survey_design
 dc_as_survey_enusc <- enusc_2023 %>%
-  mutate(id = Conglomerado) %>%
+  dplyr::mutate(id = Conglomerado) %>%
   srvyr::as_survey_design(id, strata = VarStrat, weights = Fact_Hog_Reg)
 
 # disenio con update
@@ -349,4 +349,227 @@ test_that("revision mensaje por no usar funcion svydesign (subset)",{
   expect_message(create_mean('gastot_hd', design = dc_epf_subset),
                  'Complex design with modifications')
 })
+
+
+
+
+###############################################
+## create_internal_estimations se, cv y deff ##
+###############################################
+
+expect_match_survey <- function(survey_expr,
+                                own_expr,
+                                criterios = c("adjust","average","remove","certainty")
+                                   ){
+
+  old_opt <- getOption("survey.lonely.psu")
+  options(survey.lonely.psu = old_opt)
+
+  for (criterio in criterios) {
+
+        options(survey.lonely.psu = criterio)
+
+    table_svy <- eval(survey_expr)
+    table_own <- eval(own_expr)
+
+    ## estimation
+    expect_equal(
+      table_own$est,
+      unname(coef(table_svy)),
+      info = paste("criterio:", criterio)
+    )
+
+    ## SE
+    expect_equal(
+      table_own$se,
+      SE(table_svy),
+      info = paste("criterio:", criterio)
+    )
+
+    expect_equal(
+      table_own$deff,
+      deff(table_svy),
+      info = paste("criterio:", criterio)
+    )
+
+  }
+}
+
+## TEST ELE ##
+
+dc_ele <- svydesign(ids = ~rol_ficticio, weights = ~fe_transversal, strata = ~estrato, fpc = ~pob, data = ELE7)
+
+#### ratio
+test_that("get_ratio vs svyratio por dominios cod_actividad + cod_tamano + tramo", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~VA_2022f, denominator = ~REMP_TOTAL, ~cod_actividad + cod_tamano + tramo,
+            design = dc_ele, FUN = svyratio, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~VA_2022f, denominator = ~REMP_TOTAL, domains = ~cod_actividad + cod_tamano + tramo,
+                      design = dc_ele, fun_est = get_ratio, deff = T)
+      )
+    )
+  })
+
+test_that("get_ratio vs svyratio por dominios cod_actividad", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~VA_2022f, denominator = ~REMP_TOTAL, ~cod_actividad,
+            design = dc_ele, FUN = svyratio, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~VA_2022f, denominator = ~REMP_TOTAL, domains = ~cod_actividad,
+                      design = dc_ele, fun_est = get_ratio, deff = T)
+    )
+  )
+})
+
+
+#### total
+test_that("get_total vs svytotal por dominios cod_actividad + cod_tamano + tramo", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~VA_2022f, ~cod_actividad + cod_tamano + tramo,
+            design = dc_ele, FUN = svytotal, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~VA_2022f, domains = ~cod_actividad + cod_tamano + tramo,
+                      design = dc_ele, fun_est = get_total, deff = T)
+    )
+  )
+})
+
+test_that("get_total vs svytotal por dominios cod_actividad", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~VA_2022f, ~cod_actividad,
+            design = dc_ele, FUN = svytotal, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~VA_2022f, domains = ~cod_actividad,
+                      design = dc_ele, fun_est = get_total, deff = T)
+    )
+  )
+})
+
+#### mean
+test_that("get_mean vs svymean por dominios cod_actividad + cod_tamano + tramo", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~VA_2022f, ~cod_actividad + cod_tamano + tramo,
+            design = dc_ele, FUN = svymean, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~VA_2022f, domains = ~cod_actividad + cod_tamano + tramo,
+                      design = dc_ele, fun_est = get_mean, deff = T)
+    )
+  )
+})
+
+test_that("get_mean vs svymean por dominios cod_actividad", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~VA_2022f, ~cod_actividad,
+            design = dc_ele, FUN = svymean, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~VA_2022f, domains = ~cod_actividad,
+                      design = dc_ele, fun_est = get_mean, deff = T)
+    )
+  )
+})
+
+## TEST EPF ##
+#### mean
+test_that("get_mean vs svymean por dominios zona+sexo+ecivil", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~gastot_hd, ~zona+sexo+ecivil,
+            design = dc_epf, FUN = svymean, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~gastot_hd, domains = ~zona+sexo+ecivil,
+                      design = dc_epf, fun_est = get_mean, deff = T)
+    )
+  )
+})
+
+test_that("get_mean vs svymean por dominios zona", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~gastot_hd, ~zona,
+            design = dc_epf, FUN = svymean, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~gastot_hd, domains = ~zona,
+                      design = dc_epf, fun_est = get_mean, deff = T)
+    )
+  )
+})
+
+
+#### total
+test_that("get_total vs svytotal por dominios zona+sexo+ecivil", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~gastot_hd, ~zona+sexo+ecivil,
+            design = dc_epf, FUN = svytotal, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~gastot_hd, domains = ~zona+sexo+ecivil,
+                      design = dc_epf, fun_est = get_total, deff = T)
+    )
+  )
+})
+
+test_that("get_total vs svytotal por dominios zona", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~gastot_hd, ~zona,
+            design = dc_epf, FUN = svytotal, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~gastot_hd, domains = ~zona,
+                      design = dc_epf, fun_est = get_total, deff = T)
+    )
+  )
+})
+
+
+## TEST ENUSC ##
+dc_enusc <- svydesign(ids = ~Conglomerado,
+                      weights = ~Fact_Hog_Reg,    # fexp a nivel regional
+                      strata = ~VarStrat,
+                      check.strata = TRUE,
+                      data = enusc_2023 %>%
+                        dplyr::mutate(enc_region  = as.character(enc_region )))
+#### mean
+test_that("get_mean vs svymean por dominios ~enc_region+rph_sexol", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~VH_DV, ~enc_region+rph_sexo,
+            design = dc_enusc, FUN = svymean, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~VH_DV, domains = ~enc_region+rph_sexo,
+                      design = dc_enusc, fun_est = get_mean, deff = T)
+    )
+  )
+})
+
+test_that("get_mean vs svymean por dominios ~rph_sexo", {
+
+  expect_match_survey(
+    survey_expr = quote(
+      svyby(~VH_DV, ~rph_sexo,
+            design = dc_enusc, FUN = svymean, deff = T)),
+    own_expr = quote(
+      get_FUN_domain( ~VH_DV, domains = ~rph_sexo,
+                      design = dc_enusc, fun_est = get_mean, deff = T)
+    )
+  )
+})
+
 

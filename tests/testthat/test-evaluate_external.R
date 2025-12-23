@@ -44,7 +44,7 @@ x <- survey::svyby(~desocupado, by = ~region+sexo, design = dc_ene, FUN = survey
 test_cv <- survey::cv(x)
 
 test_that("cv calculado correctamente", {
-  expect_equal(sum(test2$cv == test_cv), length(test_cv))
+  expect_equal(test2$cv, unname(test_cv))
 })
 
 

@@ -368,7 +368,7 @@ standardize_columns <- function(data, var, denom) {
 
 #-----------------------------------------------------------------------
 
-create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
+create_output <- function(table, domains, gl, n, env = parent.frame()) {
 
   domains_original <- get("domains",envir = env)
 
@@ -382,8 +382,6 @@ create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
       dplyr::left_join(gl %>% dplyr::select(c(dplyr::all_of(domains), "df")),
                        by = domains) %>%
       dplyr::left_join(n %>% dplyr::select(c(dplyr::all_of(domains), "n")),
-                       by = domains) %>%
-      dplyr::left_join(cv %>% dplyr::select(c(dplyr::all_of(domains), "cv")),
                        by = domains)
   } else {
 
@@ -394,12 +392,12 @@ create_output <- function(table, domains, gl, n, cv, env = parent.frame()) {
 
     final <- data.frame(table)
 
-    final <- dplyr::bind_cols(final, "df" = gl , "n" = n, "cv" = cv[1])
+    final <- dplyr::bind_cols(final, "df" = gl , "n" = n)#, "cv" = cv[1])
 
-    ## en ocaciones survey te entrega el error estandar con el nombre de la variable objetivo.
-    if(names(final)[2] == var){
-      names(final)[2] <- "se"
-    }
+    # ## en ocaciones survey te entrega el error estandar con el nombre de la variable objetivo.
+    # if(names(final)[2] == var){
+    #   names(final)[2] <- "se"
+    # }
 
   }
 
@@ -751,6 +749,80 @@ get_survey_table <-  function(var, domains, complex_design, estimation = "mean",
   return(estimacion)
 }
 
+
+
+#-----------------------------------------------------------------------
+
+#' Calculates multiple estimations. Internal wrapper
+#'
+#' Generates a table with estimates for a given aggregation
+#'
+#' @param var \code{string} objective variable
+#' @param domains \code{domains}
+#' @param complex_design design from \code{survey}
+#' @param estimation \code{string} indicating if the mean must be calculated
+#' @param env \code{environment} parent frame
+#' @param fun function required regarding the estimation
+#' @param denom denominator. This parameter works for the ratio estimation
+#' @param env parent environment
+#' @param type_est type of estimation: all or size
+#' @return \code{dataframe} containing  main results from survey
+#' @import dplyr
+
+get_table <-  function(var, domains, complex_design, estimation = "general", env = parent.frame(), fun, denom = NULL, type_est = "all") {
+
+
+  if (estimation == "general") { # para estimaciones de media, proporción y tamaños
+
+    estimacion <-  get_FUN_domain(vars =  var,
+                                  denominator = denom,
+                                  domains = domains,
+                                  design = complex_design,
+                                  fun_est = fun,
+                                  deff = get("deff", env)
+                                  #, na.rm = get("na.rm", env)
+                                  )
+
+    # This is a patch because a problem with df_type = chile. We needed to add the var to domains in order to get the DF and sample size according to
+    # chile approach. This decision  produces an error in the deff calculation. So we implement here a specific procedure for the size function. The idea is
+    # to avoid any modification in the rest of the code.
+    if (type_est == "size" &&  get("df_type", env) == "chile" ) {
+
+      names(estimacion)[names(estimacion) == formula_to_string(var) ] <- "est"
+      estimacion[formula_to_string(var)] <- 1
+
+    }
+
+
+    # sometimes survey outputs two columns with the same name. In those cases we keep the first occurrence and the second one is modified
+    estimacion <- fix_repeated_columns(estimacion, v = var)
+
+    # drop rows with zero values
+    string_var <- formula_to_string(var)
+
+    #estimacion <- estimacion %>%
+    #  dplyr::filter(!!rlang::parse_expr(string_var)  != 0)
+
+  } else { # para calcular la mediana
+
+    estimacion <- survey::svyby(var,
+                                by = domains,
+                                FUN = survey::svyquantile,
+                                design = complex_design,
+                                quantiles = 0.5,
+                                method="constant",
+                                interval.type = "quantile",
+                                ties="discrete")
+  }
+
+  return(estimacion)
+}
+
+
+
+
+
+
 #-----------------------------------------------------------------------
 
 
@@ -1074,7 +1146,7 @@ create_ratio_internal <- function(var,denominator, domains = NULL, subpop = NULL
   domains_form <- convert_to_formula(domains)
   denominator_form <- convert_to_formula(denominator)
 
-  tabla <- get_survey_table(var_form, domains_form, disenio, fun = survey::svyratio, estimation = "ratio", denom = denominator_form)
+  tabla <- get_table(var_form, domains_form, disenio, fun = get_ratio, denom = denominator_form)
 
   # Crear listado de variables que se usan para el cálculo
   agrupacion <- create_groupby_vars(domains)
@@ -1087,15 +1159,15 @@ create_ratio_internal <- function(var,denominator, domains = NULL, subpop = NULL
   gl <- get_df(disenio, agrupacion)
 
   #Extrear el coeficiente de variacion
-  cv <- get_cv(tabla, disenio, agrupacion)
+  #cv <- get_cv(tabla, disenio, agrupacion)
 
 
   # Convert to df if there is not any domain
-  tabla <- convert_ratio_to_df(tabla, domains)
+  #tabla <- convert_ratio_to_df(tabla, domains)
 
 
   #Unir toda la informacion en una tabla final
-  final <- create_output(tabla, agrupacion,  gl, n, cv)
+  final <- create_output(tabla, agrupacion,  gl, n) #,cv)
 
   # Ordenar las columnas y estandarizar los nombres de las variables
   final <- standardize_columns(final, var, denominator )
@@ -1196,7 +1268,7 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   # Convertir en fórmula para survey
   domains_form <- convert_to_formula(domains)
 
-  tabla <- get_survey_table(var_form, domains_form, disenio, fun = survey::svymean)
+  tabla <- get_table(var_form, domains_form, disenio, fun = get_mean)
 
   # Crear listado de variables que se usan en los dominios
   agrupacion <- create_groupby_vars(domains)
@@ -1208,10 +1280,10 @@ create_prop_internal <- function(var, domains = NULL, subpop = NULL, disenio, ci
   gl <- get_df(disenio, agrupacion)
 
   # Extraer el coeficiente de variación
-  cv <- get_cv(tabla, disenio, agrupacion)
+  # cv <- get_cv(tabla, disenio, agrupacion)
 
   # Unir toda la información en una tabla final
-  final <- create_output(tabla, agrupacion, gl, n, cv)
+  final <- create_output(tabla, agrupacion, gl, n)#, cv)
 
   # Ordenar las columnas y estandarizar los nombres de las variables
   final <- standardize_columns(final, var, denom = get("denominator", env))
