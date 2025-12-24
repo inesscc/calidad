@@ -760,7 +760,7 @@ get_survey_table <-  function(var, domains, complex_design, estimation = "mean",
 #' @param var \code{string} objective variable
 #' @param domains \code{domains}
 #' @param complex_design design from \code{survey}
-#' @param estimation \code{string} indicating if the mean must be calculated
+#' @param estimation \code{string} indicating if mean, size, total, proportions, ratios must be calculated. By default 'general' specify those estimates, in the other side, median estimates are calculated with survey package.
 #' @param env \code{environment} parent frame
 #' @param fun function required regarding the estimation
 #' @param denom denominator. This parameter works for the ratio estimation
@@ -804,7 +804,7 @@ get_table <-  function(var, domains, complex_design, estimation = "general", env
     #  dplyr::filter(!!rlang::parse_expr(string_var)  != 0)
 
   } else { # para calcular la mediana
-
+    # TODO: preguntar si es que sigue vigente esto, para mi se elimina
     estimacion <- survey::svyby(var,
                                 by = domains,
                                 FUN = survey::svyquantile,

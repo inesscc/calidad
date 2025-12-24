@@ -137,8 +137,8 @@ get_total <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
     # estimation$deff <- v / vsrs
 
 
-    w <- weights(design)           # en vez de 1/prob
-    nobs <- nrow(design$variables) # en vez de NROW(design$cluster[[1]])
+    w <- weights(design)
+    nobs <- nrow(design$variables)
     N <- sum(w)
 
     Vx_hat <- var_point(x, design, na.rm=na.rm)
@@ -307,6 +307,12 @@ linearization_variance <- function(ui, strata, psu, fpc=NULL, lonely.psu = getOp
   ## procesamiento para estratos con una sola upm
   lonely.psu <- match.arg(lonely.psu, c("adjust", "average", "remove", "certainty", "fail"))
   lonely_idx    <- which(var_by_stratum$lonely_nPSU)
+
+  if(length(ui)==1){
+    if(is.na(ui)){
+      return(NA_real_)
+    }
+  }
 
   if (length(lonely_idx) > 0) {
 

@@ -93,6 +93,16 @@ dc_epf <- survey::svydesign(ids = ~varunit,
 
 dc_epf_subset <- subset(dc_epf, gastot_hd> 426548)   ## filtramos valores sobre el Q1 para ej
 
+
+dc_enusc <- svydesign(ids = ~Conglomerado,
+                      weights = ~Fact_Hog_Reg,    # fexp a nivel regional
+                      strata = ~VarStrat,
+                      check.strata = TRUE,
+                      data = enusc_2023 %>%
+                        dplyr::mutate(enc_region  = as.character(enc_region )))
+
+dc_ele <- svydesign(ids = ~rol_ficticio, weights = ~fe_transversal, strata = ~estrato, fpc = ~pob, data = ELE7)
+
 #####################
 # GET_SAMPLE_SIZE
 #####################
@@ -396,9 +406,6 @@ expect_match_survey <- function(survey_expr,
 }
 
 ## TEST ELE ##
-
-dc_ele <- svydesign(ids = ~rol_ficticio, weights = ~fe_transversal, strata = ~estrato, fpc = ~pob, data = ELE7)
-
 #### ratio
 test_that("get_ratio vs svyratio por dominios cod_actividad + cod_tamano + tramo", {
 
@@ -539,12 +546,6 @@ test_that("get_total vs svytotal por dominios zona", {
 
 
 ## TEST ENUSC ##
-dc_enusc <- svydesign(ids = ~Conglomerado,
-                      weights = ~Fact_Hog_Reg,    # fexp a nivel regional
-                      strata = ~VarStrat,
-                      check.strata = TRUE,
-                      data = enusc_2023 %>%
-                        dplyr::mutate(enc_region  = as.character(enc_region )))
 #### mean
 test_that("get_mean vs svymean por dominios ~enc_region+rph_sexol", {
 
