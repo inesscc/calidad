@@ -331,13 +331,19 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
 
   evaluation <- evaluation %>%
     dplyr::mutate(
+
       # Verification of planned domains with sufficient sample size (Robustness Criterion)
       # 'unweighted' (actual count) is used instead of 'n' to strictly apply the exception.
       # If TRUE, Deff and ESS verifications are skipped.
       is_robust_domain = (domain_info & .data$unweighted >= 100),
 
+      is_robust_domain = (domain_info & .data$n >= 100),
       label = dplyr::case_when(
+
         # 1. Design Effect (Deff) Filter - Priority
+
+
+        # 1. Filtro Deff (Según diagrama es el primero).
         (!is_robust_domain & .data$deff < 1) ~ "non-reliable",
 
         # 2. Effective Sample Size (ESS) Filter - If not a robust domain
