@@ -226,6 +226,7 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
   return(evaluation)
 }
 
+
 #----------------------------------------------------------------------------------------
 
 assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE, low_df_justified = FALSE, ratio_between_0_1 = TRUE) {
