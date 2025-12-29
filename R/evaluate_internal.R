@@ -228,67 +228,67 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
 
 
 #----------------------------------------------------------------------------------------
-
 assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE, low_df_justified = FALSE, ratio_between_0_1 = TRUE) {
 
-  # Independent evaluations by domain
-  # Each metric is evaluated separately to ensure report transparency.
+  # Independent evaluation per domain
+  # Each metric is evaluated separately for transparency.
 
   evaluation <- table %>%
     dplyr::mutate(
-      # Design Effect (Deff) Assessment
+      # Deff (Design Effect)
       eval_deff = dplyr::case_when(
         .data$deff >= 1 ~ "Sufficient deff",
         .data$deff < 1 ~ "Insufficient deff",
         TRUE ~ "NA"
       ),
-      # Sample Size (n) - Filter 1
+      # N (Sample Size)
       eval_n = dplyr::case_when(
         .data$n >= params$n ~ "Sufficient sample size",
         TRUE ~ "Insufficient sample size"
       ),
-      # Effective Sample Size (ESS)
+      # ESS (Effective Sample Size)
       eval_ess = dplyr::case_when(
         .data$ess >= params$ess ~ "Sufficient ess",
         TRUE ~ "Insufficient ess"
       ),
-      # Degrees of Freedom (DF) - Filter 2
+      # DF (Degrees of Freedom)
       eval_df = dplyr::case_when(
         .data$df >= params$df ~ "Sufficient df",
         .data$df < params$df & domain_info & low_df_justified ~ "Sufficient df",
         TRUE ~ "Insufficient df"
       ),
-      # Unweighted Case Count (including intermediate range) - Filter 3
+      # Unweighted (Case count with ranges)
       eval_unweighted = dplyr::case_when(
-        .data$unweighted >= params$CCNP_b ~ paste(">=", params$CCNP_b),      # Ex: ">= 50"
-        .data$unweighted >= params$CCNP_a ~ paste(params$CCNP_a, "to", params$CCNP_b), # Ex: "30 to 50"
-        TRUE ~ paste("<", params$CCNP_a)                                     # Ex: "< 30"
+        .data$unweighted >= params$CCNP_b ~ paste(">=", params$CCNP_b),      # e.g., ">= 50"
+        .data$unweighted >= params$CCNP_a ~ paste(params$CCNP_a, "to", params$CCNP_b), # e.g., "30 to 50"
+        TRUE ~ paste("<", params$CCNP_a)                                     # e.g., "< 30"
       )
     )
 
-  # Preliminary precision label (CV or Log-CV as appropriate) - Filter 4
-  # Reliability based on precision is determined before applying stricter quality filters.
+  # Preliminary precision label (CV or Log-CV)
+  # Determine if reliable based on precision before applying harder filters.
 
-  # 1. Detection of proportion variables (availability of log_cv or explicit class)
+  # 1. Detect data characteristics
   has_log_cv <- "log_cv" %in% colnames(table)
   is_prop_class <- any(class %in% 'calidad.prop')
   stats_over_1 <- sum(table$stat > 1, na.rm = TRUE) > 0
 
+  # 2. Warning Logic: Check for ratios > 1 immediately
+  should_warn <- (has_log_cv | is_prop_class) & ratio_between_0_1 & stats_over_1
 
-  if ((has_log_cv | is_prop_class) & ratio_between_0_1 & stats_over_1) {
+  if (should_warn) {
     warning('Oops! A ratio estimation greater than 1 was detected. The assessment will use cv.')
   }
 
-  # 3. Determination of Normal CV vs Log-CV usage
-  #    - If it does NOT have log_cv -> Normal CV
-  #    - If it HAS log_cv -> Only use Normal CV if there are values > 1 or request to ignore ratio 0-1
-
-  use_normal_cv <- !has_log_cv |
-    (has_log_cv & (stats_over_1 | !ratio_between_0_1))
+  # 3. Decide whether to use Normal CV
+  #    - If NO log_cv -> Normal CV
+  #    - If log_cv present -> Normal CV only if values > 1 OR ratio_between_0_1 is FALSE
+  use_normal_cv <- (!has_log_cv & !is_prop_class) |
+    ((has_log_cv | is_prop_class) & (stats_over_1 | !ratio_between_0_1))
 
 
   if (use_normal_cv) {
-    # --- Normal CV logic (for means, totals, and standard continuous variables)
+    # --- Normal CV Logic (Means, Totals, Sums) ---
     evaluation <- evaluation %>%
       dplyr::mutate(
         eval_cv = dplyr::case_when(
@@ -297,7 +297,7 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
           .data$cv > params$cv_upper_cepal ~ paste("cv >", params$cv_upper_cepal),
           TRUE ~ "NA"
         ),
-        # Temporary label for precision and case count
+        # Temporary label for precision and count
         temp_label_precision = dplyr::case_when(
           .data$cv <= params$cv_lower_cepal & .data$unweighted >= params$CCNP_b ~ "reliable",
           .data$cv <= params$cv_upper_cepal & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
@@ -306,8 +306,7 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
       )
 
   } else {
-
-    # --- Log-CV logic (for variables between 0 and 1, e.g., poverty rates, proportions)
+    # --- Log-CV Logic (Proportions between 0 and 1) ---
     evaluation <- evaluation %>%
       dplyr::mutate(
         eval_log_cv = dplyr::case_when(
@@ -317,13 +316,13 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
         ),
 
         temp_label_precision = dplyr::case_when(
-          # Ideal Case: Adequate LogCV and large sample size
+          # Ideal Case: Good LogCV and Large N
           .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
 
-          # Intermediate Case: Adequate LogCV BUT sample size in intermediate range (e.g., 30-50)
+          # Intermediate Case: Good LogCV but Medium N (30-50)
           .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
 
-          # Non-reliable Case
+          # Bad Case
           TRUE ~ "non-reliable"
         )
       )
@@ -331,32 +330,23 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
 
   evaluation <- evaluation %>%
     dplyr::mutate(
+      is_robust_domain = (domain_info & .data$unweighted >= params$n),
 
-      # Verification of planned domains with sufficient sample size (Robustness Criterion)
-      # 'unweighted' (actual count) is used instead of 'n' to strictly apply the exception.
-      # If TRUE, Deff and ESS verifications are skipped.
-      is_robust_domain = (domain_info & .data$unweighted >= 100),
-
-      is_robust_domain = (domain_info & .data$n >= 100),
       label = dplyr::case_when(
-
-        # 1. Design Effect (Deff) Filter - Priority
-
-
-        # 1. Filtro Deff (Según diagrama es el primero).
+        # 1. Deff Filter (First in diagram)
         (!is_robust_domain & .data$deff < 1) ~ "non-reliable",
 
-        # 2. Effective Sample Size (ESS) Filter - If not a robust domain
+        # 2. ESS Filter (Second in diagram)
         (!is_robust_domain & .data$ess < params$ess) ~ "non-reliable",
 
-        # 3. Degrees of Freedom (DF) Filter
+        # 3. DF Filter (Third in diagram)
         (.data$df < params$df & !(domain_info & low_df_justified)) ~ "non-reliable",
 
-        # 4. Final label assignment based on precision (if it passes previous filters or is robust)
+        # 4. Final Precision Label
         TRUE ~ .data$temp_label_precision
       )
     ) %>%
-    dplyr::select(-temp_label_precision, -is_robust_domain)
+    dplyr::select(-temp_label_precision, -is_robust_domain) # Cleanup
 
   evaluation <- add_class(evaluation, "cepal2023.eval")
   return(evaluation)
