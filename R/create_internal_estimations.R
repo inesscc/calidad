@@ -25,7 +25,7 @@ get_mean <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
   }
 
   ## Estimacion media ------------------------
-  ### \hat{\mu} = sum(wi xi)/ sum(wi)    -> estimador
+  ### \hat{\mu} = sum(wi xi)/ sum(wi)
 
   wi <- 1/design$prob   # pesos
   sum_wi <- sum(wi)     # sumatoria wi
@@ -99,7 +99,7 @@ get_total <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
   }
 
   ## Estimacion total ------------------------
-  ### \hat{\T} = sum(wi xi)   -> estimador
+  ### \hat{\T} = sum(wi xi)
 
   wi <- 1/design$prob   # pesos
   T_hat <- sum(x*wi)   # \hat{\mu}
@@ -187,7 +187,7 @@ get_ratio <- function(numerator, denominator, design, na.rm=FALSE, deff=FALSE,..
   }
 
   ## Estimacion ratio ------------------------
-  ### \hat{\R} = sum(wi num_i) /sum(wi den_i)    -> estimador
+  ### \hat{\R} = sum(wi num_i) /sum(wi den_i)
 
   wi <- 1/design$prob   # pesos
   T_hat_num <- sum(x_num*wi)
