@@ -267,7 +267,7 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
   use_normal_cv <- (!has_log_cv & !is_prop_class) | ((has_log_cv | is_prop_class) & (stats_over_1 | !ratio_between_0_1))
 
   if (use_normal_cv) {
-
+    # CV Normal
     evaluation <- evaluation %>%
       dplyr::mutate(
         eval_cv = dplyr::case_when(
@@ -301,12 +301,23 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
   # --- 3. Flujo Final ---
   evaluation <- evaluation %>%
     dplyr::mutate(
-      is_robust_domain = (domain_info & .data$n >= params$n & .data$unweighted >= params$n),
+
+      is_robust_domain = (domain_info & .data$n >= params$n),
 
       label = dplyr::case_when(
+        # 1. Filtro Deff normal
         (!is_robust_domain & .data$deff < 1) ~ "non-reliable",
+
+        # 2. PARCHE. Solo actúa si n no son iguales con el unweighted)
+        (is_robust_domain & .data$unweighted < params$n & .data$deff < 1) ~ "non-reliable",
+
+        # 3. Filtro ESS normal
         (!is_robust_domain & .data$ess < params$ess) ~ "non-reliable",
+
+        # 4. Filtro DF normal
         (.data$df < params$df & !(domain_info & low_df_justified)) ~ "non-reliable",
+
+        # 5. Si pasa todo, etiqueta de precisión
         TRUE ~ .data$temp_label_precision
       )
     ) %>%
