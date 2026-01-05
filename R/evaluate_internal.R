@@ -316,7 +316,7 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
         TRUE ~ .data$temp_label_precision
       )
     ) %>%
-    dplyr::select(-temp_label_precision, -is_robust_domain)
+    dplyr::select(-.data$temp_label_precision, -.data$is_robust_domain)
 
   evaluation <- add_class(evaluation, "cepal2023.eval")
   return(evaluation)

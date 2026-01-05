@@ -17,11 +17,8 @@
 
 create_html <- function(table) {
 
-  #ROJO = NO, REVISAR PQ ALGO ESTÁ MUY MALITO
-  #AMARILLO = WARNING NO TAN BRÍGIDO
-  #VERDE = PONGALE
 
-  # --- 1. ESTÁNDAR INE ---
+  # --- 1. ESTANDAR INE ---
   if (inherits(table, "ine.eval")) {
     table %>%
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
@@ -115,7 +112,7 @@ create_html <- function(table) {
   } else if (inherits(table, "cepal2023.eval")) {
     table %>%
 
-      dplyr::mutate(label = dplyr::if_else(label == "weakly-reliable", "weakly reliable", label)) %>%
+      dplyr::mutate(label = dplyr::if_else(.data$label == "weakly-reliable", "weakly reliable", .data$label)) %>%
 
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
