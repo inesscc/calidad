@@ -278,7 +278,6 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
         temp_label_precision = dplyr::case_when(
           .data$cv <= params$cv_lower_cepal & .data$unweighted >= params$CCNP_b ~ "reliable",
           .data$cv <= params$cv_upper_cepal & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-          .data$cv <= params$cv_lower_cepal & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
           TRUE ~ "non-reliable"
         )
       )
@@ -301,23 +300,19 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
   # --- 3. Flujo Final ---
   evaluation <- evaluation %>%
     dplyr::mutate(
-
       is_robust_domain = (domain_info & .data$n >= params$n),
 
       label = dplyr::case_when(
-        # 1. Filtro Deff normal
+        # 1. Filtro Deff
         (!is_robust_domain & .data$deff < 1) ~ "non-reliable",
 
-        # 2. PARCHE. Solo actúa si n no son iguales con el unweighted)
-        (is_robust_domain & .data$unweighted < params$n & .data$deff < 1) ~ "non-reliable",
+        # 2. Filtro ESS
+        (.data$ess < params$ess) ~ "non-reliable",
 
-        # 3. Filtro ESS normal
-        (!is_robust_domain & .data$ess < params$ess) ~ "non-reliable",
-
-        # 4. Filtro DF normal
+        # 3. Filtro DF
         (.data$df < params$df & !(domain_info & low_df_justified)) ~ "non-reliable",
 
-        # 5. Si pasa todo, etiqueta de precisión
+        # 4. Etiqueta final
         TRUE ~ .data$temp_label_precision
       )
     ) %>%
