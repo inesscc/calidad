@@ -767,7 +767,6 @@ get_survey_table <-  function(var, domains, complex_design, estimation = "mean",
 #' @param env parent environment
 #' @param type_est type of estimation: all or size
 #' @return \code{dataframe} containing  main results from survey
-#' @import dplyr
 
 get_table <-  function(var, domains, complex_design, estimation = "general", env = parent.frame(), fun, denom = NULL, type_est = "all") {
 
