@@ -66,8 +66,6 @@ create_html <- function(table) {
     # --- 2. ESTÁNDAR CEPAL 2020
   } else if (inherits(table, "cepal2020.eval")) {
     table %>%
-      # NOTA: Se eliminó la traducción forzada. Se respetan publish/review/supress.
-      #Era demasiada innovación
 
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
@@ -112,16 +110,16 @@ create_html <- function(table) {
       ) %>%
       .apply_kable_styling()
 
+
     # --- 3. ESTÁNDAR CEPAL 2023 ---
   } else if (inherits(table, "cepal2023.eval")) {
     table %>%
 
-      dplyr::mutate(label = dplyr::case_when(
-        label == "weakly-reliable" ~ "weakly reliable",
-        TRUE ~ label
-      )) %>%
+      dplyr::mutate(label = dplyr::if_else(label == "weakly-reliable", "weakly reliable", label)) %>%
+
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
+        # 1. Semáforo genérico
         label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
           .data$label == "reliable" ~ "green",
           .data$label == "weakly reliable" ~ "yellow",
@@ -129,14 +127,62 @@ create_html <- function(table) {
           TRUE ~ "white"
         ), color = "black"),
 
+        # 2. Semáforos Específicos
+
+        # Tamaño Muestral (n)
         n = kableExtra::cell_spec(.data$n, color = "black", background = dplyr::case_when(
-          .data$n < 60 ~ "red",
+          grepl("insufficient", .data$eval_n) ~ "red",
           TRUE ~ "white"
         )),
+
+        # Grados de Libertad (df)
         df = kableExtra::cell_spec(.data$df, color = "black", background = dplyr::case_when(
-          !grepl("Sufficient", .data$eval_df) ~ "red",
+          grepl("Insufficient", .data$eval_df) ~ "red",
           TRUE ~ "white"
-        ))) %>%
+        )),
+
+        # Conteo no ponderado (Unweighted)
+        unweighted = if("eval_unweighted" %in% names(table)) {
+          kableExtra::cell_spec(.data$unweighted, color = "black", background = dplyr::case_when(
+            grepl("<", .data$eval_unweighted) ~ "red", # Menor a 30
+            TRUE ~ "white"
+          ))
+        } else { .data$unweighted },
+
+        # Efecto de diseño (Deff)
+        deff = if("eval_deff" %in% names(table)) {
+          kableExtra::cell_spec(.data$deff, color = "black", background = dplyr::case_when(
+            grepl("Insufficient", .data$eval_deff) ~ "red",
+            TRUE ~ "white"
+          ))
+        } else { .data$deff },
+
+        # Tamaño Efectivo (ESS)
+        ess = if("eval_ess" %in% names(table)) {
+          kableExtra::cell_spec(.data$ess, color = "black", background = dplyr::case_when(
+            grepl("Insufficient", .data$eval_ess) ~ "red",
+            TRUE ~ "white"
+          ))
+        } else { .data$ess },
+
+        # Precisión (CV)
+        cv = if("eval_cv" %in% names(table)) {
+          kableExtra::cell_spec(.data$cv, color = "black", background = dplyr::case_when(
+            grepl("cv >", .data$eval_cv) ~ "red",
+            grepl("between", .data$eval_cv) ~ "yellow",
+            TRUE ~ "white"
+          ))
+        } else { .data$cv },
+
+        # Precisión Logarítmica (Log CV) - Si existe
+        log_cv = if("eval_log_cv" %in% names(table)) {
+          kableExtra::cell_spec(.data$log_cv, color = "black", background = dplyr::case_when(
+            grepl("log_cv >", .data$eval_log_cv) ~ "red",
+            TRUE ~ "white"
+          ))
+        } else { if("log_cv" %in% names(table)) .data$log_cv else NULL }
+
+      ) %>%
       .apply_kable_styling()
 
     # --- 4. ESTÁNDAR ECONÓMICAS ---
