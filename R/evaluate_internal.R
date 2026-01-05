@@ -140,7 +140,7 @@ assess_ine <- function(table, params, class = "calidad.mean", ratio_between_0_1 
     }
 
 
-    evaluacion <- table %>%
+    evaluation <- table %>%
       dplyr::filter(!is.na(.data$n) & !is.na(.data$df) & !is.na(.data$cv)) %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
@@ -159,7 +159,7 @@ assess_ine <- function(table, params, class = "calidad.mean", ratio_between_0_1 
     # proportion case
   } else {
 
-    evaluacion <- table %>%
+    evaluation <- table %>%
       dplyr::mutate(eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
                     eval_df = dplyr::if_else(.data$df >= params$df, "sufficient df", "insufficient df"),
                     prop_est = dplyr::case_when(.data$stat <= 0.5                 ~ "<= 0.5",
@@ -179,11 +179,15 @@ assess_ine <- function(table, params, class = "calidad.mean", ratio_between_0_1 
                     )
 
   }
-  return(evaluacion)
+# Add ine class to the final object
+  evaluation <- add_class(evaluation, "ine.eval")
+  return(evaluation)
 }
+
 #-------------------------------------------------
 assess_cepal2020 <- function(table, params, class = "calidad.mean") {
-  # General case
+
+  # General case (Medias, Totales, Tamaños)
   if (sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1 ) {
 
     evaluation <- table %>%
@@ -196,9 +200,8 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
         eval_n == "insufficient sample size" | eval_ess == "insufficient ess" | eval_unweighted == "insufficient cases" ~ "supress",
         eval_df == "insufficient df"  ~ "review",
         eval_cv ==  "adequate cv"  ~ "publish"
-
-
       ))
+
     # Proportion case
   } else {
 
@@ -215,81 +218,106 @@ assess_cepal2020 <- function(table, params, class = "calidad.mean") {
         eval_df == "insufficient df" | eval_cv == "non adequate cv" ~ "review",
         eval_cv ==  "adequate cv"  ~ "publish"
       ))
-
   }
 
   # Add cepal 2020 class to the final object
   evaluation <- add_class(evaluation, "cepal2020.eval")
 
   return(evaluation)
-
-
 }
-#-------------------------------------------------
-###################
-# CEPAL 2023
-utils::globalVariables(c("eval_deff", "eval_ess"))
 
-assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE, low_df_justified =FALSE, ratio_between_0_1 = TRUE) {
 
+#----------------------------------------------------------------------------------------
+assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info = FALSE, low_df_justified = FALSE, ratio_between_0_1 = TRUE) {
+
+  # --- 1. Etiquetas individuales ---
   evaluation <- table %>%
-    dplyr::mutate(eval_deff = dplyr::case_when(.data$deff >= 1 ~ "Sufficient deff",
-                                               .data$deff < 1 & domain_info & .data$n >= params$n ~ "Sufficient deff",
-                                               TRUE ~ "non-reliable")) %>%
     dplyr::mutate(
-      eval_ess = dplyr::if_else(eval_deff == "Sufficient deff" & .data$ess >= params$ess, "Sufficient ess", "non-reliable"),
-      eval_df = dplyr::if_else(eval_ess == "Sufficient ess" & .data$df >= params$df, "Sufficient df",
-                               dplyr::if_else(eval_ess == "Sufficient ess" & .data$df < params$df & domain_info & low_df_justified , "Sufficient df",
-                                              "non-reliable"))
+      eval_deff = dplyr::case_when(
+        .data$deff >= 1 ~ "Sufficient deff",
+        .data$deff < 1 ~ "Insufficient deff",
+        TRUE ~ "NA"
+      ),
+      eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
+      eval_ess = dplyr::case_when(
+        .data$ess >= params$ess ~ "Sufficient ess",
+        TRUE ~ "Insufficient ess"
+      ),
+      eval_df = dplyr::case_when(
+        .data$df >= params$df ~ "Sufficient df",
+        .data$df < params$df & domain_info & low_df_justified ~ "Sufficient df",
+        TRUE ~ "Insufficient df"
+      ),
+      eval_unweighted = dplyr::case_when(
+        .data$unweighted >= params$CCNP_b ~ paste(">=", params$CCNP_b),
+        .data$unweighted >= params$CCNP_a ~ paste(params$CCNP_a, "to", params$CCNP_b),
+        TRUE ~ paste("<", params$CCNP_a)
+      )
     )
 
-  if ((sum(class %in% c("calidad.mean", "calidad.size", "calidad.total")) == 1) | (sum(class %in% 'calidad.prop') == 1 & (sum(table$stat>1)>0 | !ratio_between_0_1))) {
+  # --- 2. Precisión (CV vs Log-CV) ---
+  has_log_cv <- "log_cv" %in% colnames(table)
+  is_prop_class <- any(class %in% 'calidad.prop')
+  stats_over_1 <- sum(table$stat > 1, na.rm = TRUE) > 0
 
-    if ((ratio_between_0_1) & sum(class %in% 'calidad.prop') == 1){
-      warning('Oops! A ratio estimation greater than 1 was detected. The assessment will use cv.')
-    }
+  if ((has_log_cv | is_prop_class) & ratio_between_0_1 & stats_over_1) {
+    warning('Oops! A ratio estimation greater than 1 was detected. The assessment will use cv.')
+  }
 
+  use_normal_cv <- (!has_log_cv & !is_prop_class) | ((has_log_cv | is_prop_class) & (stats_over_1 | !ratio_between_0_1))
+
+  if (use_normal_cv) {
+    # CV Normal
     evaluation <- evaluation %>%
       dplyr::mutate(
         eval_cv = dplyr::case_when(
-          .data$cv > params$cv_upper_cepal ~ paste("cv >", params$cv_upper_cepal),
-          .data$cv > params$cv_lower_cepal & .data$cv <= params$cv_upper_cepal ~ paste("cv between", params$cv_lower_cepal, "and", params$cv_upper_cepal),
-          .data$cv <= params$cv_lower_cepal ~ paste("cv <=", params$cv_lower_cepal))
-        ) %>%
-
-      dplyr::mutate(label = dplyr::case_when(
-        eval_df == "Sufficient df" & eval_cv == paste("cv >", params$cv_upper_cepal) ~ "non-reliable",
-        eval_df == "Sufficient df" & eval_cv == paste("cv between", params$cv_lower_cepal, "and", params$cv_upper_cepal) & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        eval_df == "Sufficient df" & eval_cv == paste("cv between", params$cv_lower_cepal, "and", params$cv_upper_cepal) & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "Sufficient df" & eval_cv == paste("cv <=", params$cv_lower_cepal) & .data$unweighted >= params$CCNP_b ~ "reliable",
-        eval_df == "Sufficient df" & eval_cv == paste("cv <=", params$cv_lower_cepal) & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "Sufficient df" & eval_cv == paste("cv <=", params$cv_lower_cepal) & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        TRUE ~ "non-reliable"
-      ))
-    #proportion
+          .data$cv <= params$cv_lower_cepal ~ paste("cv <=", params$cv_lower_cepal),
+          .data$cv <= params$cv_upper_cepal ~ paste("cv between", params$cv_lower_cepal, "and", params$cv_upper_cepal),
+          TRUE ~ paste("cv >", params$cv_upper_cepal)
+        ),
+        temp_label_precision = dplyr::case_when(
+          .data$cv <= params$cv_lower_cepal & .data$unweighted >= params$CCNP_b ~ "reliable",
+          .data$cv <= params$cv_upper_cepal & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+          TRUE ~ "non-reliable"
+        )
+      )
   } else {
-    if (!"log_cv" %in% colnames(table)) {
-      stop("log_cv must be used!")
-    }
+    # Log CV
     evaluation <- evaluation %>%
-      dplyr::mutate(eval_log_cv = dplyr::case_when(
-        .data$log_cv <= params$cvlog_max ~ paste("log_cv <=", params$cvlog_max),
-        .data$log_cv > params$cvlog_max ~ paste("log_cv >", params$cvlog_max)
-
-        )) %>%
-
-      dplyr::mutate(label = dplyr::case_when(
-        eval_df == "Sufficient df" & .data$stat < 0.5 & eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted >= params$CCNP_b ~ "reliable",
-        eval_df == "Sufficient df" & .data$stat < 0.5 &  eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "Sufficient df" & .data$stat < 0.5 &  eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        eval_df == "Sufficient df" & .data$stat >= 0.5 & eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted >= params$CCNP_b ~ "reliable",
-        eval_df == "Sufficient df" & .data$stat >= 0.5 & eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted < params$CCNP_b & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "Sufficient df" & .data$stat >= 0.5 & eval_log_cv == paste("log_cv <=", params$cvlog_max) & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        eval_df == "Sufficient df" & .data$stat >= 0.5 & eval_log_cv == paste("log_cv >", params$cvlog_max) & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
-        eval_df == "Sufficient df" & .data$stat >= 0.5 & eval_log_cv == paste("log_cv >", params$cvlog_max) & .data$unweighted < params$CCNP_a ~ "non-reliable",
-        TRUE ~ "non-reliable"
-      ))
+      dplyr::mutate(
+        eval_log_cv = dplyr::case_when(
+          .data$log_cv <= params$cvlog_max ~ paste("log_cv <=", params$cvlog_max),
+          TRUE ~ paste("log_cv >", params$cvlog_max)
+        ),
+        temp_label_precision = dplyr::case_when(
+          .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_b ~ "reliable",
+          .data$log_cv <= params$cvlog_max & .data$unweighted >= params$CCNP_a ~ "weakly-reliable",
+          TRUE ~ "non-reliable"
+        )
+      )
   }
+
+  # --- 3. Flujo Final ---
+  evaluation <- evaluation %>%
+    dplyr::mutate(
+      is_robust_domain = (domain_info & .data$n >= params$n),
+
+      label = dplyr::case_when(
+        # 1. Filtro Deff
+        (!is_robust_domain & .data$deff < 1) ~ "non-reliable",
+
+        # 2. Filtro ESS
+        (.data$ess < params$ess) ~ "non-reliable",
+
+        # 3. Filtro DF
+        (.data$df < params$df & !(domain_info & low_df_justified)) ~ "non-reliable",
+
+        # 4. Etiqueta final
+        TRUE ~ .data$temp_label_precision
+      )
+    ) %>%
+    dplyr::select(-temp_label_precision, -is_robust_domain)
+
   evaluation <- add_class(evaluation, "cepal2023.eval")
   return(evaluation)
 }

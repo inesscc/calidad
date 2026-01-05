@@ -26,6 +26,11 @@ Authors@R: c(
         family = "Preuss",
         role = c("ctb"),
         email = "jmpreussa@ine.gob.cl"
+        ),
+      person(given = "Franco",
+        family = "Acevedo",
+        role = c("ctb"),
+        email = "francoignacioacevedo@gmail.com"
         )
     )
 Description: Assesses the quality of estimates made by complex sample designs,
