@@ -1,6 +1,6 @@
 
 #-----------------------------------------------------------------------
-## estimacion de la media
+## mean estimation
 #' @importFrom stats model.frame
 #' @importFrom stats na.pass
 #' @importFrom stats weights
@@ -71,7 +71,7 @@ get_mean <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
 
 
 #-----------------------------------------------------------------------
-## estimacion de la totales
+## total estimation
 get_total <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
   "
   Args:
@@ -153,7 +153,7 @@ get_total <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
 
 
 #-----------------------------------------------------------------------
-## estimacion de razon
+## ratio estimation
 
 get_ratio <- function(numerator, denominator, design, na.rm=FALSE, deff=FALSE,...){
   "
@@ -371,10 +371,12 @@ get_FUN_domain <- function(vars, denominator= NULL, design, fun_est, domains=NUL
     uniquelevels <- sort(unique(byfactor))
 
     dom_vals <- sort(uniquelevels)
-    design$nPSU <- dplyr::tibble(strata = design$strata[[1]],
-                                 cluster = design$cluster[[1]]) %>%
-      dplyr::group_by(.data$strata) %>%
-      dplyr::reframe(nPSU = dplyr::n_distinct(.data$cluster))
+    # design$nPSU <- dplyr::tibble(strata = design$strata[[1]],
+    #                              cluster = design$cluster[[1]]) %>%
+    #   dplyr::group_by(.data$strata) %>%
+    #   dplyr::reframe(nPSU = dplyr::n_distinct(.data$cluster))
+
+    design$nPSU <- data.frame(nPSU= design$fpc$sampsize, strata = design$strata[[1]]) %>% dplyr::distinct()
 
     res <- lapply(dom_vals, function(d) {
       subd <- subset(design, byfactor %in% d)

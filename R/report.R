@@ -30,7 +30,7 @@ create_html <- function(table) {
           TRUE ~ "white"
         ), color = "black"),
 
-        # Semáforo parapersonas de n y df
+        # n y df
         n = kableExtra::cell_spec(.data$n, color = "black", background = dplyr::case_when(
           grepl("insufficient", .data$eval_n) ~ "red",
           TRUE ~ "white"
@@ -40,7 +40,7 @@ create_html <- function(table) {
           TRUE ~ "white"
         )),
 
-        # Semáforo para CV (Rojo si > tope, Amarillo si está entre medio)
+        # CV (Rojo si > umbral, Amarillo si está entre medio)
         cv = if("eval_cv" %in% names(table)) {
           kableExtra::cell_spec(.data$cv, color = "black", background = dplyr::case_when(
             grepl("cv >", .data$eval_cv) ~ "red",
@@ -49,7 +49,7 @@ create_html <- function(table) {
           ))
         } else { .data$cv },
 
-        # Semáforo para SE (Amarillo si es alto)
+        # SE (Amarillo si es alto)
         se = if("eval_se" %in% names(table)) {
           kableExtra::cell_spec(.data$se, color = "black", background = dplyr::case_when(
             grepl("high", .data$eval_se) ~ "yellow",
@@ -79,7 +79,7 @@ create_html <- function(table) {
           TRUE ~ "white"
         )),
 
-        # Ojo: df y cv en CEPAL 2020 son amarillos (review), no rojos.
+        # df y cv en CEPAL 2020 son amarillos (review)
         df = kableExtra::cell_spec(.data$df, color = "black", background = dplyr::case_when(
           grepl("insufficient", .data$eval_df) ~ "yellow",
           TRUE ~ "white"
@@ -116,7 +116,7 @@ create_html <- function(table) {
 
       dplyr::mutate_if(is.numeric, ~round(.x, 2)) %>%
       dplyr::mutate(
-        # 1. Semáforo genérico
+
         label = kableExtra::cell_spec(.data$label, background = dplyr::case_when(
           .data$label == "reliable" ~ "green",
           .data$label == "weakly reliable" ~ "yellow",
@@ -124,11 +124,10 @@ create_html <- function(table) {
           TRUE ~ "white"
         ), color = "black"),
 
-        # 2. Semáforos Específicos
 
         # Tamaño Muestral (n)
         n = kableExtra::cell_spec(.data$n, color = "black", background = dplyr::case_when(
-          grepl("insufficient", .data$eval_n) ~ "red",
+          grepl("Insufficient", .data$eval_n) ~ "red",
           TRUE ~ "white"
         )),
 
@@ -218,7 +217,6 @@ create_html <- function(table) {
           ))
         } else { .data$se },
 
-        # CORRECCIÓN DE FLUJO: Solo pintamos rojo si FALLA n Y FALLA tasa
         compliance_rate = if("eval_compliance_rate" %in% names(table)) {
           kableExtra::cell_spec(.data$compliance_rate, color = "black", background = dplyr::case_when(
             (grepl("insufficient", .data$eval_n) & grepl("insufficient", .data$eval_compliance_rate)) ~ "red",

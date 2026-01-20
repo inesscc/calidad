@@ -238,7 +238,7 @@ assess_cepal2023 <- function(table, params, class = "calidad.mean", domain_info 
         .data$deff < 1 ~ "Insufficient deff",
         TRUE ~ "NA"
       ),
-      eval_n = dplyr::if_else(.data$n >= params$n, "sufficient sample size", "insufficient sample size"),
+      eval_n = dplyr::if_else(.data$n >= params$n, "Sufficient sample size", "Insufficient sample size"),
       eval_ess = dplyr::case_when(
         .data$ess >= params$ess ~ "Sufficient ess",
         TRUE ~ "Insufficient ess"

@@ -37,6 +37,10 @@ test_that('test ratio scheme eclac_2023',
 test1 <- create_mean("gastot_hd", domains = "zona+sexo+ecivil", design = dc, deff = TRUE, ess = TRUE, unweighted = TRUE)
 test <- assess(test1, publish = TRUE)
 
+test_that('object class assess scheme chile',
+          expect_contains(class(test), 'ine.eval')
+          )
+
 # INE Chile Standard for proportion
 test2 <- create_prop("desocupado", domains = "region+sexo", design = dc_ene, eclac_input = TRUE)
 
@@ -110,6 +114,10 @@ test <- assess(test2, scheme = "eclac_2020")
 test_that('ess must be used',
           expect_error(assess(test3, scheme = "eclac_2020")))
 
+test_that('object class assess scheme cepal_2020',
+          expect_contains(class(test), 'cepal2020.eval')
+)
+
 test <- assess(test4, scheme = "eclac_2020")
 
 # Proportion without log_cv
@@ -143,6 +151,11 @@ test <- assess(test2, scheme = "eclac_2023")
 
 test_that('ess must be used',
           expect_error(assess(test3, scheme = "eclac_2023")))
+
+test_that('object class assess scheme cepal_2023',
+          expect_contains(class(test), 'cepal2023.eval')
+)
+
 
 test <- assess(test4, scheme = "eclac_2023")
 
@@ -316,6 +329,7 @@ test_that('test different number of rows',
                                 slice(1:40))
                        ))
 
+
 ## diferente table_n_obj con NAs
 test_that('test different number of rows',
           expect_error(assess(prod_salarial, scheme = 'chile_economics', domain_info = T,
@@ -340,6 +354,10 @@ test_that('test total reliable in prod salarial',
                               table_n_obj = n_obj_ELE2, ratio_between_0_1 = FALSE) %>% filter(label == 'reliable') %>% nrow(),
                        38))
 
+test_that('object class assess scheme chile_economics',
+          expect_contains(assess(prod_salarial, scheme = 'chile_economics', domain_info = T,
+                                 table_n_obj = n_obj_ELE2, ratio_between_0_1 = FALSE) %>% class(), 'economicas.eval')
+)
 
 ## Test para evaluar si el ratio esta entre 0 y 1, en este caso le pusimos que esta entre 0 y 1 cuando en realidad se toman valores fuera a ese intervalo, se espera que arroje error:
 test_that('test para evaluar ratio between 0 y 1',
