@@ -26,12 +26,14 @@ tolower_strings <-  function(x) {
 get_design_vars <- function(design) {
   ### evaluacion update y as_survey
   create_vars <- FALSE
+  psu <- names(design$cluster)
+
   if (as.character(design$call)[[1]] != "svydesign"){
     if(as.character(design$call)[1] == 'update'| as.character(design$call)[1] == 'subset'){
       message("Complex design with modifications")
     }
 
-    if (names(design$cluster) !='id') {
+    if (psu !='id') {
       create_vars <- TRUE
     }else{
       # si la variable se llama igual que el valor por defecto, se revisara que este presente en las variables
@@ -50,14 +52,19 @@ get_design_vars <- function(design) {
     }
   }  ## usamos lo de siempre si se detecta svydesign
   else{
-    if (!as.character(design$call$ids)[[2]] %in% c("0", "1")) {
+    if(psu!='id'){
       create_vars <- TRUE
     }
+    else{
+      if(!as.character(design$call$ids)[[2]] %in% c("0", "1")) {
+        create_vars <- TRUE
+        }
+      }
   }
 
 
   if(create_vars){
-    psu <- names(design$cluster)
+    psu <- psu
     strata <- names(design$strata)
     vars <- c(psu, strata)
   } else {
@@ -259,8 +266,17 @@ se_message <- function(design) {
       }
     }
   }else{ # caso normal con svydesign
-    if (as.character(design$call$ids)[[2]] %in% c("0","1"))
-      disenio_complejo <- FALSE
+    if(names(design$cluster)!='id'){
+      disenio_complejo <- TRUE
+    }
+    else{
+      if(!as.character(design$call$ids)[[2]] %in% c("0", "1")) {
+        disenio_complejo <- FALSE
+      }
+    }
+
+    # if (as.character(design$call$ids)[[2]] %in% c("0","1"))
+    #   disenio_complejo <- FALSE
   }
 
   if (!disenio_complejo) {
