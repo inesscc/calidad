@@ -388,19 +388,24 @@ expect_match_survey <- function(survey_expr,
       unname(coef(table_svy)),
       info = paste("criterio:", criterio)
     )
+    print('#####################################')
+    #print(table_own$est - unname(coef(table_svy)))
 
     ## SE
     expect_equal(
       table_own$se,
-      SE(table_svy),
+      unname(SE(table_svy)),
       info = paste("criterio:", criterio)
     )
 
+    print(table_own$se - unname(SE(table_svy)))
+
     expect_equal(
       table_own$deff,
-      deff(table_svy),
+      unname(deff(table_svy)),
       info = paste("criterio:", criterio)
     )
+
 
   }
 }
@@ -480,7 +485,7 @@ test_that("get_mean vs svymean por dominios cod_actividad", {
   expect_match_survey(
     survey_expr = quote(
       svyby(~VA_2022f, ~cod_actividad,
-            design = dc_ele, FUN = svymean, deff = T)),
+            design =  dc_ele , FUN = svymean, deff = T)),
     own_expr = quote(
       get_FUN_domain( ~VA_2022f, domains = ~cod_actividad,
                       design = dc_ele, fun_est = get_mean, deff = T)
@@ -547,7 +552,7 @@ test_that("get_total vs svytotal por dominios zona", {
 
 ## TEST ENUSC ##
 #### mean
-test_that("get_mean vs svymean por dominios ~enc_region+rph_sexol", {
+test_that("get_mean vs svymean por dominios ~enc_region+rph_sexo", {
 
   expect_match_survey(
     survey_expr = quote(

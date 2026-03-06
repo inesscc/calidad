@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_external.R
 \name{create_mean}
 \alias{create_mean}
-\title{Create the inputs to evaluate the quality of mean estimations}
+\title{Create the inputs to evaluate the quality of mean estimates}
 \usage{
 create_mean(
   var,
@@ -21,39 +21,59 @@ create_mean(
 )
 }
 \arguments{
-\item{var}{numeric variable within the \code{dataframe}.}
+\item{var}{Name of numeric variable to estimate within the \code{data.frame}.}
 
-\item{domains}{domains to be estimated separated by the + character.}
+\item{domains}{Domains variables to be estimated separated by the `+` character.}
 
-\item{subpop}{integer dummy variable to filter the dataframe.}
+\item{subpop}{Integer dummy variable used to filter a subpopulation before estimation. If `NULL`, no filtering is applied.}
 
-\item{design}{complex design created by \code{survey} package.}
+\item{design}{A complex survey design object created with \code{survey::svydesign()}.}
 
-\item{ci}{\code{boolean} indicating if the confidence intervals must be calculated.}
+\item{ci}{\code{boolean}. If `TRUE`, compute confidence intervals (see Details).}
 
-\item{ess}{\code{boolean} effective sample size.}
+\item{ess}{\code{boolean}. If `TRUE`, compute an effective sample size.}
 
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.}
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used. TODO: PREGUNTAR SOBRE ESTO}
 
-\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.}
+\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors. TODO: PREGUNTAR SOBRE ESTO}
 
-\item{rm.na}{\code{boolean} remove NA values if required.}
+\item{rm.na}{\code{boolean}. If `TRUE`, remove observations with missing values in `var` before estimation.}
 
-\item{deff}{\code{boolean} design effect.}
+\item{deff}{\code{boolean}. If `TRUE`, compute a design effect}
 
-\item{rel_error}{\code{boolean} relative error.}
+\item{rel_error}{\code{boolean}. If `TRUE`, compute relative error measures.}
 
-\item{unweighted}{\code{boolean} add non-weighted count if required.}
+\item{unweighted}{\code{boolean}. If `TRUE`, add unweighted counts.}
 
-\item{eclac_input}{\code{boolean} return eclac inputs.}
+\item{eclac_input}{\code{boolean}. If `TRUE`, return inputs formatted for ECLAC workflows.}
 }
 \value{
-\code{dataframe} that contains the inputs and all domains to be evaluated.
+A \code{data.frame} containing the estimated mean and quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
 }
 \description{
-\code{create_mean} generates a \code{dataframe} with the following elements: mean,
-degrees of freedom, sample size, and coefficient of variation. The function allows
-grouping in several domains.
+\code{create_mean()} generates a \code{data.frame} containing the estimated mean,
+degrees of freedom, sample size, and quality measures such as the standard
+error and coefficient of variation. Estimates can be produced for multiple
+domains defined by one or more grouping variables.
+}
+\details{
+For each domain, the mean is estimated using the Horvitz-Thompson estimator:
+\deqn{\hat{\mu} = \frac{\sum_{i \in s} w_i y_i}{\sum_{i \in s} w_i},}
+where \eqn{y_i} is the study variable, \eqn{w_i = 1/\pi_i} is the survey weight and \eqn{\pi_i} is the first-order inclusion probability.
+
+The standard error is computed using a Taylor-linearized variance estimator.
+For means, the linearized variable is \eqn{u_i = \frac{w_i(y_i - \hat{\mu})}{\sum_{i \in s} w_i}}. The variance is then calculated from the sampling units defined in the survey design object.
+When explicit clustering is present, the linearized values are first aggregated within PSU and stratum as
+\deqn{E_{hi} = \sum_{k \in PSU_{hi}} u_{hk},}
+and stratum-specific contributions are combined to obtain the total variance.
+If no clustering variable is defined, the observational units are treated as sampling units for variance estimation. When finite population sizes are available, a finite population correction is applied.
+
+Strata with a single sampled unit are handled according to
+`getOption("survey.lonely.psu")` (e.g., `"adjust"`,`"remove"`, `"certainty"` or `"average"`).
+
+Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain.
+When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If `ajuste_ene = TRUE`, a
+fixed critical value equal to 2 is used instead.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)

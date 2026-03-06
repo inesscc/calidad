@@ -26,39 +26,58 @@ create_size(
 it is possible to include more than one variable using the + separator. When a value is introduced
 in the domain parameter, the estimation variable must be a dummy variable.}
 
-\item{domains}{domains to be estimated separated by the + character.}
+\item{domains}{Domains variables to be estimated separated by the `+` character.}
 
-\item{subpop}{integer dummy variable to filter the dataframe.}
+\item{subpop}{Integer dummy variable used to filter a subpopulation before estimation. If `NULL`, no filtering is applied.}
 
-\item{design}{complex design created by \code{survey} package.}
+\item{design}{A complex survey design object created with \code{survey::svydesign()}.}
 
-\item{ci}{\code{boolean} indicating if the confidence intervals must be calculated.}
+\item{ci}{\code{boolean}. If `TRUE`, compute confidence intervals (see Details).}
 
-\item{ess}{\code{boolean} effective sample size.}
+\item{ess}{\code{boolean}. If `TRUE`, compute an effective sample size.}
 
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.}
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used. TODO: PREGUNTAR SOBRE ESTO}
 
-\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.}
+\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors. TODO: PREGUNTAR SOBRE ESTO}
 
-\item{rm.na}{\code{boolean} remove NA values if required.}
+\item{rm.na}{\code{boolean}. If `TRUE`, remove observations with missing values in `var` before estimation.}
 
-\item{deff}{\code{boolean} design effect.}
+\item{deff}{\code{boolean}. If `TRUE`, compute a design effect}
 
-\item{rel_error}{\code{boolean} relative error.}
+\item{rel_error}{\code{boolean}. If `TRUE`, compute relative error measures.}
 
-\item{unweighted}{\code{boolean} add non-weighted count if required.}
+\item{unweighted}{\code{boolean}. If `TRUE`, add unweighted counts.}
 
 \item{df_type}{\code{character} use degrees of freedom calculation approach from INE Chile or CEPAL. Options are "chile" or "eclac".}
 
-\item{eclac_input}{\code{boolean} return eclac inputs}
+\item{eclac_input}{\code{boolean}. If `TRUE`, return inputs formatted for ECLAC workflows.}
 }
 \value{
-\code{dataframe} that contains the inputs and all domains to be evaluated.
+A \code{data.frame} containing the estimated total and quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
 }
 \description{
 \code{create_size} generates a \code{dataframe} with the following elements: sum,
 degrees of freedom, sample size, and coefficient of variation. The function allows
 grouping in several domains.
+}
+\details{
+#' For each domain, the population total is estimated using the Horvitz-Thompson estimator TODO: ARREGLAR ESTO
+\deqn{\hat{T} = \sum_{i \in s} \frac{y_i}{\pi_i} = \sum_{i \in s} w_i y_i,}
+where \eqn{y_i} is the study variable, \eqn{\pi_i} is the first-order inclusion probability, and \eqn{w_i = 1/\pi_i} is the survey weight.
+
+The standard error is computed using a Taylor-linearized variance estimator.
+For totals, the linearized variable is \eqn{u_i = y_i wi_i}. The variance is then calculated from the sampling units defined in the survey design object.
+When explicit clustering is present, the linearized values are first aggregated within PSU and stratum as
+\deqn{E_{hi} = \sum_{k \in PSU_{hi}} u_{hk},}
+and stratum-specific contributions are combined to obtain the total variance.
+If no clustering variable is defined, the observational units are treated as sampling units for variance estimation. When finite population sizes are available, a finite population correction is applied.
+
+Strata with a single sampled unit are handled according to
+`getOption("survey.lonely.psu")` (e.g., `"adjust"`,`"remove"`, `"certainty"` or `"average"`).
+
+Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain.
+When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If `ajuste_ene = TRUE`, a
+fixed critical value equal to 2 is used instead.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)

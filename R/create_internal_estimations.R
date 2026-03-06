@@ -27,9 +27,9 @@ get_mean <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
   ## Estimacion media ------------------------
   ### \hat{\mu} = sum(wi xi)/ sum(wi)
 
-  wi <- 1/design$prob   # pesos
+  wi <- stats::weights(design) #1/design$prob   # pesos
   sum_wi <- sum(wi)     # sumatoria wi
-  mu_hat <- sum(x*wi)/sum_wi   # \hat{\mu}
+  mu_hat <- sum(x*wi/sum_wi)   # \hat{\mu}
 
   ## Linealizacion ------------------------
   ### ui = (wi * (xi-\hat{\mu}))/sum(wi)
@@ -41,6 +41,7 @@ get_mean <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
   fpc <- design$fpc$popsize
   if(!is.null(fpc)){
     fpc <- data.frame(strata = design$strata[[1]],
+                      psu = design$cluster[[1]],
                       Nh = unname(fpc)) %>%
       dplyr::distinct()
   }
@@ -61,9 +62,7 @@ get_mean <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
     vsrs <- vsrs * (sum_wi - nobs) / sum_wi
 
     estimation$deff <- v / vsrs
-
   }
-
 
   return(estimation)
 }
@@ -95,22 +94,22 @@ get_total <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
   ## Estimacion total ------------------------
   ### \hat{\T} = sum(wi xi)
 
-  wi <- 1/design$prob   # pesos
-  T_hat <- sum(x*wi)   # \hat{\mu}
+  #wi <- 1/design$prob   # pesos
+  T_hat <- sum(x/design$prob)   # \hat{\mu}
 
   ## Linealizacion ------------------------
   ### ui = x*wi  se queda igual
 
-  ui <- unname(x*wi)
+  ui <- unname(x/design$prob)
 
   ## revisar fpc -----------------------
   fpc <- design$fpc$popsize
   if(!is.null(fpc)){
     fpc <- data.frame(strata = design$strata[[1]],
+                      psu = design$cluster[[1]],
                       Nh = unname(fpc)) %>%
       dplyr::distinct()
   }
-
 
   ## Varianza ------------------------
   v <- linearization_variance(ui = ui, strata = design$strata[[1]], psu = design$cluster[[1]], fpc = fpc, nPSU = design$nPSU)
@@ -118,18 +117,8 @@ get_total <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
   estimation <- data.frame(est = T_hat, se = sqrt(v)) %>%
     dplyr::mutate(cv = .data$se/.data$est)  ## add cv
 
-  ## get deff
+  ## get deff ------------------------
   if(deff){
-
-    #nobs<-NROW(design$cluster[[1]])
-    # nobs <- length(weights(design))
-    # N <- sum(wi)
-    # Vx_hat <- var_point(x, design, na.rm=na.rm)  # estimador de Var(x)
-    # vsrs <- Vx_hat * sum(weights(design)^2)
-    # vsrs <- vsrs * (N - nobs) / N
-    #
-    # estimation$deff <- v / vsrs
-
 
     w <- weights(design)
     nobs <- nrow(design$variables)
@@ -142,7 +131,6 @@ get_total <- function(vars, design, na.rm=FALSE, deff=FALSE,...){
     vsrs <- vsrs * (N - nobs) / N
 
     estimation$deff <- v / vsrs
-
 
   }
 
@@ -182,25 +170,27 @@ get_ratio <- function(numerator, denominator, design, na.rm=FALSE, deff=FALSE,..
   ## Estimacion ratio ------------------------
   ### \hat{\R} = sum(wi num_i) /sum(wi den_i)
 
-  wi <- 1/design$prob   # pesos
-  T_hat_num <- sum(x_num*wi)
-  T_hat_den <- sum(x_den*wi)
+  #wi <- 1/design$prob   # pesos
+  T_hat_num <- sum(x_num/design$prob )
+  T_hat_den <- sum(x_den/design$prob )
 
   R_hat <- T_hat_num/ T_hat_den
 
   ## Linealizacion ------------------------
 
   # r <- (numerator[,i]-rval$ratio[i,j]*denominator[,j])/sum(denominator[,j]/design$prob)
-  ui <- unname((wi * (x_num-R_hat*x_den))/T_hat_den)
+  ui <- unname(( (x_num-R_hat*x_den)/design$prob )/T_hat_den)
 
 
   ## revisar fpc -----------------------
   fpc <- design$fpc$popsize
   if(!is.null(fpc)){
     fpc <- data.frame(strata = design$strata[[1]],
+                      psu = design$cluster[[1]],
                       Nh = unname(fpc)) %>%
       dplyr::distinct()
   }
+
 
 
   ## Varianza ------------------------
@@ -212,9 +202,9 @@ get_ratio <- function(numerator, denominator, design, na.rm=FALSE, deff=FALSE,..
   ## get deff
   if (deff) {
 
-    g <- ui / wi
+    g <- ui * design$prob # /wi
     nobs <- nrow(design$variables)
-    N <- sum(wi)
+    N <- sum(1/design$prob)
 
     Vg_hat <- var_point(g, design, na.rm=FALSE)
 
@@ -233,14 +223,21 @@ get_ratio <- function(numerator, denominator, design, na.rm=FALSE, deff=FALSE,..
 #-----------------------------------------------------------------------
 ## varianza mediante linealizacion de taylor 1er orden (score)
 
+#'@keywords internal
 linearization_variance <- function(ui, strata, psu, fpc=NULL, lonely.psu = getOption("survey.lonely.psu"), nPSU = NULL){
+
+  if(length(ui)==1){
+    if(is.na(ui)){
+      return(NA_real_)
+    }
+  }
 
   df <- data.frame(strata = strata,
                    psu = psu,
                    ei = ui)
-  # agrupar a nivel PSU dentro de cada estrato
+
   df_psu <- df %>%
-    dplyr::group_by(.data$strata, .data$psu) %>%
+    dplyr::group_by(.data$strata, .data$psu) %>% # agrupar a nivel PSU dentro de cada estrato
     dplyr::summarise(E_hi = sum(.data$ei), .groups = "drop")
 
 
@@ -249,21 +246,11 @@ linearization_variance <- function(ui, strata, psu, fpc=NULL, lonely.psu = getOp
     dplyr::count(.data$strata, name = "nh_obs")
 
 
-  if (is.null(nPSU)) {
-    # caso simple sin dominios
-    df_npsu <- nh_obs %>%
-      dplyr::mutate(nPSU = nh_obs)
-
-  }else{
-    ## se espera que sea un df
-    df_npsu <- nh_obs %>%
-      dplyr::left_join(nPSU, by = "strata")
-  }
-
-
   ## revisamos casos que no son partes del subset pero si de la muestra
-  df_npsu <- df_npsu %>%
+  df_npsu <- nh_obs %>%
+    dplyr::left_join(nPSU, by = "strata") %>%  # unimos size de strata
     dplyr::mutate(dropped = pmax(.data$nPSU - .data$nh_obs, 0L))
+
 
   if(sum(df_npsu$dropped)>0){
 
@@ -278,134 +265,132 @@ linearization_variance <- function(ui, strata, psu, fpc=NULL, lonely.psu = getOp
     df_psu <- dplyr::bind_rows(df_psu, zeros)
   }
 
-  # Calculo de sumatoria de para la varianza
-  var_by_stratum <- df_psu %>%
+
+
+  df_psu <- df_psu %>%
     dplyr::left_join(df_npsu, by = "strata") %>%
+    dplyr::mutate(lonely_nPSU = (nPSU == 1))
+
+  ## Revision fpc
+  if(!is.null(fpc)){
+    df_psu <- df_psu %>%
+      dplyr::left_join(fpc, by = c('strata', 'psu')) %>%
+      dplyr::mutate(fpc = ifelse(.data$nPSU/.data$Nh == 1, 0, (.data$Nh-.data$nPSU)/.data$Nh)
+                    ,lonely_nPSU = ifelse(.data$Nh==1, FALSE, .data$lonely_nPSU)
+      )
+  }else{
+    df_psu['fpc'] <- 1
+  }
+
+
+  df_psu2 <- df_psu %>%
     dplyr::group_by(strata) %>%
-    dplyr::summarise(
-      nPSU = unique(.data$nPSU),
-      nh_obs = unique(.data$nh_obs),
-      mean_E = sum(.data$E_hi)/ .data$nPSU,      # mean(E_hi),
-      ss = sum((.data$E_hi - .data$mean_E)^2),   # centramos
-      .groups = "drop"
-    ) %>%
     dplyr::mutate(
-      nh_obs = nh_obs,
-      lonely_nPSU = (nPSU == 1),
-      lonely_nobs = (nh_obs == 1),
-      df = dplyr::if_else(nPSU > 1, nPSU / (nPSU - 1), 1)
-    )
+      mean_E = sum(.data$E_hi)/ .data$nPSU,      # mean(E_hi),
+      #df = dplyr::if_else(nPSU > 1, nPSU / (nPSU - 1), 1),
+      scale =  dplyr::if_else(nPSU > 1, fpc* nPSU / (nPSU - 1), fpc*1)
+    ) %>%
+    dplyr::ungroup()
 
 
   ## procesamiento para estratos con una sola upm
   lonely.psu <- match.arg(lonely.psu, c("adjust", "average", "remove", "certainty", "fail"))
-  lonely_idx    <- which(var_by_stratum$lonely_nPSU)
+  lonely_idx <- sum(df_psu2$lonely_nPSU)
 
-  if(length(ui)==1){
-    if(is.na(ui)){
-      return(NA_real_)
-    }
+  if (lonely_idx > 0 & lonely.psu == "fail") {
+    stop("Stratum has only one sampling unit (lonely PSU).")
   }
 
-  if (length(lonely_idx) > 0) {
+  if (lonely.psu == "adjust") {
+    ## promedio de todo
+    center_stratum <- sum(df_psu2$E_hi)/sum(nPSU$nPSU) # sum(df_psu2$nPSU)
 
-    if (lonely.psu == "fail") {
-      stop("Stratum has only one sampling unit (lonely PSU).")
-    }
-
-    if (lonely.psu == "adjust") {
-
-      var_by_stratum$ss[lonely_idx] <- var_by_stratum$mean_E[lonely_idx]^2
-
-    } else if (lonely.psu == "remove") {
-      # sacamos los estratos lonely de la contribución de varianza
-      var_by_stratum$ss[lonely_idx] <- 0
-
-    } else if (lonely.psu == "certainty") {
-      # lonely certainty: var = 0
-      var_by_stratum$ss[lonely_idx] <- 0
-
-    }
+    df_psu2 <- df_psu2 %>%
+      dplyr::mutate(mean_E = ifelse(.data$lonely_nPSU, center_stratum, .data$mean_E)
+                    )
   }
 
+  df_psu2 <- df_psu2 %>%
+    dplyr::mutate(E_hi_center =.data$E_hi - .data$mean_E)
 
-  var_by_stratum <- var_by_stratum %>%
-    dplyr::mutate(s2 = .data$ss* .data$df)
+  var_by_stratum <- df_psu2 %>%
+    dplyr::group_by(strata) %>%
+    dplyr::summarise(s2 = sum((sqrt(.data$scale)*.data$E_hi_center)^2),
+                     lonely_nPSU = unique(.data$lonely_nPSU))
 
-  ## verificamos correccion por poblacion finita
-  if(!is.null(fpc)){
-    var_by_stratum <- var_by_stratum %>%
-      dplyr::left_join(fpc, by = 'strata') %>%
-      dplyr::mutate(fpc = ifelse(.data$nPSU/.data$Nh == 1, 0, (1-(.data$nPSU/.data$Nh))),
-                    s2 = .data$s2 * .data$fpc)
-  }
 
   if (nrow(var_by_stratum) == 0) return(NA_real_)
 
   V_total <- sum(var_by_stratum$s2) ## revisar bien los NAs
+  # print('.-------------------------')
+  #print(V_total)
+
+  # stratvars<- tapply(1:NROW(df_psu2),
+  #                    list(factor(df_psu2$strata)),
+  #                    function(index){
+  #                      crossprod(df_psu2$E_hi_center[index] * sqrt(df_psu2$scale[index]))
+  #                    }
+  #                    )
+  #
+  # aux <- sum(stratvars)
+  # #print(aux)
+  # print('diferencia:')
+  # print(V_total - aux)
+  #
+  # V_total <- aux
 
   if (lonely.psu == "average") {
 
     # v_total ya calculado sumando aportes por estrato (lonely aportan 0)
-    p <- mean(var_by_stratum$lonely_nobs & !var_by_stratum$lonely_nobs)
+    p <- length(var_by_stratum$lonely_nPSU)/sum(!var_by_stratum$lonely_nPSU)
 
-    V_total <- V_total / (1 - p)
+    V_total <- V_total* p
   }
-
 
   return(V_total)
 
 }
 
-
 #-----------------------------------------------------------------------
+
 ## funcion general
 get_FUN_domain <- function(vars, denominator= NULL, design, fun_est, domains=NULL, na.rm=FALSE, deff=FALSE){
+
+  # design$nPSU <- data.frame(nPSU= design$fpc$sampsize, strata = design$strata[[1]]) %>% dplyr::distinct()
 
 
   if(!is.null(domains)){
 
-    #domains <- convert_to_formula(domains)
     byfactors <- model.frame(domains, model.frame(design), na.action=na.pass)
-    byfactor <- interaction(byfactors)
-    uniquelevels <- sort(unique(byfactor))
+    byfactor  <- interaction(byfactors)
 
-    dom_vals <- sort(uniquelevels)
-    # design$nPSU <- dplyr::tibble(strata = design$strata[[1]],
-    #                              cluster = design$cluster[[1]]) %>%
-    #   dplyr::group_by(.data$strata) %>%
-    #   dplyr::reframe(nPSU = dplyr::n_distinct(.data$cluster))
+    dropped <- weights(design, "sampling") == 0
+    # si quieres imitar na.rm.by o na.rm.all, hay que sumarlo aquí también
 
-    design$nPSU <- data.frame(nPSU= design$fpc$sampsize, strata = design$strata[[1]]) %>% dplyr::distinct()
+    uniquelevels <- sort(unique(byfactor[!dropped]))
 
-    res <- lapply(dom_vals, function(d) {
-      subd <- subset(design, byfactor %in% d)
-      fun_est(vars, design = subd, na.rm = na.rm, deff = deff, denominator = denominator)
+    res <- lapply(uniquelevels, function(d) {
+      idx  <- (byfactor %in% d) & (!dropped)
+      subd <- design[idx, ]
+      subd$nPSU <- data.frame(nPSU= subd$fpc$sampsize, strata = subd$strata[[1]]) %>% dplyr::distinct()
+      fun_est(vars, design=subd, na.rm=na.rm, deff=deff, denominator=denominator)
     })
 
-    byfactors$byfactor <- byfactor
-    byfactors <- byfactors %>%
-      dplyr::distinct() %>%
-      dplyr::arrange(byfactor) %>%
-      dplyr::select(-byfactor)
-
+    by_out <- byfactors[match(uniquelevels, byfactor), , drop=FALSE]
     res <- dplyr::bind_rows(res)
-    # rownames(res) <- dom_vals
+    res <- dplyr::bind_cols(by_out, res)
 
-    if(deff){
-      byfactors[c('est', 'se', 'cv', 'deff')] <- res
-    }else{
-      byfactors[c('est', 'se', 'cv')] <- res
-    }
-    res <- byfactors
-
-
-  }else{
+  } else{
+    design$nPSU <- data.frame(nPSU= design$fpc$sampsize, strata = design$strata[[1]]) %>% dplyr::distinct()
     res <- fun_est(vars, design= design, na.rm = na.rm, deff = deff, denominator= denominator)
   }
 
   return(res)
 }
+
+## TODO: REVISAR QUE EL REORDENAMIENTO POR VARIABLES TIPO FACTOR NO SEA SOLO PARA UNA VARIABLE SINO QUE TODAS SE VEAN AFECTADAS POR ESO... PUEDE QUE AL AGREGAR VARIABLES AL DF SE GENEREN COSAS QUE NO DEBRIAN
+
+
 
 
 # var MAS -----------------------------------------------------------------
@@ -414,11 +399,14 @@ var_point <- function(x, design, na.rm=FALSE){
 
   w <- stats::weights(design)
 
-  ok <- (w != 0) & !is.na(x)
-  if (na.rm) { x <- x[ok]; w <- w[ok] } else if (any(!ok)) return(NA_real_)
+  ok <- (w != 0) & !is.na(x)  # n
 
-  n <- length(x)
+  n <- sum(ok) #length(x)
   if (n <= 1) return(NA_real_)
+
+  #if (na.rm) { x <- x[ok]; w <- w[ok] } # else if (any(!ok)) return(NA_real_)
+  x <- x[ok]
+  w <- w[ok]
 
   psum <- sum(w)
   xbar <- sum(w*x)/psum

@@ -16,7 +16,7 @@ dc_ene <- survey::svydesign(ids = ~conglomerado, strata = ~estrato_unico, data =
                             weights = ~fact_cal)
 
 ############
-# assess #
+#  assess  #
 ############
 
 # National level with denominator
@@ -46,6 +46,7 @@ test2 <- create_prop("desocupado", domains = "region+sexo", design = dc_ene, ecl
 
 x <- survey::svyby(~desocupado, by = ~region+sexo, design = dc_ene, FUN = survey::svymean)
 test_cv <- survey::cv(x)
+
 
 test_that("cv calculado correctamente", {
   expect_equal(test2$cv, unname(test_cv))

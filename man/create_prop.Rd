@@ -20,6 +20,7 @@ create_prop(
   standard_eval = FALSE,
   eclac_input = FALSE,
   ci_logit = FALSE,
+  rm.na = FALSE,
   scheme = c("eclac_2020", "eclac_2023")
 )
 }
@@ -28,41 +29,51 @@ create_prop(
 
 \item{denominator}{numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL.}
 
-\item{domains}{domains to be estimated separated by the + character.}
+\item{domains}{Domains variables to be estimated separated by the `+` character.}
 
-\item{subpop}{integer dummy variable to filter the dataframe.}
+\item{subpop}{Integer dummy variable used to filter a subpopulation before estimation. If `NULL`, no filtering is applied.}
 
-\item{design}{complex design created by \code{survey} package.}
+\item{design}{A complex survey design object created with \code{survey::svydesign()}.}
 
-\item{ci}{\code{boolean} indicating if the confidence intervals must be calculated.}
+\item{ci}{\code{boolean}. If `TRUE`, compute confidence intervals (see Details).}
 
-\item{deff}{\code{boolean} design effect.}
+\item{deff}{\code{boolean}. If `TRUE`, compute a design effect}
 
-\item{ess}{\code{boolean} effective sample size.}
+\item{ess}{\code{boolean}. If `TRUE`, compute an effective sample size.}
 
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.}
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used. TODO: PREGUNTAR SOBRE ESTO}
 
-\item{rel_error}{\code{boolean} relative error.}
+\item{rel_error}{\code{boolean}. If `TRUE`, compute relative error measures.}
 
 \item{log_cv}{\code{boolean} logarithmic coefficient of variation.}
 
-\item{unweighted}{\code{boolean} add non-weighted count if required.}
+\item{unweighted}{\code{boolean}. If `TRUE`, add unweighted counts.}
 
-\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.}
+\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors. TODO: PREGUNTAR SOBRE ESTO}
 
-\item{eclac_input}{\code{boolean} return eclac inputs}
+\item{eclac_input}{\code{boolean}. If `TRUE`, return inputs formatted for ECLAC workflows.}
 
 \item{ci_logit}{\code{boolean} indicating if interval confidence is logit, only available for proportions.}
+
+\item{rm.na}{\code{boolean}. If `TRUE`, remove observations with missing values in `var` before estimation.}
 
 \item{scheme}{\code{character} variable indicating the evaluation protocol to use for CEPAL standard. Options are "eclac_2020" and "eclac_2023". The "eclac_2020" option does not support ratio estimation.}
 }
 \value{
-\code{dataframe} that contains the inputs and all domains to be evaluated.
+A \code{data.frame} containing the estimated total and quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
 }
 \description{
 \code{create_prop} generates a \code{dataframe} with the following elements: sum,
 degrees of freedom, sample size, standard error, and coefficient of variation. The function allows
 grouping in several domains.
+}
+\details{
+Strata with a single sampled unit are handled according to
+`getOption("survey.lonely.psu")` (e.g., `"adjust"`,`"remove"`, `"certainty"` or `"average"`).
+
+Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain.
+When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If `ajuste_ene = TRUE`, a
+fixed critical value equal to 2 is used instead.
 }
 \examples{
 library(survey)

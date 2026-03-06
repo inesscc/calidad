@@ -3,27 +3,48 @@
 if(getRversion() >= "2.15.1")  utils::globalVariables(c("."))
 
 
-#' Create the inputs to evaluate the quality of mean estimations
+#' Create the inputs to evaluate the quality of mean estimates
 #'
-#' \code{create_mean} generates a \code{dataframe} with the following elements: mean,
-#' degrees of freedom, sample size, and coefficient of variation. The function allows
-#' grouping in several domains.
+#' \code{create_mean()} generates a \code{data.frame} containing the estimated mean,
+#' degrees of freedom, sample size, and quality measures such as the standard
+#' error and coefficient of variation. Estimates can be produced for multiple
+#' domains defined by one or more grouping variables.
 #'
-#' @param var numeric variable within the \code{dataframe}.
-#' @param domains domains to be estimated separated by the + character.
-#' @param subpop integer dummy variable to filter the dataframe.
-#' @param design complex design created by \code{survey} package.
-#' @param ci \code{boolean} indicating if the confidence intervals must be calculated.
-#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.
-#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.
-#' @param ess \code{boolean} effective sample size.
-#' @param rm.na \code{boolean} remove NA values if required.
-#' @param deff \code{boolean} design effect.
-#' @param rel_error \code{boolean} relative error.
-#' @param unweighted \code{boolean} add non-weighted count if required.
-#' @param eclac_input \code{boolean} return eclac inputs.
+#' @param var Name of numeric variable to estimate within the \code{data.frame}.
+#' @param domains Domains variables to be estimated separated by the `+` character.
+#' @param subpop Integer dummy variable used to filter a subpopulation before estimation. If `NULL`, no filtering is applied.
+#' @param design A complex survey design object created with \code{survey::svydesign()}.
+#' @param ci \code{boolean}. If `TRUE`, compute confidence intervals (see Details).
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used. TODO: PREGUNTAR SOBRE ESTO
+#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors. TODO: PREGUNTAR SOBRE ESTO
+#' @param ess \code{boolean}. If `TRUE`, compute an effective sample size.
+#' @param rm.na \code{boolean}. If `TRUE`, remove observations with missing values in `var` before estimation.
+#' @param deff \code{boolean}. If `TRUE`, compute a design effect
+#' @param rel_error \code{boolean}. If `TRUE`, compute relative error measures.
+#' @param unweighted \code{boolean}. If `TRUE`, add unweighted counts.
+#' @param eclac_input \code{boolean}. If `TRUE`, return inputs formatted for ECLAC workflows.
 #' @import survey
-#' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
+#'
+#' @details
+#' For each domain, the mean is estimated using the Horvitz-Thompson estimator:
+#' \deqn{\hat{\mu} = \frac{\sum_{i \in s} w_i y_i}{\sum_{i \in s} w_i},}
+#' where \eqn{y_i} is the study variable, \eqn{w_i = 1/\pi_i} is the survey weight and \eqn{\pi_i} is the first-order inclusion probability.
+#'
+#' The standard error is computed using a Taylor-linearized variance estimator.
+#' For means, the linearized variable is \eqn{u_i = \frac{w_i(y_i - \hat{\mu})}{\sum_{i \in s} w_i}}. The variance is then calculated from the sampling units defined in the survey design object.
+#' When explicit clustering is present, the linearized values are first aggregated within PSU and stratum as
+#' \deqn{E_{hi} = \sum_{k \in PSU_{hi}} u_{hk},}
+#' and stratum-specific contributions are combined to obtain the total variance.
+#' If no clustering variable is defined, the observational units are treated as sampling units for variance estimation. When finite population sizes are available, a finite population correction is applied.
+#'
+#' Strata with a single sampled unit are handled according to
+#' `getOption("survey.lonely.psu")` (e.g., `"adjust"`,`"remove"`, `"certainty"` or `"average"`).
+#'
+#' Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain.
+#' When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If `ajuste_ene = TRUE`, a
+#' fixed critical value equal to 2 is used instead.
+
+#' @return A \code{data.frame} containing the estimated mean and quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
 #'
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
@@ -131,25 +152,46 @@ create_mean = function(var, domains = NULL, subpop = NULL, design, ci = FALSE, e
 
 #' Create the inputs to evaluate the quality of the sum of continuous variables
 #'
-#' \code{create_total} generates a \code{dataframe} with the following elements: sum,
-#' degrees of freedom, sample size, and coefficient of variation. The function allows
-#' grouping in several domains.
+#' \code{create_total} generates a \code{data.frame} containing the estimated total, degrees of freedom, sample size, and quality measures such as the
+#' standard error and coefficient of variation. Estimates can be produced for multiple domains defined by one or more grouping variables.
 #'
-#' @param var numeric variable within the \code{dataframe}.
-#' @param domains domains to be estimated separated by the + character.
-#' @param subpop integer dummy variable to filter the dataframe.
-#' @param design complex design created by \code{survey} package.
-#' @param ci \code{boolean} indicating if the confidence intervals must be calculated.
-#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.
-#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.
-#' @param ess \code{boolean} effective sample size.
-#' @param rm.na \code{boolean} remove NA values if required.
-#' @param deff \code{boolean} design effect.
-#' @param rel_error \code{boolean} relative error.
-#' @param unweighted \code{boolean} add non-weighted count if required.
-#' @param eclac_input \code{boolean} return eclac inputs
+#' @param var Name of numeric variable to estimate within the \code{data.frame}.
+#' @param domains Domains variables to be estimated separated by the `+` character.
+#' @param subpop Integer dummy variable used to filter a subpopulation before estimation. If `NULL`, no filtering is applied.
+#' @param design A complex survey design object created with \code{survey::svydesign()}.
+#' @param ci \code{boolean}. If `TRUE`, compute confidence intervals (see Details).
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used. TODO: PREGUNTAR SOBRE ESTO
+#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors. TODO: PREGUNTAR SOBRE ESTO
+#' @param ess \code{boolean}. If `TRUE`, compute an effective sample size.
+#' @param rm.na \code{boolean}. If `TRUE`, remove observations with missing values in `var` before estimation.
+#' @param deff \code{boolean}. If `TRUE`, compute a design effect
+#' @param rel_error \code{boolean}. If `TRUE`, compute relative error measures.
+#' @param unweighted \code{boolean}. If `TRUE`, add unweighted counts.
+#' @param eclac_input \code{boolean}. If `TRUE`, return inputs formatted for ECLAC workflows.
 #' @import survey
-#' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
+#'
+#' @details
+#' For each domain, the population total is estimated using the Horvitz-Thompson estimator
+#' \deqn{\hat{T} = \sum_{i \in s} \frac{y_i}{\pi_i} = \sum_{i \in s} w_i y_i,}
+#' where \eqn{y_i} is the study variable, \eqn{\pi_i} is the first-order inclusion probability, and \eqn{w_i = 1/\pi_i} is the survey weight.
+#'
+#' The standard error is computed using a Taylor-linearized variance estimator.
+#' For totals, the linearized variable is \eqn{u_i = y_i wi_i}. The variance is then calculated from the sampling units defined in the survey design object.
+#' When explicit clustering is present, the linearized values are first aggregated within PSU and stratum as
+#' \deqn{E_{hi} = \sum_{k \in PSU_{hi}} u_{hk},}
+#' and stratum-specific contributions are combined to obtain the total variance.
+#' If no clustering variable is defined, the observational units are treated as sampling units for variance estimation. When finite population sizes are available, a finite population correction is applied.
+#'
+#' Strata with a single sampled unit are handled according to
+#' `getOption("survey.lonely.psu")` (e.g., `"adjust"`,`"remove"`, `"certainty"` or `"average"`).
+#'
+#' Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain.
+#' When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If `ajuste_ene = TRUE`, a
+#' fixed critical value equal to 2 is used instead.
+#'
+#'
+#' @return A \code{data.frame} containing the estimated total and quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
+#'
 #'
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
@@ -262,21 +304,41 @@ create_total <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE,
 #' @param var numeric variable within the \code{dataframe}. When the domain parameter is not used,
 #' it is possible to include more than one variable using the + separator. When a value is introduced
 #' in the domain parameter, the estimation variable must be a dummy variable.
-#' @param domains domains to be estimated separated by the + character.
-#' @param subpop integer dummy variable to filter the dataframe.
-#' @param design complex design created by \code{survey} package.
-#' @param ci \code{boolean} indicating if the confidence intervals must be calculated.
-#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.
-#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.
-#' @param ess \code{boolean} effective sample size.
-#' @param rm.na \code{boolean} remove NA values if required.
-#' @param deff \code{boolean} design effect.
-#' @param rel_error \code{boolean} relative error.
-#' @param unweighted \code{boolean} add non-weighted count if required.
+#' @param domains Domains variables to be estimated separated by the `+` character.
+#' @param subpop Integer dummy variable used to filter a subpopulation before estimation. If `NULL`, no filtering is applied.
+#' @param design A complex survey design object created with \code{survey::svydesign()}.
+#' @param ci \code{boolean}. If `TRUE`, compute confidence intervals (see Details).
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used. TODO: PREGUNTAR SOBRE ESTO
+#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors. TODO: PREGUNTAR SOBRE ESTO
+#' @param ess \code{boolean}. If `TRUE`, compute an effective sample size.
+#' @param rm.na \code{boolean}. If `TRUE`, remove observations with missing values in `var` before estimation.
+#' @param deff \code{boolean}. If `TRUE`, compute a design effect
+#' @param rel_error \code{boolean}. If `TRUE`, compute relative error measures.
+#' @param unweighted \code{boolean}. If `TRUE`, add unweighted counts.
 #' @param df_type \code{character} use degrees of freedom calculation approach from INE Chile or CEPAL. Options are "chile" or "eclac".
-#' @param eclac_input \code{boolean} return eclac inputs
+#' @param eclac_input \code{boolean}. If `TRUE`, return inputs formatted for ECLAC workflows.
 #' @import survey
-#' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
+#'
+#' @details
+#'#' For each domain, the population total is estimated using the Horvitz-Thompson estimator TODO: ARREGLAR ESTO
+#' \deqn{\hat{T} = \sum_{i \in s} \frac{y_i}{\pi_i} = \sum_{i \in s} w_i y_i,}
+#' where \eqn{y_i} is the study variable, \eqn{\pi_i} is the first-order inclusion probability, and \eqn{w_i = 1/\pi_i} is the survey weight.
+#'
+#' The standard error is computed using a Taylor-linearized variance estimator.
+#' For totals, the linearized variable is \eqn{u_i = y_i wi_i}. The variance is then calculated from the sampling units defined in the survey design object.
+#' When explicit clustering is present, the linearized values are first aggregated within PSU and stratum as
+#' \deqn{E_{hi} = \sum_{k \in PSU_{hi}} u_{hk},}
+#' and stratum-specific contributions are combined to obtain the total variance.
+#' If no clustering variable is defined, the observational units are treated as sampling units for variance estimation. When finite population sizes are available, a finite population correction is applied.
+#'
+#' Strata with a single sampled unit are handled according to
+#' `getOption("survey.lonely.psu")` (e.g., `"adjust"`,`"remove"`, `"certainty"` or `"average"`).
+#'
+#' Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain.
+#' When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If `ajuste_ene = TRUE`, a
+#' fixed critical value equal to 2 is used instead.
+#'
+#' @return A \code{data.frame} containing the estimated total and quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
 #'
 #' @examples
 #' dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)
@@ -392,22 +454,33 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #'
 #' @param var numeric variable within the \code{dataframe}, is the numerator of the ratio to be calculated.
 #' @param denominator numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL.
-#' @param domains domains to be estimated separated by the + character.
-#' @param design complex design created by \code{survey} package.
-#' @param subpop integer dummy variable to filter the dataframe.
-#' @param ci \code{boolean} indicating if the confidence intervals must be calculated.
-#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.
-#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors.
-#' @param deff \code{boolean} design effect.
-#' @param ess \code{boolean} effective sample size.
-#' @param rel_error \code{boolean} relative error.
-#' @param eclac_input \code{boolean} return eclac inputs
-#' @param log_cv \code{boolean} logarithmic coefficient of variation.
-#' @param unweighted \code{boolean} add non-weighted count if required.
+#' @param domains Domains variables to be estimated separated by the `+` character.
+#' @param subpop Integer dummy variable used to filter a subpopulation before estimation. If `NULL`, no filtering is applied.
+#' @param design A complex survey design object created with \code{survey::svydesign()}.
+#' @param ci \code{boolean}. If `TRUE`, compute confidence intervals (see Details).
+#' @param ajuste_ene \code{boolean} indicating if an adjustment for the sampling-frame transition period must be used. TODO: PREGUNTAR SOBRE ESTO
+#' @param standard_eval \code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors. TODO: PREGUNTAR SOBRE ESTO
+#' @param ess \code{boolean}. If `TRUE`, compute an effective sample size.
+#' @param rm.na \code{boolean}. If `TRUE`, remove observations with missing values in `var` before estimation.
+#' @param deff \code{boolean}. If `TRUE`, compute a design effect
+#' @param rel_error \code{boolean}. If `TRUE`, compute relative error measures.
+#' @param unweighted \code{boolean}. If `TRUE`, add unweighted counts.
+#' @param eclac_input \code{boolean}. If `TRUE`, return inputs formatted for ECLAC workflows.
 #' @param ci_logit \code{boolean} indicating if interval confidence is logit, only available for proportions.
 #' @param scheme \code{character} variable indicating the evaluation protocol to use for CEPAL standard. Options are "eclac_2020" and "eclac_2023". The "eclac_2020" option does not support ratio estimation.
+#' @param log_cv \code{boolean} logarithmic coefficient of variation.
 #' @import survey
-#' @return \code{dataframe} that contains the inputs and all domains to be evaluated.
+#'
+#' @details
+#' Strata with a single sampled unit are handled according to
+#' `getOption("survey.lonely.psu")` (e.g., `"adjust"`,`"remove"`, `"certainty"` or `"average"`).
+#'
+#' Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain.
+#' When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If `ajuste_ene = TRUE`, a
+#' fixed critical value equal to 2 is used instead.
+#'
+#'
+#' @return A \code{data.frame} containing the estimated total and quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
 #'
 #' @examples
 #' library(survey)
@@ -429,7 +502,7 @@ create_size <- function(var, domains = NULL, subpop = NULL, design, ci = FALSE, 
 #' @export
 create_prop <- function(var, denominator = NULL, domains = NULL, subpop = NULL, design, ci = FALSE, deff = FALSE, ess = FALSE,
                         ajuste_ene = FALSE, rel_error = FALSE, log_cv = FALSE, unweighted = FALSE, standard_eval = FALSE,
-                        eclac_input = FALSE, ci_logit = FALSE, scheme = c('eclac_2020', 'eclac_2023')) {
+                        eclac_input = FALSE, ci_logit = FALSE, rm.na = FALSE, scheme = c('eclac_2020', 'eclac_2023')) {
 
 
   scheme <- match.arg(scheme)
