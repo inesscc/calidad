@@ -12,7 +12,6 @@ create_total(
   ci = FALSE,
   ess = FALSE,
   ajuste_ene = FALSE,
-  standard_eval = FALSE,
   rm.na = FALSE,
   deff = FALSE,
   rel_error = FALSE,
@@ -33,9 +32,7 @@ create_total(
 
 \item{ess}{\code{boolean}. If `TRUE`, compute an effective sample size.}
 
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used. TODO: PREGUNTAR SOBRE ESTO}
-
-\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors. TODO: PREGUNTAR SOBRE ESTO}
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.}
 
 \item{rm.na}{\code{boolean}. If `TRUE`, remove observations with missing values in `var` before estimation.}
 

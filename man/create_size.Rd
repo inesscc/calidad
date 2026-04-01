@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_external.R
 \name{create_size}
 \alias{create_size}
-\title{Create the inputs to evaluate the quality of total estimations}
+\title{Create the inputs to evaluate the quality of population size estimates}
 \usage{
 create_size(
   var,
@@ -12,7 +12,6 @@ create_size(
   ci = FALSE,
   ess = FALSE,
   ajuste_ene = FALSE,
-  standard_eval = FALSE,
   rm.na = FALSE,
   deff = FALSE,
   rel_error = FALSE,
@@ -22,9 +21,7 @@ create_size(
 )
 }
 \arguments{
-\item{var}{numeric variable within the \code{dataframe}. When the domain parameter is not used,
-it is possible to include more than one variable using the + separator. When a value is introduced
-in the domain parameter, the estimation variable must be a dummy variable.}
+\item{var}{Name of numeric variable to estimate within the \code{data.frame}.}
 
 \item{domains}{Domains variables to be estimated separated by the `+` character.}
 
@@ -36,9 +33,7 @@ in the domain parameter, the estimation variable must be a dummy variable.}
 
 \item{ess}{\code{boolean}. If `TRUE`, compute an effective sample size.}
 
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used. TODO: PREGUNTAR SOBRE ESTO}
-
-\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors. TODO: PREGUNTAR SOBRE ESTO}
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.}
 
 \item{rm.na}{\code{boolean}. If `TRUE`, remove observations with missing values in `var` before estimation.}
 
@@ -53,31 +48,28 @@ in the domain parameter, the estimation variable must be a dummy variable.}
 \item{eclac_input}{\code{boolean}. If `TRUE`, return inputs formatted for ECLAC workflows.}
 }
 \value{
-A \code{data.frame} containing the estimated total and quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
+A `data.frame` containing the estimated population size, degrees of freedom, sample size, and associated quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
 }
 \description{
-\code{create_size} generates a \code{dataframe} with the following elements: sum,
-degrees of freedom, sample size, and coefficient of variation. The function allows
-grouping in several domains.
+\code{create_size} generates a \code{dataframe} containing the estimated population size, degrees of freedom, sample size, and quality measures such as the standard error and coefficient of variation. Estimates can be produced for multiple domains defined by one or more grouping variables.
 }
 \details{
-#' For each domain, the population total is estimated using the Horvitz-Thompson estimator TODO: ARREGLAR ESTO
+The population size is estimated as a total using the Horvitz-Thompson  estimator
 \deqn{\hat{T} = \sum_{i \in s} \frac{y_i}{\pi_i} = \sum_{i \in s} w_i y_i,}
-where \eqn{y_i} is the study variable, \eqn{\pi_i} is the first-order inclusion probability, and \eqn{w_i = 1/\pi_i} is the survey weight.
+where \eqn{y_i} is typically an indicator variable identifying whether the sampled unit belongs to the target population, \eqn{\pi_i} is the first-order inclusion probability, and \eqn{w_i = 1/\pi_i} is the survey weight.
 
-The standard error is computed using a Taylor-linearized variance estimator.
-For totals, the linearized variable is \eqn{u_i = y_i wi_i}. The variance is then calculated from the sampling units defined in the survey design object.
+Standard errors are computed using a Taylor-linearized variance estimator.
+For totals, the linearized variable is \eqn{u_i = w_i y_i}. The variance is then computed from the sampling units defined in the survey design object.
 When explicit clustering is present, the linearized values are first aggregated within PSU and stratum as
 \deqn{E_{hi} = \sum_{k \in PSU_{hi}} u_{hk},}
 and stratum-specific contributions are combined to obtain the total variance.
-If no clustering variable is defined, the observational units are treated as sampling units for variance estimation. When finite population sizes are available, a finite population correction is applied.
+If no clustering variable is defined, the observational units are treated as sampling units for variance estimation. Finite population corrections are applied when available.
 
 Strata with a single sampled unit are handled according to
-`getOption("survey.lonely.psu")` (e.g., `"adjust"`,`"remove"`, `"certainty"` or `"average"`).
+`getOption("survey.lonely.psu")`.
 
-Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain.
-When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If `ajuste_ene = TRUE`, a
-fixed critical value equal to 2 is used instead.
+Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain. When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If
+`ajuste_ene = TRUE`, a fixed critical value equal to 2 is used instead.
 }
 \examples{
 dc <- survey::svydesign(ids = ~varunit, strata = ~varstrat, data = epf_personas, weights = ~fe)

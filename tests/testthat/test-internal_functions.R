@@ -377,7 +377,7 @@ expect_match_survey <- function(survey_expr,
 
   for (criterio in criterios) {
 
-        options(survey.lonely.psu = criterio)
+    options(survey.lonely.psu = criterio)
 
     table_svy <- eval(survey_expr)
     table_own <- eval(own_expr)
@@ -388,8 +388,6 @@ expect_match_survey <- function(survey_expr,
       unname(coef(table_svy)),
       info = paste("criterio:", criterio)
     )
-    print('#####################################')
-    #print(table_own$est - unname(coef(table_svy)))
 
     ## SE
     expect_equal(
@@ -398,15 +396,11 @@ expect_match_survey <- function(survey_expr,
       info = paste("criterio:", criterio)
     )
 
-    print(table_own$se - unname(SE(table_svy)))
-
     expect_equal(
       table_own$deff,
       unname(deff(table_svy)),
       info = paste("criterio:", criterio)
     )
-
-
   }
 }
 

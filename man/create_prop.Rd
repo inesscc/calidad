@@ -2,7 +2,7 @@
 % Please edit documentation in R/create_external.R
 \name{create_prop}
 \alias{create_prop}
-\title{Create the inputs to evaluate the quality of proportion estimations}
+\title{Create the inputs to evaluate the quality of proportions and ratios estimates}
 \usage{
 create_prop(
   var,
@@ -17,7 +17,6 @@ create_prop(
   rel_error = FALSE,
   log_cv = FALSE,
   unweighted = FALSE,
-  standard_eval = FALSE,
   eclac_input = FALSE,
   ci_logit = FALSE,
   rm.na = FALSE,
@@ -25,9 +24,10 @@ create_prop(
 )
 }
 \arguments{
-\item{var}{numeric variable within the \code{dataframe}, is the numerator of the ratio to be calculated.}
+\item{var}{Name of a numeric variable in the input \code{dataframe}. If `denominator = NULL`, `var` is interpreted as an indicator variable
+for proportion estimation. Otherwise, it is treated as the numerator of the ratio.}
 
-\item{denominator}{numeric variable within the \code{dataframe}, is the denominator of the ratio to be calculated. If the \code{var} parameter is dummy, it can be NULL.}
+\item{denominator}{Name of a numeric variable used as the denominator of the ratio. If `NULL`, a proportion is estimated instead.}
 
 \item{domains}{Domains variables to be estimated separated by the `+` character.}
 
@@ -35,45 +35,48 @@ create_prop(
 
 \item{design}{A complex survey design object created with \code{survey::svydesign()}.}
 
-\item{ci}{\code{boolean}. If `TRUE`, compute confidence intervals (see Details).}
+\item{ci}{\code{boolean}. If `TRUE`, compute confidence intervals.}
 
 \item{deff}{\code{boolean}. If `TRUE`, compute a design effect}
 
 \item{ess}{\code{boolean}. If `TRUE`, compute an effective sample size.}
 
-\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used. TODO: PREGUNTAR SOBRE ESTO}
+\item{ajuste_ene}{\code{boolean} indicating if an adjustment for the sampling-frame transition period must be used.}
 
 \item{rel_error}{\code{boolean}. If `TRUE`, compute relative error measures.}
 
-\item{log_cv}{\code{boolean} logarithmic coefficient of variation.}
+\item{log_cv}{\code{boolean}. If `TRUE`, compute a logarithmic coefficient of variation.}
 
 \item{unweighted}{\code{boolean}. If `TRUE`, add unweighted counts.}
 
-\item{standard_eval}{\code{boolean} indicating if the function is wrapped inside another function, if \code{TRUE} avoid lazy eval errors. TODO: PREGUNTAR SOBRE ESTO}
-
 \item{eclac_input}{\code{boolean}. If `TRUE`, return inputs formatted for ECLAC workflows.}
 
-\item{ci_logit}{\code{boolean} indicating if interval confidence is logit, only available for proportions.}
+\item{ci_logit}{\code{boolean} If `TRUE`, compute logit-based confidence intervals. This option is only available for proportions.}
 
 \item{rm.na}{\code{boolean}. If `TRUE`, remove observations with missing values in `var` before estimation.}
 
-\item{scheme}{\code{character} variable indicating the evaluation protocol to use for CEPAL standard. Options are "eclac_2020" and "eclac_2023". The "eclac_2020" option does not support ratio estimation.}
+\item{scheme}{\code{character} variable indicating the evaluation protocol used for CEPAL standards. Supported options are `"eclac_2020"` and `"eclac_2023"`. Ratio estimation is not available for `"eclac_2020"`. TODO: REVISAR ESTO CON DETALLE, NO LO RECUERDO EN SU TOTALIDAD JAJAJ}
 }
 \value{
-A \code{data.frame} containing the estimated total and quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
+A \code{data.frame} containing the estimated proportion or ratio and associated quality metrics such as the standard error (`se`) and coefficient of variation (`cv`).
 }
 \description{
-\code{create_prop} generates a \code{dataframe} with the following elements: sum,
-degrees of freedom, sample size, standard error, and coefficient of variation. The function allows
-grouping in several domains.
+\code{create_prop} generates a \code{data.frame} containing the estimated proportion
+or ratio, degrees of freedom, sample size, and quality measures such as the standard error and coefficient of variation. Estimates can be produced for multiple domains defined by one or more grouping variables.
+When `denominator = NULL`, the function estimates a proportion by treating
+`var` as an indicator variable. When `denominator` is provided, the function estimates a ratio between the weighted totals of `var` and `denominator`.
 }
 \details{
-Strata with a single sampled unit are handled according to
-`getOption("survey.lonely.psu")` (e.g., `"adjust"`,`"remove"`, `"certainty"` or `"average"`).
+When `denominator = NULL`, the proportion is estimated as a weighted mean of
+`var`. When `denominator` is provided, the parameter is estimated as a ratio
+between the weighted totals of `var` and `denominator`.
 
-Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain.
-When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If `ajuste_ene = TRUE`, a
-fixed critical value equal to 2 is used instead.
+Standard errors are computed using a Taylor-linearized variance estimator. For proportions, the linearized variable \eqn{u_i} is the same as in mean estimation. For ratios, \eqn{u_i} is based on the residual \eqn{y_i - \hat{R}x_i}. The variance is then computed from the sampling units defined in the survey design object.
+When clustering is present, linearized values are aggregated within PSU and stratum; otherwise, observational units are treated as sampling units. Finite population corrections are applied when available.
+
+Strata with a single sampled unit are handled according to `getOption("survey.lonely.psu")`.
+
+Degrees of freedom are computed as the number of sampled PSUs minus the number of strata within each domain. When `ci = TRUE`, confidence intervals are based on a critical value from the t distribution with these degrees of freedom. If `ajuste_ene = TRUE`, a fixed critical value equal to 2 is used instead. When `ci_logit = TRUE`, logit-based confidence intervals are used for proportions.
 }
 \examples{
 library(survey)

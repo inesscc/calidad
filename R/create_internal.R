@@ -818,17 +818,17 @@ get_table <-  function(var, domains, complex_design, estimation = "general", env
     #estimacion <- estimacion %>%
     #  dplyr::filter(!!rlang::parse_expr(string_var)  != 0)
 
-  } else { # para calcular la mediana
-    # TODO: preguntar si es que sigue vigente esto, para mi se elimina
-    estimacion <- survey::svyby(var,
-                                by = domains,
-                                FUN = survey::svyquantile,
-                                design = complex_design,
-                                quantiles = 0.5,
-                                method="constant",
-                                interval.type = "quantile",
-                                ties="discrete")
   }
+  # else { # para calcular la mediana
+  #   estimacion <- survey::svyby(var,
+  #                               by = domains,
+  #                               FUN = survey::svyquantile,
+  #                               design = complex_design,
+  #                               quantiles = 0.5,
+  #                               method="constant",
+  #                               interval.type = "quantile",
+  #                               ties="discrete")
+  # }
 
   return(estimacion)
 }

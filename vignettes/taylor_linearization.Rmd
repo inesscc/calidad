@@ -1,0 +1,336 @@
+---
+title: "Variance estimation with Taylor linearization in complex surveys"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Variance estimation with Taylor linearization in complex surveys}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+library(kableExtra)
+
+```
+
+
+## Introduction
+
+Estimating quantities such as totals, means, or proportions from survey data is usually straightforward. Estimating their sampling variability, however, is more challenging. In complex surveys, observations are not independent draws from a simple random sample: sampling weights, stratification, clustering, and finite population corrections all affect the precision of an estimator.
+
+A widely used solution to this problem is Taylor linearization. The main idea is to approximate a possibly nonlinear estimator by a linear function of the observed data, reducing the problem of variance estimation to estimating the variance of a sum. This approach is the foundation of design-based variance estimation in the [survey R package](https://cran.r-project.org/web/packages/survey/index.html)(Lumley, 2004).
+
+The functions implemented in this package follow the same methodological framework, but present the calculations explicitly, making it easier to understand the intermediate steps involved. In this vignette we focus on three common estimators: totals, means, and ratios, and show how all of them can be understood through the same three-step workflow:
+
+
+1. define the linearized variable associated with the estimator
+
+2. treat the estimator as a pseudo-total
+
+3. estimate its variance using the survey design
+
+
+This vignette is organized in two parts. We first introduce the theoretical framework behind Taylor linearization, and then provide a step-by-step implementation using a simple example to illustrate how variance is computed in practice.
+
+## The main idea of Taylor linearization
+
+Taylor linearization provides a general strategy to estimate the variance of complex survey estimators. The central idea is to approximate an estimator $\hat{\theta}$  by a first order Taylor expansion, expressing it as a sum of contributions from each sampled unit. Let $s$ denote the set of sampled units, then:
+
+
+$$\hat{\theta} \approx \sum_{i \in s} u_i$$
+where $u_i$ is the linearized variable associated with observation $i$, sometimes referred to as a pseudo-value. This approximation has an important consequence: instead of deriving a specific variance formula for each estimator, the problem reduces to estimating the variance of the pseudo-total $\sum_{i \in s} u_i$ that is 
+
+$$\mathrm{Var}(\hat{\theta}) \approx \mathrm{Var}\!\left(\sum_{i \in s} u_i\right)$$
+
+This perspective reveals a common structure behind many survey estimators. Totals, means, and ratios may appear to require different variance formulas, but under Taylor linearization they all follow the same workflow. The next section shows how the linearized variable $u_i$ is derived for each of these estimators.
+
+
+## Linearized variables for common estimators
+
+Many estimators used in survey analysis can be expressed as functions of estimated totals. For example, the weighted mean can be written as the ratio between two totals, and ratio estimators are also defined as functions of totals.
+
+This representation is particularly convenient because Taylor linearization can be applied directly, yielding a linearized variable $u_i$ whose sum approximates the estimator. The following sections illustrate this idea for three widely used estimators: totals, ratios and means.
+
+### Totals
+
+Consider the population total of a study variable $y$. The Horvitz Thompson estimator of the total is
+
+
+$$\hat{T} = \sum_{i \in s} w_i y_i,$$
+
+where $w_i = 1/\pi_i$ is the survey weight and $\pi_i$ is the first-order inclusion probability. Since the estimator is already expressed as a sum of unit contributions, no approximation is needed and the linearized variable is simply
+
+$$u_i= w_i y_i$$
+
+
+
+### Ratios
+
+Ratio estimators are also commonly used in survey analysis. Consider the ratio between two variables $y$ and $x$:
+
+$$\hat{R} = \frac{\hat{T_y}}{\hat{T_x}} = \frac{\sum_{i \in s} w_i y_i}{\sum_{i \in s} w_i x_i}$$
+
+To obtain the linearized variable for the ratio estimator, write the estimator as a function of two totals:
+
+$$
+\hat R = g(\hat T_y,\hat T_x), \qquad \text{with} \quad g(T_y,T_x)=\frac{T_y}{T_x}
+$$
+
+A first-order Taylor expansion of $g(\hat T_y,\hat T_x)$ around the population totals $(T_y,T_x)$ gives:
+
+$$
+\hat R - R \approx
+\frac{\partial g}{\partial T_y}(\hat T_y-T_y)
++
+\frac{\partial g}{\partial T_x}(\hat T_x-T_x)
+$$
+
+Since
+
+- $$ \frac{\partial g}{\partial T_y}=\frac{1}{T_x}$$
+
+- $$\frac{\partial g}{\partial T_x}=-\frac{T_y}{T_x^2}=-\frac{R}{T_x}$$
+
+
+it follows that
+
+$$
+\hat R - R
+\approx
+\frac{1}{T_x}(\hat T_y-T_y)
+-
+\frac{R}{T_x}(\hat T_x-T_x)
+=
+\frac{1}{T_x}(\hat T_y-R\hat T_x)
+$$
+
+Using the definitions of $\hat{T_y}$ and $\hat{T_x}$,
+
+$$
+\hat R - R
+\approx
+\frac{1}{T_x}\sum_{i\in s} w_i (y_i-Rx_i)
+$$
+
+Therefore, the linearized variable is
+
+$$
+u_i = \frac{w_i (y_i-Rx_i)}{T_x}
+$$
+
+In practice, the unknown population quantities are replaced by their sample estimates, yielding
+
+$$
+u_i \approx \frac{w_i (y_i-\hat R x_i)}{\hat T_x}
+$$
+
+### Means
+
+The weighted population mean can be written as a special case of the ratio estimator:
+
+$$\hat{\mu} = \frac{\hat{T_y}}{\hat{T_1}} =\frac{\sum_{i \in s} w_i y_i}{\sum_{i \in s} w_i}$$
+where $\hat{T}_1 = \sum_{i \in s} w_i$ corresponds to the estimated population size. Since the mean is a ratio estimator with $x_i = 1$ for all units, its linearized variable follows directly from the ratio case:
+
+$$u_i = \frac{w_i (y_i - \hat{\mu})}{\sum_{i \in s} w_i}$$
+The linearized value depends on the deviation of each observation from the estimated mean, scaled by the survey weight and the estimated population size. As in the ratio case, unknown population quantities are replaced by their sample estimates in practice.
+
+
+## Variance estimator under the sampling design
+
+Once the linearized variables $u_i$ are available for each sampled unit, the remaining steps depend only on the survey design and not on the specific form of the estimator. This section describes how the variance of the pseudo-total is estimated in practice, following the same approach used by the `survey` package (Lumley, 2004).
+
+
+### Aggregation within sampling units
+
+In many complex surveys, sampling is carried out in stages. At the first stage, primary sampling units (PSUs) are selected within each stratum. Because observations within the same PSU are not independent, the linearized variables are first aggregated at the PSU level:
+
+
+$$E_{hi} = \sum_{k \in PSU_{hi}} u_{hk}$$
+
+where $E_{hi}$ denotes the total linearized value for PSU $i$ in stratum $h$. This quantity represents the contribution of that PSU to the pseudo-total. In designs without an explicit clustering variable, each observation is treated as its own PSU and this aggregation step is unnecessary.
+
+
+### Within stratum variance
+
+The sampling variance is estimated by evaluating the variability of the PSU totals $E_{hi}$ within each stratum. For stratum $h$ containing $n_h$ sampled PSUs, the within stratum contribution is:
+
+
+$$v_h = \frac{n_h}{n_h-1} \sum_{i =1} ^{n_h} (E_{hi}- \bar{E_h})^2$$
+
+where $\bar{E_h} = \frac{1}{n_h} \sum_{i =1}^{n_h} E_{hi}$ is the mean of the PSU totals within stratum $h$, and the factor $\frac{n_h}{n_h-1}$ yields an unbiased estimator of the within stratum variance.
+
+When finite population sizes are available, a finite population correction (fpc) is applied to account for the fact that sampling is carried out without replacement. The corrected contribution for stratum $h$ becomes
+
+$$v_h^* = (1-f_h)\frac{n_h}{n_h-1} \sum_{i =1} ^{n_h} (E_{hi}- \bar{E_h})^2$$
+
+where $f_h = n_h/N_h$ is the sampling fraction in stratum $h$ and $N_h$ is the total number of PSUs in that stratum. Note that when the population is large relative to the sample, $f_h \approx 0$ and the correction has negligible effect.
+
+### Final variance estimate
+
+The total variance estimate is then obtained by summing the stratum specific contributions across all strata: 
+
+
+$$\widehat{\mathrm{Var}}(\hat{\theta}) \approx \sum_h v_h^*$$
+
+
+This result closes the three-step workflow introduced at the outset. Starting from the estimator $\hat{\theta}$, its linearized variables $u_i$ are derived, aggregated within PSUs to obtain $E_{hi}$, and finally combined across strata to produce the variance estimate. The specific form of $\hat{\theta}$  only enters through the linearized variables; everything else depends solely on the sampling design.
+
+Strata with only one sampled PSU require special treatment, as variance estimation within a stratum requires at least two PSUs. These cases, commonly referred to as lonely PSUs, are discussed in Appendix A. For a broader treatment of variance estimation in complex surveys, see Lumley (2010, Chapter 3).
+
+
+
+## Implementation in the package
+
+To illustrate the methodology described in the previous sections, we use a fictional household survey dataset designed to reflect the key features of a complex sampling design: stratification, clustering, probability weights, and finite population corrections.
+
+The dataset consists of 23 households distributed across 5 strata, 8 PSUs, and 2 regions. Three variables are available for each household: a binary variable of interest $y$, the age of the household head (`age_head`), and the number of household members (`n_members`). The variable `region` allows estimation within subpopulations, which is discussed at the end of this section.
+
+
+
+```{r echo = FALSE}
+bbdd <- data.frame(
+  hogar_id = 1:23,
+  strata = c("A","A","A","B","B","B","B","B","B", "C","C","C","C","C","C","C","C","C", "D","D","D","D","E"),
+  psu = c("A1","A1","A1","B1","B1","B1","B2","B2","B2", "C1","C1","C1","C2","C2","C2","C3","C3","C3", "D1","D1","D2","D2","E1"),
+  weight = c(1.00,1.00,1.00, 3.00,3.00,3.00,3.00,3.00,3.00, 2.67,2.67,2.67,2.67,2.67,2.67,2.67,2.67,2.67, 2.50,2.50,2.50,2.50, 4.00),
+  Nh = c(1,1,1,6,6,6,6,6,6,8,8,8,8,8,8,8,8,8,5,5,5,5,4),
+  region = c("R1","R1","R1", "R1","R1","R2","R1","R2","R2", "R2","R2","R1","R2","R1","R1","R2","R1","R2", "R1","R2","R1","R2","R1"),
+  y = c(1,0,1,1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,1,0,1,0,1),
+  age_head = c(45,38,52,61,29,44,33,57,41,48,35,66,27,53,39,71,42,58,64,31,49,36,30),
+  n_members = c(3,2,4,5,3,2,4,2,3,3,2,5,4,3,2,6,3,4,4,2,5,3,2)
+)
+
+bbdd %>% kbl()
+
+```
+
+The five strata differ in the number of sampled PSUs relative to the population, which affects both the survey weights and the finite population correction used in variance estimation. Stratum A contains a single PSU with $N_h = 1$, meaning it was selected with certainty and contributes zero variance by design. Stratum E, in contrast, has $N_h = 4$ but only one sampled PSU, making it a lonely PSU in the sense described in Appendix A.
+
+The sampling design can be declared using the `survey` package as follows:
+
+```{r, message=FALSE, warning=FALSE}
+library(survey)
+library(dplyr)
+
+design <- survey::svydesign( ids = ~psu, strata = ~strata, weights = ~weight, fpc = ~Nh, data = bbdd )
+
+```
+
+
+### Estimating the variance of a total
+
+Using the function `create_total()`, the estimated total of $y$ and its associated variance can be obtained as follows. However, this call returns an error:
+
+```{r, error=TRUE}
+
+calidad::create_total('y', design = design)
+
+```
+
+This occurs because variance estimation under Taylor linearization requires at least two sampled PSUs within a stratum in order to measure between PSU variability. In this example, one stratum is sampled with certainty and another contains a lonely PSU, so the variance cannot be computed unless a specific treatment for single PSU strata is defined.
+
+To understand why this happens, and how different configuration choices affect the final result, we reconstruct the variance estimator step by step.
+
+As described in the theoretical section on totals, the linearized variable for the total estimator is simply $u_i = w_i y_i$. We first compute this quantity for each sampled unit and then aggregate it within each PSU to obtain the PSU totals $E_{hi}$, which are the basic inputs to the variance estimator.
+
+```{r}
+bbdd$u_i <- bbdd$weight * bbdd$y
+
+bbdd %>%
+  group_by(strata, psu) %>%
+  summarise(E_hi = sum(u_i), .groups = "drop") %>% 
+  kbl()
+```
+
+
+
+
+We now examine how these PSU totals are used within each stratum to compute the variance contributions. For each stratum, we need the number of sampled PSUs $n_h$, the mean PSU total $\bar{E}_h$, and the variability of $E_{hi}$ around this mean. These quantities are shown below:
+
+```{r}
+bbdd %>%
+  mutate(u_i = weight * y) %>%
+  group_by(strata, psu, Nh) %>%
+  summarise(E_hi = sum(u_i), .groups = "drop") %>%
+  group_by(strata) %>%
+  mutate(
+    nh = n(),
+    mean_E = mean(E_hi),
+    sq_dev = (E_hi - mean_E)^2
+  ) %>%
+  ungroup() %>% kbl()
+
+```
+
+
+In strata with more than one sampled PSU, the squared deviations are well defined and allow us to measure between-PSU variability. However, when a stratum contains only one PSU, we have $n_h = 1$, which implies:
+
+- the mean $\bar{E}_h$ is equal to the single observed value $E_{h1}$
+- the squared deviation is zero
+- but the scaling factor $\frac{n_h}{n_h - 1}$ is undefined
+
+As a result, the variance contribution for these strata cannot be computed directly.
+
+Applying the full variance formula, including the finite population correction and scaling factor, we obtain:
+
+
+```{r}
+
+bbdd %>%
+  mutate(u_i = weight * y) %>%
+  group_by(strata, psu, Nh) %>%
+  summarise(E_hi = sum(u_i), .groups = "drop") %>%
+  group_by(strata) %>%
+  mutate(
+    nh = n(),                                                           # PSUs sampled in stratum h
+    mean_E = sum(E_hi) / nh,                                            # stratum mean of PSU totals
+    fpc = ifelse(nh/Nh == 1, 0, (Nh - nh) / Nh),                        # finite population correction
+    scale = ifelse(nh > 1, fpc * nh / (nh - 1), NA_real_),
+    #scale = ifelse(nh>1 | nh == 1 & Nh>1, fpc * nh / (nh - 1), 1* fpc), # scaling factor
+    sq_dev = (E_hi - mean_E)^2                                          # squared deviations
+  ) %>%
+  summarise(
+    nh = unique(nh),
+    Nh = unique(Nh),
+    fpc = unique(fpc),
+    lonely_psu = ifelse(Nh == 1, FALSE, ifelse(nh == 1, TRUE, FALSE)),
+    v_h = unique(scale) * sum(sq_dev),          # stratum contribution
+    .groups = "drop"
+  )
+
+
+```
+
+
+
+## Apendix
+
+### Appendix A: Strata with a single PSU
+
+Variance estimation within a stratum requires at least two sampled PSUs, since the within-stratum variance is computed as a sum of squared deviations around the stratum mean. When a stratum contains only one sampled PSU, this quantity cannot be computed directly. These cases are commonly referred to as lonely PSUs.
+
+Different strategies exist for handling lonely PSUs, and the appropriate choice depends on the assumptions one is willing to make about the sampling design. Following Lumley (2004), this package controls the treatment of lonely PSUs through the `survey.lonely.psu` option, which supports four approaches.
+
+
+`certainty` treats the lonely PSU as a self-representing stratum, meaning it was selected with certainty and therefore represents itself completely. Under this interpretation, there is no sampling variability to estimate within the stratum, and its variance contribution is zero by design.
+
+`remove` takes a different approach, the lonely stratum is excluded entirely from the variance calculation, as if it had not been sampled. The practical effect is the same, the stratum contributes zero to the total variance but the justification differs. Rather than assuming certainty of selection, remove simply discards the stratum on the grounds that its variance cannot be estimated. This can lead to underestimation of the total variance if the removed strata are not genuinely self-representing.
+
+`adjust` centers the lonely PSU not around its own stratum mean, but around the grand mean of all PSU totals across strata. Formally, instead of using $\bar{E_h}$, the deviation is computed as $E_{hi}- \bar{E}$, where:
+
+  $$\bar{E} = \frac{\sum _h \sum _i E_{hi}}{\sum_h n_h}$$
+and $n_h$ is the total number of PSU in stratum $h$ according to the sampling design. This allows the lonely stratum to contribute positively to the total variance, under the assumption that its variability is representative of the other strata.
+  
+`average` imputes to each lonely stratum the average variance of the non-lonely strata. Concretely, the variance contributions of non-lonely strata are summed and then scaled by the factor $\frac{H}{H^*}$, where $H$ is the total number of strata and $H^*$ is the number of non lonely strata:
+
+$$\text{Var}(\hat{\theta}) = \frac{H}{H^*} \sum_{h\notin \text{lonely}} v_h^*$$
+
+This is equivalent to imputing the average non-lonely variance to each lonely stratum and then summing across all strata.
+
+
+The default behavior follows the value set in `getOption("survey.lonely.psu")`, ensuring consistency with analyses carried out using the survey package.
+

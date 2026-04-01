@@ -16,9 +16,9 @@ knitr::opts_chunk$set(
 
 # Tutorial package calidad 
 
-The package aims to implement in a simple way the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4), [ECLAC 2020](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) and [ECLAC 2023](https://repositorio.cepal.org/server/api/core/bitstreams/f04569e6-4f38-42e7-a32b-e0b298e0ab9c/content) for the quality assessment of estimates from household surveys and [INE Chile Economics Surveys 2024](https://www.ine.gob.cl/docs/default-source/buenas-practicas/directrices-metodologicas/estandares/documentos/est%C3%A1ndar-evaluaci%C3%B3n-de-calidad-de-estimaciones-econ%C3%B3micas.pdf?sfvrsn=201fbeb9_2) for the quality assessment of estimates from economics surveys.
+This package implements, in a simple way, the methodologies of [INE Chile](https://www.ine.cl/docs/default-source/documentos-de-trabajo/20200318-lineamientos-medidas-de-precisi%C3%B3n.pdf?sfvrsn=f1ab2dbe_4), [ECLAC 2020](https://repositorio.cepal.org/bitstream/handle/11362/45681/S2000293_es.pdf?sequence=4&isAllowed=y) and [ECLAC 2023](https://repositorio.cepal.org/server/api/core/bitstreams/f04569e6-4f38-42e7-a32b-e0b298e0ab9c/content) for the quality assessment of estimates from household surveys, as well the [INE Chile Economic Surveys 2024](https://www.ine.gob.cl/docs/default-source/buenas-practicas/directrices-metodologicas/estandares/documentos/est%C3%A1ndar-evaluaci%C3%B3n-de-calidad-de-estimaciones-econ%C3%B3micas.pdf?sfvrsn=201fbeb9_2) standards for economic surveys.
 
-This tutorial shows the basic use of the package and includes the main functions to create the necessary inputs to implement the quality standards.
+This tutorial presents the basic use of the package and introduces the main functions used to generate the inputs required to apply these quality standards.
 
 
 ## Data edition
